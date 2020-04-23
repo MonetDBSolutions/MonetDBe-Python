@@ -2,7 +2,7 @@
 name = "monetdbe"
 version = "0.1"
 description = "MonetDBe - the Python embedded MonetDB"
-license = "MPL 2.0)"
+license = "MPL-2.0"
 authors = ["Gijs Molenaar <gijs@pythonic.nl>"]
 readme = "README.md"
 repository = "https://github.com/gijzelaerr/monetdbe"
