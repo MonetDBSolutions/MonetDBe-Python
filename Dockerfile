@@ -24,4 +24,9 @@ RUN /opt/python/cp37-cp37m/bin/python ./setup.py bdist_wheel -d .
 RUN /opt/python/cp38-cp38/bin/python ./setup.py bdist_wheel -d .
 
 # add shared libraries to wheels
-RUN auditwheel repair --plat manylinux2014_x86_64 -w /output *.whl
+ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/usr/local/lib64/monetdb5"
+
+RUN auditwheel repair --plat manylinux2014_x86_64 -w /output monetdbe-*-cp35-cp35m-linux_x86_64.whl
+RUN auditwheel repair --plat manylinux2014_x86_64 -w /output monetdbe-*-cp36-cp36m-linux_x86_64.whl
+RUN auditwheel repair --plat manylinux2014_x86_64 -w /output monetdbe-*-cp37-cp37m-linux_x86_64.whl
+RUN auditwheel repair --plat manylinux2014_x86_64 -w /output monetdbe-*-cp38-cp38-linux_x86_64.whl

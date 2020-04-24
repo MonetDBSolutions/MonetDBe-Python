@@ -1,6 +1,7 @@
 from .base import BaseInterAPI
 from _monetdbe_cffi import lib
 
+
 class CFFIInterAPI(BaseInterAPI):
 
     def cleanup_result(self):

@@ -14,7 +14,7 @@ with open(path, 'r') as f:
 
 ffibuilder.set_source("_monetdbe_cffi",
                       """
-#include "monetdb_embedded.h"
+#include "monetdb/monetdb_embedded.h"
                       """,
                       libraries=['embedded'])
 
