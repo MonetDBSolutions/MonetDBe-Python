@@ -1,5 +1,5 @@
 from .base import BaseInterAPI
-from _monetdbe_cffi import lib
+from _monetdbe_cffi import lib, ffi
 
 
 class CFFIInterAPI(BaseInterAPI):
@@ -47,7 +47,8 @@ class CFFIInterAPI(BaseInterAPI):
         lib.monetdb_shutdown()
 
     def startup(self):
-        lib.monetdb_startup()
+        err = lib.monetdb_startup(ffi.NULL, 0)
+        err
 
     def append(self):
         lib.monetdb_append()
