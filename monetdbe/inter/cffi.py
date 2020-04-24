@@ -1,62 +1,52 @@
 from .base import BaseInterAPI
-from cffi import FFI
-from pathlib import Path
-
-path = str(Path(__file__).parent / 'embed.h')
-
+from _monetdbe_cffi import lib
 
 class CFFIInterAPI(BaseInterAPI):
-    def __init__(self):
-        ffibuilder = FFI()
-        with open(path, 'r') as f:
-            ffibuilder.cdef(f.read())
-        ffibuilder.set_source("_monetdbe_cffi", libraries=['embedded'])
-        ffibuilder.compile(verbose=True)
 
     def cleanup_result(self):
-        pass
+        lib.monetdb_cleanup_result()
 
     def clear_prepare(self):
-        pass
+        lib.monetdb_clear_prepare()
 
     def connect(self):
-        pass
+        lib.monetdb_connect()
 
     def disconnect(self):
-        pass
+        lib.monetdb_disconnect()
 
     def get_autocommit(self):
-        pass
+        lib.monetdb_get_autocommit()
 
     def get_columns(self):
-        pass
+        lib.monetdb_get_columns()
 
     def get_table(self):
-        pass
+        lib.monetdb_get_table()
 
     def is_initialized(self):
-        pass
+        lib.monetdb_is_initialized()
 
     def query(self):
-        pass
+        lib.monetdb_query()
 
     def result_fetch(self):
-        pass
+        lib.monetdb_result_fetch()
 
     def result_fetch_rawcol(self):
-        pass
+        lib.monetdb_result_fetch_rawcol()
 
     def send_close(self):
-        pass
+        lib.monetdb_send_close()
 
     def set_autocommit(self):
-        pass
+        lib.monetdb_set_autocommit()
 
     def shutdown(self):
-        pass
+        lib.monetdb_shutdown()
 
     def startup(self):
-        pass
+        lib.monetdb_startup()
 
     def append(self):
-        pass
+        lib.monetdb_append()

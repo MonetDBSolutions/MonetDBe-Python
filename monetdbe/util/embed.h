@@ -1,6 +1,6 @@
 // todo gijs: these voids are wrong
 typedef void MT_Lock;
-typedef void BAT;
+//typedef void BAT;
 
 typedef int8_t bit;
 typedef int8_t bte;
@@ -669,11 +669,13 @@ extern void *sql_values_list_element_validate_and_insert(void *v1, void *v2, voi
 extern void *sql_range_part_validate_and_insert(void *v1, void *v2);
 extern void *sql_values_part_validate_and_insert(void *v1, void *v2);
 
+/*
 typedef struct {
  BAT *b;
  char* name;
  void* def;
 } sql_emit_col;
+*/
 
 typedef struct {
  unsigned char day;

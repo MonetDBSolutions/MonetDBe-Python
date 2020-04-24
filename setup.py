@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="monetdbe",
-    version="0.1",
+    version="0.2",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/gijzelaerr/monetdbe",
+    url="https://github.com/monetdBSolutions/MonetDBe-Python/",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -22,7 +22,7 @@ setuptools.setup(
         "Topic :: Database :: Front-Ends",
     ],
     python_requires='>=3.5',
-    install_requires=[
-        'cffi',
-    ]
+    setup_requires=["cffi>=1.0.0"],
+    cffi_modules=["monetdbe/util/cffi_builder.py:ffibuilder"],  # "filename:global"
+    install_requires=["cffi>=1.0.0"],
 )
