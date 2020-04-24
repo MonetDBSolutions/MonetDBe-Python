@@ -93,4 +93,4 @@ register_adapters_and_converters()
 
 # Clean up namespace
 
-del (register_adapters_and_converters)
+del register_adapters_and_converters

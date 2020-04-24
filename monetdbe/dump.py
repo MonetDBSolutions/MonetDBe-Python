@@ -7,6 +7,7 @@
 # future enhancements, you should normally quote any identifier that
 # is an English language word, even if you do not have to."
 
+
 def _iterdump(connection):
     """
     Returns an iterator to the dump of the database in an SQL text format.
@@ -17,7 +18,7 @@ def _iterdump(connection):
     """
 
     cu = connection.cursor()
-    yield ('BEGIN TRANSACTION;')
+    yield 'BEGIN TRANSACTION;'
 
     # monetdbe_master table contains the SQL CREATE statements for the database.
     q = """
@@ -30,9 +31,9 @@ def _iterdump(connection):
     schema_res = cu.execute(q)
     for table_name, type, sql in schema_res.fetchall():
         if table_name == 'monetdbe_sequence':
-            yield ('DELETE FROM "monetdbe_sequence";')
+            yield 'DELETE FROM "monetdbe_sequence";'
         elif table_name == 'monetdbe_stat1':
-            yield ('ANALYZE "monetdbe_master";')
+            yield 'ANALYZE "monetdbe_master";'
         elif table_name.startswith('monetdbe_'):
             continue
         # NOTE: Virtual table support not implemented
@@ -43,7 +44,7 @@ def _iterdump(connection):
         #        qtable,
         #        sql.replace("''")))
         else:
-            yield ('{0};'.format(sql))
+            yield '{0};'.format(sql)
 
         # Build the insert statement for each row of the current table
         table_name_ident = table_name.replace('"', '""')
@@ -54,7 +55,7 @@ def _iterdump(connection):
             ",".join("""'||quote("{0}")||'""".format(col.replace('"', '""')) for col in column_names))
         query_res = cu.execute(q)
         for row in query_res:
-            yield ("{0};".format(row[0]))
+            yield "{0};".format(row[0])
 
     # Now when the type is 'index', 'trigger', or 'view'
     q = """
@@ -65,6 +66,6 @@ def _iterdump(connection):
         """
     schema_res = cu.execute(q)
     for name, type, sql in schema_res.fetchall():
-        yield ('{0};'.format(sql))
+        yield '{0};'.format(sql)
 
-    yield ('COMMIT;')
+    yield 'COMMIT;'
