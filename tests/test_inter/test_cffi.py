@@ -1,7 +1,6 @@
 from unittest import TestCase
 from monetdbe.inter.cffi import CFFIInterAPI
 
-
 class TestCFFIInterAPI(TestCase):
 
     def setUp(self) -> None:
@@ -9,5 +8,4 @@ class TestCFFIInterAPI(TestCase):
 
     def test_startup(self):
         self.inter.startup()
-
 
