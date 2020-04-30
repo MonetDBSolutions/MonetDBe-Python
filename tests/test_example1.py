@@ -1,6 +1,8 @@
 import logging
 from monetdbe import exceptions
 
+from monetdbe.inter.cffi import CFFIInterAPI
+
 _logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
@@ -20,26 +22,13 @@ def error(msg):
 
 
 def main():
-    err = lib.monetdb_startup(ffi.NULL, 0)
-    error(err)
+    inter = CFFIInterAPI()
+    inter.startup()
+    conn = inter.connect()
 
-    pconn = ffi.new("monetdb_connection *")
-    p_result = ffi.new("monetdb_result **")
-
-    err = lib.monetdb_connect(pconn)
-    error(err)
-    conn = pconn[0]
-
-    err = lib.monetdb_query(conn, "CREATE TABLE test (x integer, y string)".encode(), ffi.NULL, ffi.NULL, ffi.NULL)
-    error(err)
-
-    err = lib.monetdb_query(conn, "INSERT INTO test VALUES (42, 'Hello'), (NULL, 'World')".encode(), ffi.NULL, ffi.NULL,
-                            ffi.NULL)
-    error(err)
-    err = lib.monetdb_query(conn, "SELECT x, y FROM test; ".encode(), p_result, ffi.NULL, ffi.NULL)
-    error(err)
-
-    result = p_result[0]
+    inter.query(conn, "CREATE TABLE test (x integer, y string)")
+    inter.query(conn, "INSERT INTO test VALUES (42, 'Hello'), (NULL, 'World')")
+    result, affected_rows, prepare_id = inter.query(conn, "SELECT x, y FROM test; ", make_result=True)
 
     _logger.info(f"Query result with {result.ncols} cols and {result.nrows} rows")
 
@@ -63,6 +52,10 @@ def main():
                     _logger.info("NULL")
                 else:
                     _logger.info("%s" % ffi.string(col.data[r]))
+
+    inter.cleanup_result(conn, result)
+    inter.disconnect(conn)
+    inter.shutdown()
 
 
 if __name__ == '__main__':
