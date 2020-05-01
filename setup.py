@@ -21,7 +21,7 @@ setuptools.setup(
         "Topic :: Database :: Database Engines/Servers",
         "Topic :: Database :: Front-Ends",
     ],
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     setup_requires=["cffi>=1.0.0"],
     cffi_modules=["monetdbe/util/cffi_builder.py:ffibuilder"],  # "filename:global"
     install_requires=["cffi>=1.0.0"],

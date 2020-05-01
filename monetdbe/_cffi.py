@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Dict, Tuple, Callable
 
 import logging
 from monetdbe import exceptions
@@ -19,6 +19,22 @@ def check_error(msg):
         decoded = ffi.string(msg).decode()
         _logger.error(decoded)
         raise exceptions.DatabaseError(decoded)
+
+
+type_map: Dict[Any, Tuple[str, Callable]] = {
+    lib.monetdb_int32_t: ("monetdb_column_int32_t *", lambda x: x),
+    lib.monetdb_str: ("monetdb_column_str *", lambda x: ffi.string(x).decode()),
+
+}
+
+
+def extract(rcol, r):
+    cast_string, cast_function = type_map[rcol.type]
+    col = ffi.cast(cast_string, rcol)
+    if col.is_null(col.data[r]):
+        return None
+    else:
+        return cast_function(col.data[r])
 
 
 class MonetEmbedded:
@@ -85,8 +101,10 @@ class MonetEmbedded:
 
         return result, affected_rows[0], prepare_id[0]
 
-    def result_fetch(self):
-        lib.monetdb_result_fetch()
+    def result_fetch(self, result, c: int):
+        p_rcol = ffi.new("monetdb_column **")
+        check_error(lib.monetdb_result_fetch(self.connection, p_rcol, result, c))
+        return p_rcol[0]
 
     def result_fetch_rawcol(self):
         lib.monetdb_result_fetch_rawcol()

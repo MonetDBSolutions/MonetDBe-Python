@@ -14,11 +14,11 @@ class Connection:
         ...
 
     def __del__(self):
-        self.inter.cleanup_result(self.result)
+        # self.inter.cleanup_result(self.result)
+        ...
 
     def execute(self, query: str):
-        self.inter.cleanup_result(self.result)
-        self.result, affected_rows, prepare_id = self.inter.query(query, make_result=True)
+        return self.inter.query(query, make_result=True)
 
     def executemany(self, *args, **kwargs):
         ...
