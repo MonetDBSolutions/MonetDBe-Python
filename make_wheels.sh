@@ -3,5 +3,5 @@
 IMAGE=monetdbe
 
 #docker build -t ${IMAGE} .
-rm build/*.whl
-docker run -v `pwd`/build:/build:rw ${IMAGE} sh -c "cp /output/*.whl /build"
+rm dist/*.whl
+docker run -v `pwd`/dist:/dist:rw ${IMAGE} sh -c "cp /output/*.whl /dist"
