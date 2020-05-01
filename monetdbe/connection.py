@@ -1,10 +1,11 @@
 from monetdbe.cursor import Cursor
-from monetdbe.inter.cffi import CFFIInterAPI
+from monetdbe._cffi import MonetEmbedded
 
 
 class Connection:
     def __init__(self, *args, **kwargs):
-        self.inter = CFFIInterAPI(*args, **kwargs)
+        self.inter = MonetEmbedded(*args, **kwargs)
+        self.result = None
 
     def __enter__(self, *args, **kwargs):
         return self
@@ -12,9 +13,12 @@ class Connection:
     def __exit__(self, *args, **kwargs):
         ...
 
+    def __del__(self):
+        self.inter.cleanup_result(self.result)
+
     def execute(self, query: str):
-        # todo: need to clear results when not used anymore
-        result, affected_rows, prepare_id = self.inter.query(query, make_result=True)
+        self.inter.cleanup_result(self.result)
+        self.result, affected_rows, prepare_id = self.inter.query(query, make_result=True)
 
     def executemany(self, *args, **kwargs):
         ...

@@ -1,7 +1,7 @@
 import logging
 from monetdbe import exceptions
 
-from monetdbe.inter.cffi import CFFIInterAPI
+from monetdbe._cffi import MonetEmbedded
 
 _logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def error(msg):
 
 
 def main():
-    inter = CFFIInterAPI()
+    inter = MonetEmbedded()
     inter.query("CREATE TABLE test (x integer, y string)")
     inter.query("INSERT INTO test VALUES (42, 'Hello'), (NULL, 'World')")
     result, affected_rows, prepare_id = inter.query("SELECT x, y FROM test; ", make_result=True)

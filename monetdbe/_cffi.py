@@ -1,8 +1,8 @@
-import logging
-from typing import Optional, Any
 from pathlib import Path
+from typing import Optional, Any
+
+import logging
 from monetdbe import exceptions
-from monetdbe.inter.base import BaseInterAPI
 
 _logger = logging.getLogger(__name__)
 
@@ -21,8 +21,7 @@ def check_error(msg):
         raise exceptions.DatabaseError(decoded)
 
 
-class CFFIInterAPI(BaseInterAPI):
-
+class MonetEmbedded:
     connection = ffi.NULL
 
     def __init__(self, dbdir: Optional[Path] = None):
@@ -40,7 +39,8 @@ class CFFIInterAPI(BaseInterAPI):
 
     def cleanup_result(self, result):
         _logger.info("cleanup_result called")
-        check_error(lib.monetdb_cleanup_result(self.connection, result))
+        if result:
+            check_error(lib.monetdb_cleanup_result(self.connection, result))
 
     def clear_prepare(self):
         lib.monetdb_clear_prepare()

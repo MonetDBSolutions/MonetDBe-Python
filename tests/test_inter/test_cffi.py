@@ -1,12 +1,11 @@
 from unittest import TestCase
-from monetdbe.inter.cffi import CFFIInterAPI
-
+from monetdbe._cffi import MonetEmbedded
 
 
 class TestCFFIInterAPI(TestCase):
 
     def setUp(self) -> None:
-        self.inter = CFFIInterAPI()
+        self.inter = MonetEmbedded()
 
     def test_startup(self):
         self.inter.startup()
