@@ -24,8 +24,33 @@ import datetime
 import time
 import collections.abc
 
-from .exceptions import *
-from .todo import *
+from monetdbe.connection import Connection
+from .exceptions import DatabaseError, DataError, IntegrityError, InterfaceError, InternalError, NotSupportedError, \
+    OperationalError, ProgrammingError, Warning, Error, StandardError
+
+PARSE_DECLTYPES = False
+PARSE_COLNAMES = False
+
+converters = {}
+
+OptimizedUnicode = False
+
+
+class Row:
+    ...
+
+
+def register_adapter(*args, **kwargs):
+    ...
+
+
+def register_converter(*args, **kwargs):
+    ...
+
+
+def connect(*args, **kwargs):
+    return Connection()
+
 
 paramstyle = "qmark"
 

@@ -7,7 +7,7 @@ class BaseInterAPI(ABC):
         ...
 
     @abstractmethod
-    def cleanup_result(self, connection, result):
+    def cleanup_result(self, result):
         ...
 
     @abstractmethod
@@ -19,7 +19,7 @@ class BaseInterAPI(ABC):
         ...
 
     @abstractmethod
-    def disconnect(self, connection):
+    def disconnect(self):
         ...
 
     @abstractmethod
@@ -39,7 +39,7 @@ class BaseInterAPI(ABC):
         ...
 
     @abstractmethod
-    def query(self, connection, query):
+    def query(self, query):
         ...
 
     @abstractmethod

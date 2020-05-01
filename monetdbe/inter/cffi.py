@@ -1,4 +1,6 @@
 import logging
+from typing import Optional, Any
+from pathlib import Path
 from monetdbe import exceptions
 from monetdbe.inter.base import BaseInterAPI
 
@@ -14,39 +16,59 @@ except ImportError as e:
 
 def check_error(msg):
     if msg:
-        _logger.error(msg)
-        raise exceptions.DatabaseError(msg)
+        decoded = ffi.string(msg).decode()
+        _logger.error(decoded)
+        raise exceptions.DatabaseError(decoded)
 
 
 class CFFIInterAPI(BaseInterAPI):
 
-    def cleanup_result(self, connection, result):
-        check_error(lib.monetdb_cleanup_result(connection, result))
+    connection = ffi.NULL
+
+    def __init__(self, dbdir: Optional[Path] = None):
+        self.startup(dbdir)
+        self.connection = self.connect()
+
+    def __del__(self):
+        self.disconnect()
+        self.shutdown()
+
+    def startup(self, dbdir: Optional[Path] = None, sequential: bool = False):
+        if not dbdir:
+            dbdir = ffi.NULL
+        check_error(lib.monetdb_startup(dbdir, sequential))
+
+    def cleanup_result(self, result):
+        _logger.info("cleanup_result called")
+        check_error(lib.monetdb_cleanup_result(self.connection, result))
 
     def clear_prepare(self):
         lib.monetdb_clear_prepare()
 
     def connect(self):
+        _logger.info("connect called")
         pconn = ffi.new("monetdb_connection *")
         check_error(lib.monetdb_connect(pconn))
         return pconn[0]
 
-    def disconnect(self, connection):
-        check_error(lib.monetdb_disconnect(connection))
+    def disconnect(self):
+        _logger.info("disconnect called")
+        if self.connection != ffi.NULL:
+            check_error(lib.monetdb_disconnect(self.connection))
+        self.connection = ffi.NULL
 
-    def get_autocommit(self):
-        lib.monetdb_get_autocommit()
+    def query(self, query: str, make_result: bool = False) -> (Optional[Any], int, int):
+        """
+        Execute a query.
 
-    def get_columns(self):
-        lib.monetdb_get_columns()
+        query: the query
+        make_results: Create and return a result object. If enabled, you need to call cleanup_result on the
+                      result afterwards
 
-    def get_table(self):
-        lib.monetdb_get_table()
+        returns:
+            result, affected_rows, prepare_id
 
-    def is_initialized(self):
-        lib.monetdb_is_initialized()
-
-    def query(self, connection, query: str, make_result: bool = False):
+        """
         if make_result:
             p_result = ffi.new("monetdb_result **")
         else:
@@ -54,7 +76,7 @@ class CFFIInterAPI(BaseInterAPI):
 
         affected_rows = ffi.new("lng *")
         prepare_id = ffi.new("int *")
-        check_error(lib.monetdb_query(connection, query.encode(), p_result, affected_rows, prepare_id))
+        check_error(lib.monetdb_query(self.connection, query.encode(), p_result, affected_rows, prepare_id))
 
         if make_result:
             result = p_result[0]
@@ -76,10 +98,20 @@ class CFFIInterAPI(BaseInterAPI):
         lib.monetdb_set_autocommit()
 
     def shutdown(self):
+        _logger.info("shutdown called")
         check_error(lib.monetdb_shutdown())
-
-    def startup(self, dbdir=ffi.NULL, sequential: bool = False):
-        check_error(lib.monetdb_startup(dbdir, sequential))
 
     def append(self):
         lib.monetdb_append()
+
+    def get_autocommit(self):
+        lib.monetdb_get_autocommit()
+
+    def get_columns(self):
+        lib.monetdb_get_columns()
+
+    def get_table(self):
+        lib.monetdb_get_table()
+
+    def is_initialized(self):
+        lib.monetdb_is_initialized()
