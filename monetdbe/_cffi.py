@@ -22,19 +22,32 @@ def check_error(msg):
 
 
 type_map: Dict[Any, Tuple[str, Callable]] = {
-    lib.monetdb_int32_t: ("monetdb_column_int32_t *", lambda x: x),
-    lib.monetdb_str: ("monetdb_column_str *", lambda x: ffi.string(x).decode()),
+    lib.monetdb_int32_t: ("int32_t", None),
+    lib.monetdb_str: ("str", lambda x: ffi.string(x).decode()),
+    lib.monetdb_int8_t: ("int8_t", None),
+    lib.monetdb_int16_t: ("int16_t", None),
+    lib.monetdb_int64_t: ("int64_t", None),
+    lib.monetdb_size_t: ("size_t", None),
+    lib.monetdb_float: ("float", None),
+    lib.monetdb_double: ("double", None),
+    lib.monetdb_blob: ("blob", None),
+    lib.monetdb_date: ("date", None),
+    lib.monetdb_time: ("time", None),
+    lib.monetdb_timestamp: ("timestamp", None),
 
 }
 
 
 def extract(rcol, r):
     cast_string, cast_function = type_map[rcol.type]
-    col = ffi.cast(cast_string, rcol)
+    col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
     if col.is_null(col.data[r]):
         return None
     else:
-        return cast_function(col.data[r])
+        if cast_function:
+            return cast_function(col.data[r])
+        else:
+            return col.data[r]
 
 
 # Todo: hack to get around the single embed instance limitation
@@ -73,6 +86,10 @@ class MonetEmbedded:
         if not dbdir:
             dbdir = ffi.NULL
         check_error(lib.monetdb_startup(dbdir, sequential))
+
+    def shutdown(self):
+        _logger.info("shutdown called")
+        check_error(lib.monetdb_shutdown())
 
     def cleanup_result(self, result):
         _logger.info("cleanup_result called")
@@ -126,32 +143,37 @@ class MonetEmbedded:
         return p_rcol[0]
 
     def clear_prepare(self):
-        lib.monetdb_clear_prepare()
+        raise NotImplemented
+        # lib.monetdb_clear_prepare()
 
     def result_fetch_rawcol(self):
-        lib.monetdb_result_fetch_rawcol()
+        raise NotImplemented
+        # lib.monetdb_result_fetch_rawcol()
 
     def send_close(self):
-        lib.monetdb_send_close()
+        raise NotImplemented
+        # lib.monetdb_send_close()
 
     def set_autocommit(self):
-        lib.monetdb_set_autocommit()
-
-    def shutdown(self):
-        _logger.info("shutdown called")
-        check_error(lib.monetdb_shutdown())
+        raise NotImplemented
+        # lib.monetdb_set_autocommit()
 
     def append(self):
-        lib.monetdb_append()
+        raise NotImplemented
+        # lib.monetdb_append()
 
     def get_autocommit(self):
-        lib.monetdb_get_autocommit()
+        raise NotImplemented
+        # lib.monetdb_get_autocommit()
 
     def get_columns(self):
-        lib.monetdb_get_columns()
+        raise NotImplemented
+        # lib.monetdb_get_columns()
 
     def get_table(self):
-        lib.monetdb_get_table()
+        raise NotImplemented
+        # lib.monetdb_get_table()
 
     def is_initialized(self):
-        lib.monetdb_is_initialized()
+        raise NotImplemented
+        # lib.monetdb_is_initialized()

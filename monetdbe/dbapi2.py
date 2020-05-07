@@ -23,17 +23,25 @@
 import datetime
 import time
 import collections.abc
-
+import pkg_resources
+from typing import Optional, Type
 from monetdbe.connection import Connection
-from .exceptions import DatabaseError, DataError, IntegrityError, InterfaceError, InternalError, NotSupportedError, \
-    OperationalError, ProgrammingError, Warning, Error, StandardError
+from monetdbe.cursor import Cursor
+from monetdbe.exceptions import DatabaseError, DataError, IntegrityError, InterfaceError, InternalError,\
+    NotSupportedError, OperationalError, ProgrammingError, Warning, Error, StandardError
 
 PARSE_DECLTYPES = False
 PARSE_COLNAMES = False
-
 converters = {}
-
 OptimizedUnicode = False
+
+try:
+    __version__ = pkg_resources.require("monetdbe")[0].version  # type: str
+except pkg_resources.DistributionNotFound:
+    __version__ = "0.0"
+
+version_info = tuple([int(x) for x in __version__.split(".")])
+monetdbe_version_info = version_info
 
 
 class Row:
@@ -48,20 +56,17 @@ def register_converter(*args, **kwargs):
     ...
 
 
-def connect(*args, **kwargs):
-    return Connection()
+def connect(database: Optional[str] = None, factory: Optional[Type[Connection]] = None):
+    if factory:
+        return factory(database=database)
+    return Connection(database=database)
 
 
 paramstyle = "qmark"
-
 threadsafety = 1
-
 apilevel = "2.0"
-
 Date = datetime.date
-
 Time = datetime.time
-
 Timestamp = datetime.datetime
 
 
@@ -76,10 +81,6 @@ def TimeFromTicks(ticks):
 def TimestampFromTicks(ticks):
     return Timestamp(*time.localtime(ticks)[:6])
 
-
-__version__ = "0.1"
-version_info = tuple([int(x) for x in __version__.split(".")])
-monetdbe_version_info = version_info
 
 Binary = memoryview
 collections.abc.Sequence.register(Row)
@@ -117,5 +118,4 @@ def register_adapters_and_converters():
 register_adapters_and_converters()
 
 # Clean up namespace
-
 del register_adapters_and_converters

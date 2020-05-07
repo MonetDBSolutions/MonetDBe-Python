@@ -1,10 +1,13 @@
+from typing import Optional, Type
 from monetdbe.cursor import Cursor
 from monetdbe._cffi import MonetEmbedded
 
 
 class Connection:
-    def __init__(self, *args, **kwargs):
-        self.inter = MonetEmbedded(*args, **kwargs)
+    def __init__(self, database: Optional[str] = None):
+        if database == ':memory:':
+            database = None
+        self.inter = MonetEmbedded(dbdir=database)
         self.result = None
 
     def __enter__(self, *args, **kwargs):
@@ -18,7 +21,7 @@ class Connection:
         ...
 
     def execute(self, query: str):
-        return self.inter.query(query, make_result=True)
+        return Cursor(con=self).execute(query)
 
     def executemany(self, *args, **kwargs):
         ...
@@ -29,8 +32,11 @@ class Connection:
     def close(self, *args, **kwargs):
         ...
 
-    def cursor(self, *args, **kwargs):
-        return Cursor(self)
+    def cursor(self, factory: Type[Cursor] = Cursor):
+        cursor = factory(con=self)
+        if not cursor:
+            raise TypeError
+        return cursor
 
     def executescript(self, *args, **kwargs):
         ...
