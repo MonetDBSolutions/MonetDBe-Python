@@ -26,9 +26,8 @@ import collections.abc
 import pkg_resources
 from typing import Optional, Type
 from monetdbe.connection import Connection
+from monetdbe.row import Row
 from monetdbe.cursor import Cursor
-from monetdbe.exceptions import DatabaseError, DataError, IntegrityError, InterfaceError, InternalError,\
-    NotSupportedError, OperationalError, ProgrammingError, Warning, Error, StandardError
 
 PARSE_DECLTYPES = False
 PARSE_COLNAMES = False
@@ -42,10 +41,6 @@ except pkg_resources.DistributionNotFound:
 
 version_info = tuple([int(x) for x in __version__.split(".")])
 monetdbe_version_info = version_info
-
-
-class Row:
-    ...
 
 
 def register_adapter(*args, **kwargs):

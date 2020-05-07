@@ -14,6 +14,13 @@ except ImportError as e:
     raise
 
 
+def make_string(blob):
+    if blob:
+        return ffi.string(blob).decode()
+    else:
+        return ""
+
+
 def check_error(msg):
     if msg:
         decoded = ffi.string(msg).decode()
@@ -38,7 +45,10 @@ type_map: Dict[Any, Tuple[str, Callable]] = {
 }
 
 
-def extract(rcol, r):
+def extract(rcol, r: int):
+    """
+    Extracts values from a monetdb_column
+    """
     cast_string, cast_function = type_map[rcol.type]
     col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
     if col.is_null(col.data[r]):
