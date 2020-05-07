@@ -13,3 +13,8 @@ https://github.com/monetdBSolutions/MonetDBe-Python/
 # development
 
 ![Python package](https://github.com/monetdBSolutions/MonetDBe-Python//workflows/Python%20package/badge.svg)
+
+
+CFLAGS="-I$prefix/include" LDFLAGS="-L$prefix/lib64" venv/bin/pip install -e .
+venv/bin/pip install pytest
+venv/bin/pytest
