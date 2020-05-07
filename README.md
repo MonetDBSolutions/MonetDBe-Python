@@ -18,3 +18,6 @@ https://github.com/monetdBSolutions/MonetDBe-Python/
 CFLAGS="-I$prefix/include" LDFLAGS="-L$prefix/lib64" venv/bin/pip install -e .
 venv/bin/pip install pytest
 venv/bin/pytest
+
+# simple test 
+venv/bin/python -c "import monetdbe; monetdbe.connect()" 
