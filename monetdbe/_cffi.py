@@ -37,16 +37,37 @@ def extract(rcol, r):
         return cast_function(col.data[r])
 
 
-class MonetEmbedded:
-    connection = ffi.NULL
+# Todo: hack to get around the single embed instance limitation
+_conn_params = {}
+_active = None
+_connection = ffi.NULL
 
+
+class MonetEmbedded:
     def __init__(self, dbdir: Optional[Path] = None):
-        self.startup(dbdir)
-        self.connection = self.connect()
+        _conn_params[self] = dbdir
+        self._switch()
 
     def __del__(self):
-        self.disconnect()
-        self.shutdown()
+        global _conn_params, _active
+        if _active:
+            self.disconnect()
+            self.shutdown()
+        _conn_params.pop(self)
+        _active = None
+
+    def _switch(self):
+        global _active, _conn_params
+        if _active == self:
+            return
+        global _connection
+        if _connection:
+            self.disconnect()
+            self.shutdown()
+        dbdir = _conn_params[self]
+        self.startup(dbdir)
+        _connection = self.connect()
+        self._active = self
 
     def startup(self, dbdir: Optional[Path] = None, sequential: bool = False):
         if not dbdir:
@@ -56,10 +77,7 @@ class MonetEmbedded:
     def cleanup_result(self, result):
         _logger.info("cleanup_result called")
         if result:
-            check_error(lib.monetdb_cleanup_result(self.connection, result))
-
-    def clear_prepare(self):
-        lib.monetdb_clear_prepare()
+            check_error(lib.monetdb_cleanup_result(_connection, result))
 
     def connect(self):
         _logger.info("connect called")
@@ -69,9 +87,10 @@ class MonetEmbedded:
 
     def disconnect(self):
         _logger.info("disconnect called")
-        if self.connection != ffi.NULL:
-            check_error(lib.monetdb_disconnect(self.connection))
-        self.connection = ffi.NULL
+        global _connection
+        if _connection != ffi.NULL:
+            check_error(lib.monetdb_disconnect(_connection))
+        _connection = ffi.NULL
 
     def query(self, query: str, make_result: bool = False) -> (Optional[Any], int, int):
         """
@@ -92,7 +111,7 @@ class MonetEmbedded:
 
         affected_rows = ffi.new("lng *")
         prepare_id = ffi.new("int *")
-        check_error(lib.monetdb_query(self.connection, query.encode(), p_result, affected_rows, prepare_id))
+        check_error(lib.monetdb_query(_connection, query.encode(), p_result, affected_rows, prepare_id))
 
         if make_result:
             result = p_result[0]
@@ -103,8 +122,11 @@ class MonetEmbedded:
 
     def result_fetch(self, result, c: int):
         p_rcol = ffi.new("monetdb_column **")
-        check_error(lib.monetdb_result_fetch(self.connection, p_rcol, result, c))
+        check_error(lib.monetdb_result_fetch(_connection, p_rcol, result, c))
         return p_rcol[0]
+
+    def clear_prepare(self):
+        lib.monetdb_clear_prepare()
 
     def result_fetch_rawcol(self):
         lib.monetdb_result_fetch_rawcol()
