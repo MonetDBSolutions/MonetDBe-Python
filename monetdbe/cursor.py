@@ -1,9 +1,21 @@
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, Optional, Iterable, Any
 
 from monetdbe._cffi import extract, make_string
+from monetdbe.exceptions import ProgrammingError
 
 if TYPE_CHECKING:
     from monetdbe.connection import Connection
+
+
+def format_query(query: str, parameters: Optional[Iterable] = None, paramstyle: str = 'qmark') -> str:
+    if parameters:
+        if paramstyle == 'qmark':
+            escaped = [f"'{i}'" for i in parameters if type(i) == str]
+            return query.replace('?', '{}').format(*escaped)
+        else:
+            raise NotImplemented
+    else:
+        return query
 
 
 class Cursor:
@@ -19,16 +31,28 @@ class Cursor:
         self._all = None
         self.description: Tuple[str] = tuple()
 
-    def execute(self, operation: str, parameters=None):
+    def execute(self, operation: str, parameters: Optional[Iterable] = None):
+
+        if not self.con:
+            raise ProgrammingError
         self.description = None  # which will be set later in fetchall
-        self.result, self.affected_rows, self.prepare_id = self.con.inter.query(operation, make_result=True)
+
+        formatted = format_query(operation, parameters)
+        self.result, self.affected_rows, self.prepare_id = self.con.inter.query(formatted, make_result=True)
         return self
 
-    def executemany(self, *args, **kwargs):
-        raise NotImplemented
+    def executemany(self, operation: str, parameters: Optional[Iterable] = None):
+        if not self.con:
+            raise ProgrammingError
+        self.description = None  # which will be set later in fetchall
+
+        formatted = format_query(operation, parameters)
+        for param in parameters:
+            self.result, self.affected_rows, self.prepare_id = self.con.inter.query(formatted, make_result=True)
+        return self
 
     def close(self, *args, **kwargs):
-        raise NotImplemented
+        self.con = None
 
     def fetchall(self):
         columns = list(map(lambda x: self.con.inter.result_fetch(self.result, x), range(self.result.ncols)))

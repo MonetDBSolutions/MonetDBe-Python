@@ -8,11 +8,14 @@ class Row:
             raise TypeError
 
         self.cur = cur
-        self.row = row
+        self.row = list(row)
 
     def __iter__(self):
-        self._iter = zip(self.row.__iter__(), self.cur.description.__iter__())
-        return self
+        #return zip(self.cur.description.__iter__(), self.row.__iter__())
+        return self.row.__iter__()
 
-    def __next__(self):
-        return next(self._iter)
+    def __len__(self):
+        return len(self.row)
+
+    def __getitem__(self, item):
+        return self.row.__getitem__(item)

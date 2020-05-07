@@ -28,6 +28,10 @@ from typing import Optional, Type
 from monetdbe.connection import Connection
 from monetdbe.row import Row
 from monetdbe.cursor import Cursor
+from monetdbe.exceptions import (
+    IntegrityError, DatabaseError, StandardError, Error, DataError, InterfaceError, InternalError, NotSupportedError,
+    OperationalError, ProgrammingError, Warning
+)
 
 PARSE_DECLTYPES = False
 PARSE_COLNAMES = False

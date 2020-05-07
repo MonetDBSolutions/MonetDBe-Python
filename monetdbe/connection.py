@@ -1,7 +1,8 @@
-from typing import Optional, Type
+from typing import Optional, Type, Iterable
 from monetdbe.cursor import Cursor
 from monetdbe.row import Row
 from monetdbe._cffi import MonetEmbedded
+from monetdbe.exceptions import ProgrammingError
 
 
 class Connection:
@@ -18,17 +19,22 @@ class Connection:
     def __exit__(self, *args, **kwargs):
         raise NotImplemented
 
-    def __del__(self):
-        ...
+    def __call__(self):
+        raise ProgrammingError
 
     def execute(self, query: str):
         return Cursor(con=self).execute(query)
 
-    def executemany(self, *args, **kwargs):
-        raise NotImplemented
+    def executemany(self, query: str, args_seq: Iterable):
+        cur = Cursor(con=self)
+        for args in args_seq:
+            cur.execute(query, args)
+        return cur
 
     def commit(self, *args, **kwargs):
-        raise NotImplemented
+        # todo: not implemented yet on monetdb side
+        if not self.inter:
+            raise ProgrammingError
 
     def close(self, *args, **kwargs):
         del self.inter
@@ -38,6 +44,8 @@ class Connection:
         cursor = factory(con=self)
         if not cursor:
             raise TypeError
+        if not self.inter:
+            raise ProgrammingError
         return cursor
 
     def executescript(self, *args, **kwargs):
