@@ -19,14 +19,12 @@
 # 2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
-
 import datetime
 import time
-import collections.abc
 import pkg_resources
 from typing import Optional, Type
 from monetdbe.connection import Connection
-from monetdbe.row import Row
+
 from monetdbe.cursor import Cursor
 from monetdbe.exceptions import (
     IntegrityError, DatabaseError, StandardError, Error, DataError, InterfaceError, InternalError, NotSupportedError,
@@ -45,6 +43,12 @@ except pkg_resources.DistributionNotFound:
 
 version_info = tuple([int(x) for x in __version__.split(".")])
 monetdbe_version_info = version_info
+paramstyle = "qmark"
+threadsafety = 1
+apilevel = "2.0"
+Date = datetime.date
+Time = datetime.time
+Timestamp = datetime.datetime
 
 
 def register_adapter(*args, **kwargs):
@@ -61,12 +65,7 @@ def connect(database: Optional[str] = None, factory: Optional[Type[Connection]] 
     return Connection(database=database)
 
 
-paramstyle = "qmark"
-threadsafety = 1
-apilevel = "2.0"
-Date = datetime.date
-Time = datetime.time
-Timestamp = datetime.datetime
+connect.__doc__ = Connection.__init__.__doc__
 
 
 def DateFromTicks(ticks):
@@ -82,7 +81,6 @@ def TimestampFromTicks(ticks):
 
 
 Binary = memoryview
-collections.abc.Sequence.register(Row)
 
 
 def register_adapters_and_converters():

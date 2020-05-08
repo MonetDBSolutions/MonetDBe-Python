@@ -3,6 +3,12 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+extras_require = {
+    'numpy': ['numpy'],
+    'pandas': ['pandas'],
+    'full': ['numpy', 'pandas'],
+}
+
 setuptools.setup(
     name="monetdbe",
     version="0.2",
@@ -23,6 +29,9 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     setup_requires=["cffi>=1.0.0"],
+    extras_require=extras_require,
     cffi_modules=["monetdbe/util/cffi_builder.py:ffibuilder"],  # "filename:global"
     install_requires=["cffi>=1.0.0"],
+    tests_require=['pytest', 'numpy', 'pandas'],
+    test_suite="tests",
 )

@@ -94,8 +94,10 @@ class MonetEmbedded:
 
     def startup(self, dbdir: Optional[Path] = None, sequential: bool = False):
         if not dbdir:
-            dbdir = ffi.NULL
-        check_error(lib.monetdb_startup(dbdir, sequential))
+            dbdir_c = ffi.NULL
+        else:
+            dbdir_c = ffi.new("char[]", str(dbdir).encode())
+        check_error(lib.monetdb_startup(dbdir_c, sequential))
 
     def shutdown(self):
         _logger.info("shutdown called")

@@ -76,3 +76,12 @@ class Cursor:
 
     def executescript(self, *args, **kwargs):
         raise NotImplemented
+
+    def create(self, table, values, schema=None):
+        """
+        Creates a table from a set of values or a pandas DataFrame.
+        """
+        # note: this is a backwards compatibility function with with monetdblite
+        if not self.con:
+            raise ProgrammingError
+        raise NotImplemented
