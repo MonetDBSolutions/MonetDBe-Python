@@ -1,11 +1,9 @@
-import monetdbe.monetize
 import pytest
+import monetdbe
 
 
-identifier_escape = monetdbe.monetize.monet_identifier_escape
-
-
-class TestShutdown(object):
+@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
+class TestShutdown:
     def test_commited_on_restart(self, monetdbe_cursor_autocommit):
         (cursor, connection, dbfarm) = monetdbe_cursor_autocommit
         cursor.transaction()
@@ -34,9 +32,8 @@ class TestShutdown(object):
 
         connection = monetdbe.make_connection(dbfarm)
         cursor = connection.cursor()
-        if not PY26:
-            with pytest.raises(monetdbe.DatabaseError):
-                cursor.execute('SELECT * FROM integers')
+        with pytest.raises(monetdbe.DatabaseError):
+            cursor.execute('SELECT * FROM integers')
 
     def test_many_shutdowns(self, monetdbe_cursor_autocommit):
         (cursor, connection, dbfarm) = monetdbe_cursor_autocommit
@@ -54,24 +51,24 @@ class TestShutdown(object):
             cursor = connection.cursor()
 
     def test_fetchone_without_executing_raises(self, monetdbe_empty_cursor):
-        with pytest.raises(monetdbe.exceptions.ProgrammingError):
+        with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.fetchone()
 
     def test_fetchall_without_executing_raises(self, monetdbe_empty_cursor):
-        with pytest.raises(monetdbe.exceptions.ProgrammingError):
+        with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.fetchall()
 
     def test_fetchnumpy_without_executing_raises(self, monetdbe_empty_cursor):
-        with pytest.raises(monetdbe.exceptions.ProgrammingError):
+        with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.fetchnumpy()
 
     def test_fetchdf_without_executing_raises(self, monetdbe_empty_cursor):
-        with pytest.raises(monetdbe.exceptions.ProgrammingError):
+        with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.fetchdf()
 
     def test_execute_with_closed_cursor_raises(self, monetdbe_empty_cursor):
         monetdbe_empty_cursor.close()
-        with pytest.raises(monetdbe.exceptions.ProgrammingError):
+        with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.execute("SELECT * FROM _tables")
 
     def test_fetchmany(self, monetdbe_cursor):
@@ -107,7 +104,7 @@ class TestShutdown(object):
 
     def test_scroll_raises_for_incorrect_mode(self, monetdbe_cursor):
         monetdbe_cursor.execute("SELECT * FROM integers")
-        with pytest.raises(monetdbe.exceptions.ProgrammingError):
+        with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_cursor.scroll(5, mode='abc')
 
     def test_scroll_raises_for_out_of_bounds_offset(self, monetdbe_cursor):

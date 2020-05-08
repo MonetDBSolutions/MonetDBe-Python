@@ -59,10 +59,11 @@ def register_converter(*args, **kwargs):
     ...
 
 
-def connect(database: Optional[str] = None, factory: Optional[Type[Connection]] = None):
-    if factory:
-        return factory(database=database)
-    return Connection(database=database)
+def connect(*args, **kwargs):
+    if 'factory' in kwargs and 'database' in kwargs:
+        factory = kwargs.pop('factory')
+        return factory(database=kwargs['database'])
+    return Connection(*args, **kwargs)
 
 
 connect.__doc__ = Connection.__init__.__doc__

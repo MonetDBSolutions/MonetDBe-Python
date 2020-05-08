@@ -1,6 +1,8 @@
 import numpy
+import pytest
 
 
+@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
 class TestDescription(object):
     def test_description(self, monetdbe_cursor):
         monetdbe_cursor.execute('select * from sys.tables')

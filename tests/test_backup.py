@@ -2,6 +2,7 @@ import monetdbe as monetdbe
 import unittest
 
 
+@unittest.skip("Backup functionality not supported yet")
 class BackupTests(unittest.TestCase):
     def setUp(self):
         cx = self.cx = monetdbe.connect(":memory:")

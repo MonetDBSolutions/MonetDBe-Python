@@ -1,26 +1,55 @@
-from typing import Optional, Type, Iterable
-from monetdbe.cursor import Cursor
-from monetdbe.row import Row
+from typing import Optional, Type, Iterable, Union, TYPE_CHECKING
+from warnings import warn
+from pathlib import Path
+
 from monetdbe._cffi import MonetEmbedded
-from monetdbe.exceptions import ProgrammingError
+from monetdbe import exceptions
+
+if TYPE_CHECKING:
+    from monetdbe.row import Row
+    from monetdbe.cursor import Cursor
 
 
 class Connection:
-    def __init__(self, database: Optional[str] = None):
-        if database == ':memory:':
+    def __init__(self, database: Optional[Union[str, Path]] = None, uri: bool = False, check_same_thread: bool = True):
+        """
+        args:
+            uri: if true, database is interpreted as a URI. This allows you to specify options. For example, to open a
+                 database in read-only mode you can use:
+        """
+        if uri:
+            raise NotImplemented
+
+        if not check_same_thread:
+            raise NotImplemented
+
+        if not database:
             database = None
+        elif database == ':memory:':  # sqlite compatibility
+            database = None
+        elif type(database) == str:
+            database = str(Path(database).resolve())
+        elif hasattr(database, '__fspath__'):  # Deal with Path like objects
+            database = str(Path(database.__fspath__()).resolve())
+        else:
+            raise TypeError
+
         self.inter = MonetEmbedded(dbdir=database)
         self.result = None
         self.row_factory: Optional[Type[Row]] = None
 
-    def __enter__(self, *args, **kwargs):
+    def __enter__(self):
         return self
 
-    def __exit__(self, *args, **kwargs):
-        raise NotImplemented
+    def __exit__(self):
+        self.close()
 
     def __call__(self):
-        raise ProgrammingError
+        raise exceptions.ProgrammingError
+
+    def _check(self):
+        if not self.inter:
+            raise exceptions.ProgrammingError
 
     def execute(self, query: str):
         return Cursor(con=self).execute(query)
@@ -33,51 +62,87 @@ class Connection:
 
     def commit(self, *args, **kwargs):
         # todo: not implemented yet on monetdb side
-        if not self.inter:
-            raise ProgrammingError
+        self._check()
+        raise NotImplemented
 
     def close(self, *args, **kwargs):
         del self.inter
         self.inter = None
 
-    def cursor(self, factory: Type[Cursor] = Cursor):
-        cursor = factory(con=self)
+    def cursor(self, factory: Optional[Type['Cursor']] = None):
+
+        if not factory:
+            from monetdbe.cursor import Cursor
+            factory = Cursor
+
+        cursor = factory(connection=self)
         if not cursor:
             raise TypeError
         if not self.inter:
-            raise ProgrammingError
+            raise exceptions.ProgrammingError
         return cursor
 
     def executescript(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def set_authorizer(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def backup(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def iterdump(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def create_collation(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def create_aggregate(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def set_progress_handler(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def set_trace_callback(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def create_function(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     def rollback(self, *args, **kwargs):
+        self._check()
         raise NotImplemented
 
     @property
     def isolation_level(self):
         raise NotImplemented
+
+    @property
+    def in_transaction(self):
+        raise NotImplemented
+
+    def set_autocommit(self):
+        warn("set_autocommit() will be deprecated in future releases")
+        self._check()
+        raise NotImplemented
+
+    # these are required by the python DBAPI
+    Warning = exceptions.Warning
+    Error = exceptions.Error
+    InterfaceError = exceptions.InterfaceError
+    DatabaseError = exceptions.DatabaseError
+    DataError = exceptions.DataError
+    OperationalError = exceptions.OperationalError
+    IntegrityError = exceptions.IntegrityError
+    InternalError = exceptions.InternalError
+    ProgrammingError = exceptions.ProgrammingError
+    NotSupportedError = exceptions.NotSupportedError

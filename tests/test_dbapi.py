@@ -89,7 +89,8 @@ class ConnectionTests(unittest.TestCase):
     def setUp(self):
         self.cx = monetdbe.connect(":memory:")
         cu = self.cx.cursor()
-        cu.execute("create table test(id integer primary key, name text)")
+        # todo/note (Gijs): made ID auto_increment
+        cu.execute("create table test(id integer auto_increment primary key, name text)")
         cu.execute("insert into test(name) values (?)", ("foo",))
 
     def tearDown(self):
@@ -175,10 +176,6 @@ class ConnectionTests(unittest.TestCase):
             cx.execute('create table test(id integer)')
 
     def test_OpenUri(self):
-        if monetdbe.monetdbe_version_info < (3, 7, 7):
-            with self.assertRaises(monetdbe.NotSupportedError):
-                monetdbe.connect(':memory:', uri=True)
-            return
         self.addCleanup(unlink, TESTFN)
         with monetdbe.connect(TESTFN) as cx:
             cx.execute('create table test(id integer)')
@@ -200,9 +197,11 @@ class CursorTests(unittest.TestCase):
     def setUp(self):
         self.cx = monetdbe.connect(":memory:")
         self.cu = self.cx.cursor()
+
+        # todo/note (Gijs): changed income type from number to float and made ID auto_increment
         self.cu.execute(
-            "create table test(id integer primary key, name text, "
-            "income number, unique_test text unique)"
+            "create table test(id integer auto_increment primary key, name text, "
+            "income float, unique_test text unique)"
         )
         self.cu.execute("insert into test(name) values (?)", ("foo",))
 

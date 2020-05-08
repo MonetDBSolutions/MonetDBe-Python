@@ -130,3 +130,5 @@ dmypy.json
 
 # temporary generate cffi files
 monetdbe/util/*.c
+
+tests/@test_*_tmp/

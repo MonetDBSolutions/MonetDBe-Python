@@ -1,9 +1,9 @@
-import monetdbe.monetize
+from monetdbe.monetize import monet_identifier_escape as identifier_escape
 import numpy
+import pytest
 
-identifier_escape = monetdbe.monetize.monet_identifier_escape
 
-
+@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
 class TestMultipleResultSets:
     def test_string_insertion(self, monetdbe_cursor):
         monetdbe_cursor.execute('CREATE TABLE strings(s STRING)')

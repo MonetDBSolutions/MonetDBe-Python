@@ -1,8 +1,9 @@
-from unittest import TestCase
 import numpy
+import pytest
 
 
-class TestMultipleResultSets(TestCase):
+@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
+class TestMultipleResultSets:
     def test_regular_selection(self, monetdbe_cursor):
         monetdbe_cursor.execute('SELECT * FROM integers')
         monetdbe_cursor.execute('SELECT * FROM integers')

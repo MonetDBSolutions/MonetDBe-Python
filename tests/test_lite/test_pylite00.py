@@ -1,15 +1,11 @@
-# Test basic monetdbe statements
-
 import monetdbe
 import numpy
 import os
 import shutil
-import sys
 import pytest
 
-PY26 = sys.version_info[0] == 2 and sys.version_info[1] <= 6
 
-
+@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
 class TestmonetdbeBase(object):
     def test_uninitialized(self):
         # select before init
