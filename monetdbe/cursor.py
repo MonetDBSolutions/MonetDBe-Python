@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Tuple, Optional, Iterable, Any, Union, Dict
 from re import sub
 from warnings import warn
 from monetdbe._cffi import extract, make_string
-from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError
+from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Error
 from monetdbe.connection import Connection
 
 
@@ -45,6 +45,9 @@ class Cursor:
         self._all = None
         self.description: Tuple[str] = tuple()
 
+    def __iter__(self):
+        return self.fetchone()
+
     def _check(self):
         if not self.connection or not self.connection.inter:
             raise ProgrammingError
@@ -52,6 +55,9 @@ class Cursor:
     def execute(self, operation: str, parameters: Optional[Iterable] = None):
         self._check()
         self.description = None  # which will be set later in fetchall
+
+        if self.result:
+            self.connection.inter.cleanup_result(self.result)
 
         formatted = format_query(operation, parameters)
         try:
@@ -64,6 +70,9 @@ class Cursor:
         self._check()
         self.description = None  # which will be set later in fetchall
 
+        if self.result:
+            self.connection.inter.cleanup_result(self.result)
+
         for param in parameters:
             formatted = format_query(operation, parameters)
             self.result, self.affected_rows, self.prepare_id = self.connection.inter.query(formatted, make_result=True)
@@ -74,6 +83,10 @@ class Cursor:
 
     def fetchall(self):
         self._check()
+
+        if not self.result:
+            return
+
         columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             if not self.description:
@@ -95,7 +108,7 @@ class Cursor:
         self._check()
         if not self._all:
             self._all = self.fetchall()
-        return tuple(next(self._all))
+        return next(self._all)
 
     def executescript(self, *args, **kwargs):
         self._check()

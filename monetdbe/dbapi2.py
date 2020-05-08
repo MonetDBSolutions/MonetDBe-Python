@@ -31,18 +31,22 @@ from monetdbe.exceptions import (
     OperationalError, ProgrammingError, Warning
 )
 
-PARSE_DECLTYPES = False
-PARSE_COLNAMES = False
+PARSE_DECLTYPES = 1
+PARSE_COLNAMES = 2
 converters = {}
-OptimizedUnicode = False
+adapters = {}
+OptimizedUnicode = str
 
 try:
     __version__ = pkg_resources.require("monetdbe")[0].version  # type: str
 except pkg_resources.DistributionNotFound:
     __version__ = "0.0"
 
+version = __version__
+monetdbe_version = __version__
 version_info = tuple([int(x) for x in __version__.split(".")])
 monetdbe_version_info = version_info
+
 paramstyle = "qmark"
 threadsafety = 1
 apilevel = "2.0"
@@ -51,12 +55,14 @@ Time = datetime.time
 Timestamp = datetime.datetime
 
 
-def register_adapter(*args, **kwargs):
-    ...
+def register_adapter(k, v):
+    global adapters
+    adapters[k] = v
 
 
-def register_converter(*args, **kwargs):
-    ...
+def register_converter(k, v):
+    global converters
+    converters[k] = v
 
 
 def connect(*args, **kwargs):

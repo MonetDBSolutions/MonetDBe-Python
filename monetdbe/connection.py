@@ -11,7 +11,12 @@ if TYPE_CHECKING:
 
 
 class Connection:
-    def __init__(self, database: Optional[Union[str, Path]] = None, uri: bool = False, check_same_thread: bool = True):
+    def __init__(self,
+                 database: Optional[Union[str, Path]] = None,
+                 uri: bool = False,
+                 timeout: int = 5.0,
+                 detect_types: int = 0,
+                 check_same_thread: bool = True):
         """
         args:
             uri: if true, database is interpreted as a URI. This allows you to specify options. For example, to open a
