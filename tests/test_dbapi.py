@@ -96,9 +96,11 @@ class ConnectionTests(unittest.TestCase):
     def tearDown(self):
         self.cx.close()
 
+    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_Commit(self):
         self.cx.commit()
 
+    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_CommitAfterNoChanges(self):
         """
         A commit should also work when no changes were made to the database.
@@ -106,9 +108,11 @@ class ConnectionTests(unittest.TestCase):
         self.cx.commit()
         self.cx.commit()
 
+    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_Rollback(self):
         self.cx.rollback()
 
+    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_RollbackAfterNoChanges(self):
         """
         A rollback should also work when no changes were made to the database.
@@ -140,6 +144,7 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(self.cx.ProgrammingError, monetdbe.ProgrammingError)
         self.assertEqual(self.cx.NotSupportedError, monetdbe.NotSupportedError)
 
+    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_InTransaction(self):
         # Can't use db from setUp because we want to test initial state.
         cx = monetdbe.connect(":memory:")
@@ -175,6 +180,7 @@ class ConnectionTests(unittest.TestCase):
         with monetdbe.connect(path) as cx:
             cx.execute('create table test(id integer)')
 
+    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_OpenUri(self):
         self.addCleanup(unlink, TESTFN)
         with monetdbe.connect(TESTFN) as cx:
@@ -184,13 +190,6 @@ class ConnectionTests(unittest.TestCase):
         with monetdbe.connect('file:' + TESTFN + '?mode=ro', uri=True) as cx:
             with self.assertRaises(monetdbe.OperationalError):
                 cx.execute('insert into test(id) values(1)')
-
-    @unittest.skipIf(monetdbe.monetdbe_version_info >= (3, 3, 1),
-                     'needs monetdbe versions older than 3.3.1')
-    def test_SameThreadErrorOnOldVersion(self):
-        with self.assertRaises(monetdbe.NotSupportedError) as cm:
-            monetdbe.connect(':memory:', check_same_thread=False)
-        self.assertEqual(str(cm.exception), 'shared connections not available')
 
 
 class CursorTests(unittest.TestCase):
@@ -255,7 +254,7 @@ class CursorTests(unittest.TestCase):
     def test_ExecuteNonIterable(self):
         with self.assertRaises(ValueError) as cm:
             self.cu.execute("insert into test(id) values (?)", 42)
-        self.assertEqual(str(cm.exception), 'parameters are of unsupported type')
+        self.assertEqual(str(cm.exception), "parameters '42' type '<class 'int'>' not supported")
 
     def test_ExecuteWrongNoOfArgs1(self):
         # too many parameters
@@ -479,6 +478,7 @@ class CursorTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             cur = monetdbe.Cursor(foo)
 
+    @unittest.skip("TODO: (gijs) this crashes monetdb")
     def test_LastRowIDOnReplace(self):
         """
         INSERT OR REPLACE and REPLACE INTO should produce the same behavior.
@@ -499,12 +499,14 @@ class CursorTests(unittest.TestCase):
             ('test',))
         self.assertEqual(self.cu.lastrowid, 2)
 
+    @unittest.skip("TODO: (gijs) this crashes monetdb")
     def test_LastRowIDInsertOR(self):
         results = []
         for statement in ('FAIL', 'ABORT', 'ROLLBACK'):
             sql = 'INSERT OR {} INTO test(unique_test) VALUES (?)'
             with self.subTest(statement='INSERT OR {}'.format(statement)):
-                self.cu.execute(sql.format(statement), (statement,))
+                formatted = sql.format(statement)
+                self.cu.execute(formatted, (statement,))
                 results.append((statement, self.cu.lastrowid))
                 with self.assertRaises(monetdbe.IntegrityError):
                     self.cu.execute(sql.format(statement), (statement,))
@@ -521,7 +523,8 @@ class ThreadTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
         self.cur = self.con.cursor()
-        self.cur.execute("create table test(id integer primary key, name text, bin binary, ratio number, ts timestamp)")
+        # NOTE: (gijs) replaced binary type with blob
+        self.cur.execute("create table test(id integer primary key, name text, bin blob, ratio float, ts timestamp)")
 
     def tearDown(self):
         self.cur.close()
@@ -705,7 +708,7 @@ class ExtensionTests(unittest.TestCase):
         cur.executescript("""
             -- bla bla
             /* a stupid comment */
-            create table a(i);
+            create table a(i int);
             insert into a(i) values (5);
             """)
         cur.execute("select i from a")
@@ -738,7 +741,8 @@ class ExtensionTests(unittest.TestCase):
 
     def test_ConnectionExecutemany(self):
         con = monetdbe.connect(":memory:")
-        con.execute("create table test(foo)")
+        # NOTE: (gijs) added type int, required for MonetDB
+        con.execute("create table test(foo int)")
         con.executemany("insert into test(foo) values (?)", [(3,), (4,)])
         result = con.execute("select foo from test order by foo").fetchall()
         self.assertEqual(result[0][0], 3, "Basic test of Connection.executemany")
@@ -746,7 +750,8 @@ class ExtensionTests(unittest.TestCase):
 
     def test_ConnectionExecutescript(self):
         con = monetdbe.connect(":memory:")
-        con.executescript("create table test(foo); insert into test(foo) values (5);")
+        # NOTE: (gijs) added type int, required for MonetDB
+        con.executescript("create table test(foo int); insert into test(foo) values (5);")
         result = con.execute("select foo from test").fetchone()[0]
         self.assertEqual(result, 5, "Basic test of Connection.executescript")
 
@@ -860,9 +865,9 @@ class monetdbeOnConflictTests(unittest.TestCase):
         self.cu = self.cx.cursor()
         self.cu.execute("""
           CREATE TABLE test(
-            id INTEGER PRIMARY KEY, name TEXT, unique_name TEXT UNIQUE
+            id INTEGER PRIMARY KEY auto_increment, name TEXT, unique_name TEXT UNIQUE
           );
-        """)
+        """)  # NOTE: (gijs) add auto_increment
 
     def tearDown(self):
         self.cu.close()
@@ -889,7 +894,7 @@ class monetdbeOnConflictTests(unittest.TestCase):
         self.cx.isolation_level = None  # autocommit mode
         self.cu = self.cx.cursor()
         # Start an explicit transaction.
-        self.cu.execute("BEGIN")
+        self.cu.execute("BEGIN TRANSACTION")  # NOTE: (gijs) added TRANSACTION
         self.cu.execute("INSERT INTO test(name) VALUES ('abort_test')")
         self.cu.execute("INSERT OR ABORT INTO test(unique_name) VALUES ('foo')")
         with self.assertRaises(monetdbe.IntegrityError):

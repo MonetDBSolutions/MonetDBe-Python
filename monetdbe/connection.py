@@ -39,14 +39,20 @@ class Connection:
         else:
             raise TypeError
 
-        self.inter = MonetEmbedded(dbdir=database)
+        try:
+            self.inter = MonetEmbedded(dbdir=database)
+        except exceptions.DatabaseError as e:
+            raise exceptions.OperationalError(e)
+
         self.result = None
         self.row_factory: Optional[Type[Row]] = None
+        self.total_changes = 0
+        self.isolation_level = None
 
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
     def __call__(self):
@@ -57,10 +63,12 @@ class Connection:
             raise exceptions.ProgrammingError
 
     def execute(self, query: str):
-        return Cursor(con=self).execute(query)
+        from monetdbe.cursor import Cursor
+        return Cursor(connection=self).execute(query)
 
     def executemany(self, query: str, args_seq: Iterable):
-        cur = Cursor(con=self)
+        from monetdbe.cursor import Cursor
+        cur = Cursor(connection=self)
         for args in args_seq:
             cur.execute(query, args)
         return cur
@@ -87,9 +95,12 @@ class Connection:
             raise exceptions.ProgrammingError
         return cursor
 
-    def executescript(self, *args, **kwargs):
+    def executescript(self, sql_script: str):
         self._check()
-        raise NotImplemented
+        for query in sql_script.split(';'):
+            query = query.strip()
+            if query:
+                self.execute(query)
 
     def set_authorizer(self, *args, **kwargs):
         self._check()
@@ -127,9 +138,6 @@ class Connection:
         self._check()
         raise NotImplemented
 
-    @property
-    def isolation_level(self):
-        raise NotImplemented
 
     @property
     def in_transaction(self):
