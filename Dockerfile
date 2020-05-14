@@ -11,7 +11,7 @@ RUN tar jxvf mbedded.tar.bz2
 # build and install monetdb
 RUN mkdir /tmp/MonetDB-mbedded/build
 WORKDIR /tmp/MonetDB-mbedded/build
-RUN cmake3 ..
+RUN cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python
 RUN make -j 4
 RUN make install
 
