@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:latest
     strategy:
       matrix:
@@ -20,7 +20,8 @@ jobs:
       run: .inside/test.sh ${{ matrix.python-version }}
 
   wheel:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
+    container: gijzelaerr/monetdb:latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
@@ -35,4 +36,21 @@ jobs:
     steps:
       - name: Python Code Quality and Lint
         uses: ricardochaves/python-lint@v1.1.0
+
+  windows:
+    runs-on: windows-2019
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2    
+      - name: build
+        run: python3 setup.py build
+
+  osx:
+    runs-on: macos-10.15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2    
+      - name: build
+        run: python3 setup.py build
+
 
