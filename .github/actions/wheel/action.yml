@@ -1,0 +1,13 @@
+name: 'Make binary wheels'
+inputs:
+  python-version:
+    required: true
+    default: 3.8
+  outputs:
+    results:
+      description: wheel creation output
+  runs:
+    using: 'docker'
+    image: 'Dockerfile'
+    args: .inside/make_wheel.sh ${{ inputs.python-version }}
+
