@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: run test action
-      run: .inside/test.sh ${{ inputs.python-version }}
+      run: .inside/test.sh ${{ matrix.python-version }}
 
   wheel:
     runs-on: ubuntu-latest
@@ -28,5 +28,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: make wheels
-      run: .inside/make_wheel.sh ${{ inputs.python-version }} 
+      run: .inside/make_wheel.sh ${{ matrix.python-version }} 
+
+  quality:
+    steps:
+      - name: Python Code Quality and Lint
+        uses: ricardochaves/python-lint@v1.1.0
 
