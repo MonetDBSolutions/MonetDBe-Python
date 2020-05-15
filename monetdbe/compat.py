@@ -2,6 +2,7 @@
 compatibility with MonetDBLite
 """
 from warnings import warn
+
 from monetdbe.dbapi2 import connect
 
 

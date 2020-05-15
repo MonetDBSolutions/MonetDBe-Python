@@ -21,8 +21,9 @@
 # 3. This notice may not be removed or altered from any source distribution.
 import datetime
 import time
+
 import pkg_resources
-from typing import Optional, Type
+
 from monetdbe.connection import Connection
 
 from monetdbe.cursor import Cursor

@@ -22,13 +22,16 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 import unittest
-import monetdbe as monetdbe
+from monetdbe.connection import Connection
+from monetdbe.cursor import Cursor
+from monetdbe.row import Row
+from monetdbe import connect, OptimizedUnicode
 from collections.abc import Sequence
 
 
-class MyConnection(monetdbe.Connection):
+class MyConnection(Connection):
     def __init__(self, *args, **kwargs):
-        monetdbe.Connection.__init__(self, *args, **kwargs)
+        Connection.__init__(self, *args, **kwargs)
 
 
 def dict_factory(cursor, row):
@@ -38,15 +41,15 @@ def dict_factory(cursor, row):
     return d
 
 
-class MyCursor(monetdbe.Cursor):
+class MyCursor(Cursor):
     def __init__(self, *args, **kwargs):
-        monetdbe.Cursor.__init__(self, *args, **kwargs)
+        Cursor.__init__(self, *args, **kwargs)
         self.row_factory = dict_factory
 
 
 class ConnectionFactoryTests(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:", factory=MyConnection)
+        self.con = connect(":memory:", factory=MyConnection)
 
     def tearDown(self):
         self.con.close()
@@ -57,14 +60,14 @@ class ConnectionFactoryTests(unittest.TestCase):
 
 class CursorFactoryTests(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:")
+        self.con = connect(":memory:")
 
     def tearDown(self):
         self.con.close()
 
     def test_IsInstance(self):
         cur = self.con.cursor()
-        self.assertIsInstance(cur, monetdbe.Cursor)
+        self.assertIsInstance(cur, Cursor)
         cur = self.con.cursor(MyCursor)
         self.assertIsInstance(cur, MyCursor)
         cur = self.con.cursor(factory=lambda con: MyCursor(con))
@@ -81,7 +84,7 @@ class CursorFactoryTests(unittest.TestCase):
 
 class RowFactoryTestsBackwardsCompat(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:")
+        self.con = connect(":memory:")
 
     def test_IsProducedByFactory(self):
         cur = self.con.cursor(factory=MyCursor)
@@ -96,7 +99,7 @@ class RowFactoryTestsBackwardsCompat(unittest.TestCase):
 
 class RowFactoryTests(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:")
+        self.con = connect(":memory:")
 
     def test_CustomFactory(self):
         self.con.row_factory = lambda cur, row: list(row)
@@ -104,9 +107,9 @@ class RowFactoryTests(unittest.TestCase):
         self.assertIsInstance(row, list)
 
     def test_monetdbeRowIndex(self):
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row = self.con.execute("select 1 as a_1, 2 as b").fetchone()
-        self.assertIsInstance(row, monetdbe.Row)
+        self.assertIsInstance(row, Row)
 
         self.assertEqual(row["a_1"], 1, "by name: wrong result for column 'a_1'")
         self.assertEqual(row["b"], 2, "by name: wrong result for column 'b'")
@@ -133,7 +136,7 @@ class RowFactoryTests(unittest.TestCase):
             row[2 ** 1000]
 
     def test_monetdbeRowIndexUnicode(self):
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row = self.con.execute("select 1 as \xff").fetchone()
         self.assertEqual(row["\xff"], 1)
         with self.assertRaises(IndexError):
@@ -142,8 +145,8 @@ class RowFactoryTests(unittest.TestCase):
             row['\xdf']
 
     def test_monetdbeRowSlice(self):
-        # A monetdbe.Row can be sliced like a list.
-        self.con.row_factory = monetdbe.Row
+        # A Row can be sliced like a list.
+        self.con.row_factory = Row
         row = self.con.execute("select 1, 2, 3, 4").fetchone()
         self.assertEqual(row[0:0], ())
         self.assertEqual(row[0:1], (1,))
@@ -161,21 +164,21 @@ class RowFactoryTests(unittest.TestCase):
 
     def test_monetdbeRowIter(self):
         """Checks if the row object is iterable"""
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row = self.con.execute("select 1 as a, 2 as b").fetchone()
         for col in row:
             pass
 
     def test_monetdbeRowAsTuple(self):
         """Checks if the row object can be converted to a tuple"""
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row = self.con.execute("select 1 as a, 2 as b").fetchone()
         t = tuple(row)
         self.assertEqual(t, (row['a'], row['b']))
 
     def test_monetdbeRowAsDict(self):
         """Checks if the row object can be correctly converted to a dictionary"""
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row = self.con.execute("select 1 as a, 2 as b").fetchone()
         d = dict(row)
         self.assertEqual(d["a"], row["a"])
@@ -183,7 +186,7 @@ class RowFactoryTests(unittest.TestCase):
 
     def test_monetdbeRowHashCmp(self):
         """Checks if the row object compares and hashes correctly"""
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row_1 = self.con.execute("select 1 as a, 2 as b").fetchone()
         row_2 = self.con.execute("select 1 as a, 2 as b").fetchone()
         row_3 = self.con.execute("select 1 as a, 3 as b").fetchone()
@@ -217,7 +220,7 @@ class RowFactoryTests(unittest.TestCase):
 
     def test_monetdbeRowAsSequence(self):
         """ Checks if the row object can act like a sequence """
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         row = self.con.execute("select 1 as a, 2 as b").fetchone()
 
         as_tuple = tuple(row)
@@ -229,11 +232,11 @@ class RowFactoryTests(unittest.TestCase):
         # segmentation fault.
         # Issue #27861: Also applies for cursor factory.
         class FakeCursor(str):
-            __class__ = monetdbe.Cursor
+            __class__ = Cursor
 
-        self.con.row_factory = monetdbe.Row
+        self.con.row_factory = Row
         self.assertRaises(TypeError, self.con.cursor, FakeCursor)
-        self.assertRaises(TypeError, monetdbe.Row, FakeCursor(), ())
+        self.assertRaises(TypeError, Row, FakeCursor(), ())
 
     def tearDown(self):
         self.con.close()
@@ -241,7 +244,7 @@ class RowFactoryTests(unittest.TestCase):
 
 class TextFactoryTests(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:")
+        self.con = connect(":memory:")
 
     def test_Unicode(self):
         austria = "Österreich"
@@ -265,7 +268,7 @@ class TextFactoryTests(unittest.TestCase):
     def test_OptimizedUnicode(self):
         # In py3k, str objects are always returned when text_factory
         # is OptimizedUnicode
-        self.con.text_factory = monetdbe.OptimizedUnicode
+        self.con.text_factory = OptimizedUnicode
         austria = "Österreich"
         germany = "Deutchland"
         a_row = self.con.execute("select ?", (austria,)).fetchone()
@@ -279,7 +282,7 @@ class TextFactoryTests(unittest.TestCase):
 
 class TextFactoryTestsWithEmbeddedZeroBytes(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:")
+        self.con = connect(":memory:")
         self.con.execute("create table test (value text)")
         self.con.execute("insert into test (value) values (?)", ("a\x00b",))
 

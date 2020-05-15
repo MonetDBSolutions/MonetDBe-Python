@@ -1,7 +1,7 @@
+import logging
 from pathlib import Path
 from typing import Optional, Any, Dict, Tuple, Callable
 
-import logging
 from monetdbe import exceptions
 
 _logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ def check_error(msg):
         raise exceptions.DatabaseError(decoded)
 
 
-type_map: Dict[Any, Tuple[str, Callable]] = {
+type_map: Dict[Any, Tuple[str, Optional[Callable]]] = {
     lib.monetdb_int32_t: ("int32_t", None),
     lib.monetdb_str: ("str", lambda x: ffi.string(x).decode()),
     lib.monetdb_int8_t: ("int8_t", None),
@@ -121,7 +121,7 @@ class MonetEmbedded:
             check_error(lib.monetdb_disconnect(_connection))
         _connection = ffi.NULL
 
-    def query(self, query: str, make_result: bool = False) -> (Optional[Any], int, int):
+    def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int, int]:
         """
         Execute a query.
 

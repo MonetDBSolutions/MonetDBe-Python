@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, Tuple, Optional, Iterable, Any, Union, Dict, Iterator
 from re import sub
 from string import Formatter
+from typing import Tuple, Optional, Iterable, Union, Dict, List, Any, Generator, Iterator
 from warnings import warn
-from _collections import defaultdict
-from monetdbe._cffi import extract, make_string
-from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Error
+
+from monetdbe._cffi import extract
 from monetdbe.connection import Connection
+from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError
 
 
 def escape(v):
@@ -13,7 +13,11 @@ def escape(v):
 
 
 class DefaultFormatter(Formatter):
-    def __init__(self, d: defaultdict):
+    """
+    This makes it possible to supply a dict with a __missing__() method (like a defaultdict)
+    """
+
+    def __init__(self, d: Dict):
         super().__init__()
         self.d = d
 
@@ -25,7 +29,7 @@ class DefaultFormatter(Formatter):
             return s
 
 
-def format_query(query: str, parameters: Optional[Union[Tuple, Dict]] = None) -> str:
+def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str, Any]]] = None) -> str:
     if type(query) != str:
         raise TypeError
 
@@ -35,13 +39,15 @@ def format_query(query: str, parameters: Optional[Union[Tuple, Dict]] = None) ->
             if '?' in query:
                 raise ProgrammingError("'?' in formatting with qmark style parameters")
 
-            escaped = dict((k, escape(v)) if type(v) == str else (k, v) for k, v in parameters.items())
+            # we ignore type below, since we already check if there is a keys method, but mypy doesn't undertand
+            escaped = dict((k, escape(v)) if type(v) == str else (k, v) for k, v in parameters.items())  # type: ignore
             x = sub(r':(\w+)', r'{\1}', query)
 
             if hasattr(type(parameters), '__missing__'):
                 # this is something like a dict with a default value
                 try:
-                    return DefaultFormatter(parameters).format(x, **escaped)
+                    # mypy doesn't understand that this is a dict-like with a default __missing__ value
+                    return DefaultFormatter(parameters).format(x, **escaped)  # type: ignore
                 except KeyError as e:
                     raise ProgrammingError(e)
             try:
@@ -53,7 +59,8 @@ def format_query(query: str, parameters: Optional[Union[Tuple, Dict]] = None) ->
             if ':' in query:
                 raise ProgrammingError("':' in formatting with named style parameters")
 
-            escaped = [f"'{i}'" if type(i) == str else i for i in parameters]
+            # mypy gets confused here
+            escaped = [f"'{i}'" if type(i) == str else i for i in parameters]  # type: ignore
             return query.replace('?', '{}').format(*escaped)
         else:
             raise ValueError(f"parameters '{parameters}' type '{type(parameters)}' not supported")
@@ -77,11 +84,11 @@ class Cursor:
         self.arraysize = 1
 
         self.connection = connection
-        self.result = None
+        self.result: Optional[Any] = None  # todo: maybe make a result python wrapper?
         self.rowcount = -1
-        self.prepare_id = None
-        self._fetch_generator = None
-        self.description: Tuple[str] = tuple()
+        self.prepare_id: Optional[int] = None
+        self._fetch_generator: Optional[Generator] = None
+        self.description: Optional[Tuple[str]] = None
 
     def __iter__(self):
         columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
@@ -114,7 +121,7 @@ class Cursor:
         self.connection.total_changes += self.rowcount
         return self
 
-    def executemany(self, operation: str, seq_of_parameters: Iterable[Iterable]):
+    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]):
         self._check()
         self.description = None  # which will be set later in fetchall
 
@@ -126,7 +133,7 @@ class Cursor:
         if hasattr(seq_of_parameters, '__iter__'):
             iterator = iter(seq_of_parameters)
         else:
-            iterator = seq_of_parameters
+            iterator = seq_of_parameters  # type: ignore   # mypy gets confused here
 
         while True:
             try:

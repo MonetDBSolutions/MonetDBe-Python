@@ -1,9 +1,9 @@
+from pathlib import Path
 from typing import Optional, Type, Iterable, Union, TYPE_CHECKING
 from warnings import warn
-from pathlib import Path
 
-from monetdbe._cffi import MonetEmbedded
 from monetdbe import exceptions
+from monetdbe._cffi import MonetEmbedded
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -14,7 +14,7 @@ class Connection:
     def __init__(self,
                  database: Optional[Union[str, Path]] = None,
                  uri: bool = False,
-                 timeout: int = 5.0,
+                 timeout: float = 5.0,
                  detect_types: int = 0,
                  check_same_thread: bool = True):
         """
@@ -33,9 +33,9 @@ class Connection:
         elif database == ':memory:':  # sqlite compatibility
             database = None
         elif type(database) == str:
-            database = str(Path(database).resolve())
+            database = Path(database).resolve()
         elif hasattr(database, '__fspath__'):  # Deal with Path like objects
-            database = str(Path(database.__fspath__()).resolve())
+            database = Path(database.__fspath__()).resolve()  # type: ignore
         else:
             raise TypeError
 
@@ -137,7 +137,6 @@ class Connection:
     def rollback(self, *args, **kwargs):
         self._check()
         raise NotImplemented
-
 
     @property
     def in_transaction(self):

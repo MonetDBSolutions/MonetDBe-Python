@@ -1,5 +1,6 @@
 import collections.abc
 from typing import Union, Generator, Optional, Any
+
 from monetdbe.cursor import Cursor
 
 

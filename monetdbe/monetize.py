@@ -3,6 +3,7 @@ This file is here for monetdblite backwards compatiblity
 """
 import datetime
 import decimal
+
 from monetdbe.exceptions import ProgrammingError
 
 

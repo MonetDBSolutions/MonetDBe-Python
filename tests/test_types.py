@@ -20,7 +20,6 @@
 # 2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
-
 import datetime
 import unittest
 import monetdbe as monetdbe
@@ -28,7 +27,7 @@ import monetdbe as monetdbe
 try:
     import zlib
 except ImportError:
-    zlib = None
+    zlib = None  # type: ignore
 
 
 class monetdbeTypeTests(unittest.TestCase):
@@ -346,7 +345,7 @@ class ObjectAdaptationTests(unittest.TestCase):
     def cast(obj):
         return float(obj)
 
-    cast = staticmethod(cast)
+    cast = staticmethod(cast)  # type: ignore
 
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
@@ -373,7 +372,7 @@ class BinaryConverterTests(unittest.TestCase):
     def convert(s):
         return zlib.decompress(s)
 
-    convert = staticmethod(convert)
+    convert = staticmethod(convert)  # type: ignore
 
     def setUp(self):
         self.con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_COLNAMES)

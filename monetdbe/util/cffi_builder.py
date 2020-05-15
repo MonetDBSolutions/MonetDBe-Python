@@ -2,8 +2,9 @@
 This is a build-time utility that will generate the _monetdbe_cffi
 CFFI bridging shared library.
 """
-from cffi import FFI
 from pathlib import Path
+
+from cffi import FFI
 
 ffibuilder = FFI()
 
