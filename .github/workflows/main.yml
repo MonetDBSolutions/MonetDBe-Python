@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: run test action
-      uses: actions/test
+      uses: actions/test@v1
 
   wheels:
     runs-on: ubuntu-latest
@@ -27,4 +27,4 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: make wheels
-      uses: actions/wheel
+      uses: actions/wheel@v1
