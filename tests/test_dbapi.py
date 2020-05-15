@@ -25,7 +25,7 @@ import threading
 import unittest
 import monetdbe as monetdbe
 
-from test.support import TESTFN, unlink
+from test.support import TESTFN, rmtree
 
 
 class ModuleTests(unittest.TestCase):
@@ -96,11 +96,11 @@ class ConnectionTests(unittest.TestCase):
     def tearDown(self):
         self.cx.close()
 
-    @unittest.skip("TODO (gijs): Not yet implemented")
+    @unittest.skip("TODO: Not yet implemented, see issue #4")
     def test_Commit(self):
         self.cx.commit()
 
-    @unittest.skip("TODO (gijs): Not yet implemented")
+    @unittest.skip("TODO: Not yet implemented, see issue #4")
     def test_CommitAfterNoChanges(self):
         """
         A commit should also work when no changes were made to the database.
@@ -170,7 +170,7 @@ class ConnectionTests(unittest.TestCase):
     def test_OpenWithPathLikeObject(self):
         """ Checks that we can successfully connect to a database using an object that
             is PathLike, i.e. has __fspath__(). """
-        self.addCleanup(unlink, TESTFN)
+        self.addCleanup(rmtree, TESTFN)
 
         class Path:
             def __fspath__(self):
@@ -180,9 +180,9 @@ class ConnectionTests(unittest.TestCase):
         with monetdbe.connect(path) as cx:
             cx.execute('create table test(id integer)')
 
-    @unittest.skip("TODO (gijs): Not yet implemented")
+    @unittest.skip("TODO: Not yet implemented, see issue #22")
     def test_OpenUri(self):
-        self.addCleanup(unlink, TESTFN)
+        self.addCleanup(rmtree, TESTFN)
         with monetdbe.connect(TESTFN) as cx:
             cx.execute('create table test(id integer)')
         with monetdbe.connect('file:' + TESTFN, uri=True) as cx:
@@ -244,6 +244,7 @@ class CursorTests(unittest.TestCase):
     def test_ExecuteArgString(self):
         self.cu.execute("insert into test(name) values (?)", ("Hugo",))
 
+    @unittest.skip("todo: not yet supported, see issue #21")
     def test_ExecuteArgStringWithZeroByte(self):
         self.cu.execute("insert into test(name) values (?)", ("Hu\x00go",))
 

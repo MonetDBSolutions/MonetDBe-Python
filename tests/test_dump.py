@@ -51,8 +51,8 @@ class DumpTests(unittest.TestCase):
                 return self.row[index]
 
         self.cx.row_factory = UnorderableRow
-        CREATE_ALPHA = """CREATE TABLE "alpha" ("one");"""
-        CREATE_BETA = """CREATE TABLE "beta" ("two");"""
+        CREATE_ALPHA = """CREATE TABLE "alpha" ("one int");"""
+        CREATE_BETA = """CREATE TABLE "beta" ("two int");"""
         expected = [
             "BEGIN TRANSACTION;",
             CREATE_ALPHA,

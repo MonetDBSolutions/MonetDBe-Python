@@ -173,7 +173,7 @@ class AggrSum:
     def finalize(self):
         return self.val
 
-
+@unittest.skip("user functions not yet supported (see issue #20)")
 class FunctionTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
@@ -346,7 +346,7 @@ class AggregateTests(unittest.TestCase):
                 t text,
                 i integer,
                 f float,
-                n,
+                n text,
                 b blob
                 )
             """)
