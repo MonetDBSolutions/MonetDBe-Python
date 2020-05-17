@@ -723,21 +723,21 @@ typedef struct {
 
 typedef void* monetdb_connection;
 
-typedef struct { monetdb_types type; int8_t *data; size_t count; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdb_column_int8_t;
-typedef struct { monetdb_types type; int16_t *data; size_t count; int16_t null_value; double scale; int (*is_null)(int16_t value); } monetdb_column_int16_t;
-typedef struct { monetdb_types type; int32_t *data; size_t count; int32_t null_value; double scale; int (*is_null)(int32_t value); } monetdb_column_int32_t;
-typedef struct { monetdb_types type; int64_t *data; size_t count; int64_t null_value; double scale; int (*is_null)(int64_t value); } monetdb_column_int64_t;
-typedef struct { monetdb_types type; size_t *data; size_t count; size_t null_value; double scale; int (*is_null)(size_t value); } monetdb_column_size_t;
+typedef struct { monetdb_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdb_column_int8_t;
+typedef struct { monetdb_types type; int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t value); } monetdb_column_int16_t;
+typedef struct { monetdb_types type; int32_t *data; size_t count; char *name; int32_t null_value; double scale; int (*is_null)(int32_t value); } monetdb_column_int32_t;
+typedef struct { monetdb_types type; int64_t *data; size_t count; char *name; int64_t null_value; double scale; int (*is_null)(int64_t value); } monetdb_column_int64_t;
+typedef struct { monetdb_types type; size_t *data; size_t count; char *name; size_t null_value; double scale; int (*is_null)(size_t value); } monetdb_column_size_t;
 
-typedef struct { monetdb_types type; float *data; size_t count; float null_value; double scale; int (*is_null)(float value); } monetdb_column_float;
-typedef struct { monetdb_types type; double *data; size_t count; double null_value; double scale; int (*is_null)(double value); } monetdb_column_double;
+typedef struct { monetdb_types type; float *data; size_t count; char *name; float null_value; double scale; int (*is_null)(float value); } monetdb_column_float;
+typedef struct { monetdb_types type; double *data; size_t count; char *name; double null_value; double scale; int (*is_null)(double value); } monetdb_column_double;
 
-typedef struct { monetdb_types type; char * *data; size_t count; char * null_value; double scale; int (*is_null)(char * value); } monetdb_column_str;
-typedef struct { monetdb_types type; monetdb_data_blob *data; size_t count; monetdb_data_blob null_value; double scale; int (*is_null)(monetdb_data_blob value); } monetdb_column_blob;
+typedef struct { monetdb_types type; char * *data; size_t count; char *name; char * null_value; double scale; int (*is_null)(char * value); } monetdb_column_str;
+typedef struct { monetdb_types type; monetdb_data_blob *data; size_t count; char *name; monetdb_data_blob null_value; double scale; int (*is_null)(monetdb_data_blob value); } monetdb_column_blob;
 
-typedef struct { monetdb_types type; monetdb_data_date *data; size_t count; monetdb_data_date null_value; double scale; int (*is_null)(monetdb_data_date value); } monetdb_column_date;
-typedef struct { monetdb_types type; monetdb_data_time *data; size_t count; monetdb_data_time null_value; double scale; int (*is_null)(monetdb_data_time value); } monetdb_column_time;
-typedef struct { monetdb_types type; monetdb_data_timestamp *data; size_t count; monetdb_data_timestamp null_value; double scale; int (*is_null)(monetdb_data_timestamp value); } monetdb_column_timestamp;
+typedef struct { monetdb_types type; monetdb_data_date *data; size_t count; char *name; monetdb_data_date null_value; double scale; int (*is_null)(monetdb_data_date value); } monetdb_column_date;
+typedef struct { monetdb_types type; monetdb_data_time *data; size_t count; char *name; monetdb_data_time null_value; double scale; int (*is_null)(monetdb_data_time value); } monetdb_column_time;
+typedef struct { monetdb_types type; monetdb_data_timestamp *data; size_t count; char *name; monetdb_data_timestamp null_value; double scale; int (*is_null)(monetdb_data_timestamp value); } monetdb_column_timestamp;
 
 extern char* monetdb_connect(monetdb_connection *conn);
 extern char* monetdb_disconnect(monetdb_connection conn);
