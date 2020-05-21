@@ -45,9 +45,11 @@ type_map: Dict[Any, Tuple[str, Optional[Callable]]] = {
 }
 
 
-def extract(rcol, r: int):
+def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
     """
-    Extracts values from a monetdb_column
+    Extracts values from a monetdb_column.
+
+    The text_factory is optional, and wraps the value with a custom user supplied text function.
     """
     cast_string, cast_function = type_map[rcol.type]
     col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
@@ -55,7 +57,11 @@ def extract(rcol, r: int):
         return None
     else:
         if cast_function:
-            return cast_function(col.data[r])
+            result = cast_function(col.data[r])
+            if rcol.type == lib.monetdb_str and text_factory:
+                return text_factory(result)
+            else:
+                return result
         else:
             return col.data[r]
 

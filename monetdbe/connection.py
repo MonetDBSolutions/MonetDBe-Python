@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Type, Iterable, Union, TYPE_CHECKING
+from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any
 from warnings import warn
 
 from monetdbe import exceptions
@@ -46,6 +46,7 @@ class Connection:
 
         self.result = None
         self.row_factory: Optional[Type[Row]] = None
+        self.text_factory: Optional[Callable[[str], Any]] = None
         self.total_changes = 0
         self.isolation_level = None
 
@@ -62,13 +63,13 @@ class Connection:
         if not self.inter:
             raise exceptions.ProgrammingError
 
-    def execute(self, query: str):
+    def execute(self, query: str, args: Optional[Iterable] = None):
         from monetdbe.cursor import Cursor
-        return Cursor(connection=self).execute(query)
+        return Cursor(con=self).execute(query, args)
 
     def executemany(self, query: str, args_seq: Iterable):
         from monetdbe.cursor import Cursor
-        cur = Cursor(connection=self)
+        cur = Cursor(con=self)
         for args in args_seq:
             cur.execute(query, args)
         return cur
@@ -88,7 +89,7 @@ class Connection:
             from monetdbe.cursor import Cursor
             factory = Cursor
 
-        cursor = factory(connection=self)
+        cursor = factory(con=self)
         if not cursor:
             raise TypeError
         if not self.inter:

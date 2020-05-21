@@ -74,8 +74,11 @@ class CursorFactoryTests(unittest.TestCase):
         self.assertIsInstance(cur, MyCursor)
 
     def test_InvalidFactory(self):
+
+        # note: disabled this test, since I think None is a good default argument to indicate you don't want a factory.
         # not a callable at all
-        self.assertRaises(TypeError, self.con.cursor, None)
+        # self.assertRaises(TypeError, self.con.cursor, None)
+
         # invalid callable with not exact one argument
         self.assertRaises(TypeError, self.con.cursor, lambda: None)
         # invalid callable returning non-cursor

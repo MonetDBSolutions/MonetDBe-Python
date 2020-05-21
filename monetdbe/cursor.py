@@ -1,89 +1,23 @@
-from re import sub
-from string import Formatter
-from typing import Tuple, Optional, Iterable, Union, Dict, List, Any, Generator, Iterator
+from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
 from warnings import warn
-
-from monetdbe._cffi import extract
+from monetdbe._cffi import extract, make_string
 from monetdbe.connection import Connection
-from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError
-
-
-def escape(v):
-    return f"'{v}'"
-
-
-class DefaultFormatter(Formatter):
-    """
-    This makes it possible to supply a dict with a __missing__() method (like a defaultdict)
-    """
-
-    def __init__(self, d: Dict):
-        super().__init__()
-        self.d = d
-
-    def get_value(self, key, *args, **kwargs):
-        s = self.d[key]
-        if isinstance(s, str):
-            return escape(s)
-        else:
-            return s
-
-
-def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str, Any]]] = None) -> str:
-    if type(query) != str:
-        raise TypeError
-
-    if parameters is not None:
-        if hasattr(type(parameters), '__getitem__') and hasattr(type(parameters), 'keys'):  # qmark style
-
-            if '?' in query:
-                raise ProgrammingError("'?' in formatting with qmark style parameters")
-
-            # we ignore type below, since we already check if there is a keys method, but mypy doesn't undertand
-            escaped = dict((k, escape(v)) if type(v) == str else (k, v) for k, v in parameters.items())  # type: ignore
-            x = sub(r':(\w+)', r'{\1}', query)
-
-            if hasattr(type(parameters), '__missing__'):
-                # this is something like a dict with a default value
-                try:
-                    # mypy doesn't understand that this is a dict-like with a default __missing__ value
-                    return DefaultFormatter(parameters).format(x, **escaped)  # type: ignore
-                except KeyError as e:
-                    raise ProgrammingError(e)
-            try:
-                return x.format(**escaped)
-            except KeyError as e:
-                raise ProgrammingError(e)
-        elif hasattr(type(parameters), '__iter__'):  # named style
-
-            if ':' in query:
-                raise ProgrammingError("':' in formatting with named style parameters")
-
-            # mypy gets confused here
-            escaped = [f"'{i}'" if type(i) == str else i for i in parameters]  # type: ignore
-            return query.replace('?', '{}').format(*escaped)
-        else:
-            raise ValueError(f"parameters '{parameters}' type '{type(parameters)}' not supported")
-    else:
-        # TODO: (gijs) this should probably be a bit more elaborate, support for escaping for example
-        for symbol in ':?':
-            if symbol in query:
-                raise ProgrammingError(f"unexpected symbol '{symbol}' in operation")
-        return query
+from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning
+from monetdbe.formatting import semicolumn_split_pattern, format_query, strip_split_and_clean
 
 
 class Cursor:
     lastrowid = 0
 
-    def __init__(self, connection: 'Connection'):
+    def __init__(self, con: 'Connection'):
 
-        if not isinstance(connection, Connection):
+        if not isinstance(con, Connection):
             raise TypeError
 
         # changing array size has no effect for monetdbe
         self.arraysize = 1
 
-        self.connection = connection
+        self.connection = con
         self.result: Optional[Any] = None  # todo: maybe make a result python wrapper?
         self.rowcount = -1
         self.prepare_id: Optional[int] = None
@@ -94,9 +28,8 @@ class Cursor:
         columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             if not self.description:
-                # TODO (gijs): self.description = tuple(rcol.name for rcol in columns)
-                self.description = tuple("TODO" for rcol in columns)
-            row = tuple(extract(rcol, r) for rcol in columns)
+                self.description = tuple(make_string(rcol.name) for rcol in columns)
+            row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
                 yield self.connection.row_factory(cur=self, row=row)
             else:
@@ -112,6 +45,10 @@ class Cursor:
 
         if self.result:
             self.connection.inter.cleanup_result(self.result)
+
+        splitted = strip_split_and_clean(operation)
+        if len(splitted) != 1:
+            raise Warning("Multiple queries in one execute() call")
 
         formatted = format_query(operation, parameters)
         try:
@@ -129,6 +66,9 @@ class Cursor:
             self.connection.inter.cleanup_result(self.result)
 
         total_affected_rows = 0
+
+        if operation[:6].lower() == 'select':
+            raise ProgrammingError("Don't use a SELECT statement with executemany()")
 
         if hasattr(seq_of_parameters, '__iter__'):
             iterator = iter(seq_of_parameters)
@@ -200,16 +140,8 @@ class Cursor:
         if not isinstance(sql_script, str):
             raise ValueError("script argument must be unicode.")
 
-        from re import sub, MULTILINE
-
-        sql_script = sub('^\s*--.*\n?', '', sql_script, flags=MULTILINE)
-        sql_script = sub('/\*.*\*/', '', sql_script, flags=MULTILINE)
-        sql_script = sql_script.strip()
-
-        for query in sql_script.split(';'):
-            query = query.strip()
-            if query:
-                self.execute(query)
+        for query in strip_split_and_clean(sql_script):
+            self.execute(query)
 
     def create(self, table, values, schema=None):
         """

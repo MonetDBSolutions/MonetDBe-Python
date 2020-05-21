@@ -333,6 +333,7 @@ class CursorTests(unittest.TestCase):
         self.cu.execute("update test set name='bar'")
         self.assertEqual(self.cu.rowcount, 2)
 
+    @unittest.skip("we skip this test, since we actually *do* know the rowcount")
     def test_RowcountSelect(self):
         """
         pymonetdbe does not know the rowcount of SELECT statements, because we
