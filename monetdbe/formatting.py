@@ -1,7 +1,7 @@
 from re import compile, sub, DOTALL
 from string import Formatter
-from typing import Dict, Optional, Union, Iterable, Any
-
+from typing import Dict, Optional, Union, Iterable, Any, List
+from monetdbe.monetize import convert
 from monetdbe.exceptions import ProgrammingError
 
 # use this pattern to split a string on non-escaped semicolumns
@@ -59,8 +59,7 @@ def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str,
             if '?' in query:
                 raise ProgrammingError("'?' in formatting with qmark style parameters")
 
-            # we ignore type below, since we already check if there is a keys method, but mypy doesn't undertand
-            escaped = dict((k, escape(v)) if type(v) == str else (k, v) for k, v in parameters.items())  # type: ignore
+            escaped: Dict[str, str] = {k: convert(v) for k, v in parameters.items()}
             x = sub(r':(\w+)', r'{\1}', query)
 
             if hasattr(type(parameters), '__missing__'):
@@ -79,8 +78,7 @@ def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str,
             if ':' in query:
                 raise ProgrammingError("':' in formatting with named style parameters")
 
-            # mypy gets confused here
-            escaped = [f"'{i}'" if type(i) == str else i for i in parameters]  # type: ignore
+            escaped: List[str] = [convert(i) for i in parameters]
             return query.replace('?', '{}').format(*escaped)
         else:
             raise ValueError(f"parameters '{parameters}' type '{type(parameters)}' not supported")

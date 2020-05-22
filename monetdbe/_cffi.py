@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Any, Dict, Tuple, Callable
 
+from monetdbe.pythonize import py_bytes, py_date, py_time, py_timestamp
 from monetdbe import exceptions
 
 _logger = logging.getLogger(__name__)
@@ -30,17 +31,17 @@ def check_error(msg):
 
 type_map: Dict[Any, Tuple[str, Optional[Callable]]] = {
     lib.monetdb_int32_t: ("int32_t", None),
-    lib.monetdb_str: ("str", lambda x: ffi.string(x).decode()),
+    lib.monetdb_str: ("str", make_string),
     lib.monetdb_int8_t: ("int8_t", None),
     lib.monetdb_int16_t: ("int16_t", None),
     lib.monetdb_int64_t: ("int64_t", None),
     lib.monetdb_size_t: ("size_t", None),
     lib.monetdb_float: ("float", None),
     lib.monetdb_double: ("double", None),
-    lib.monetdb_blob: ("blob", None),
-    lib.monetdb_date: ("date", None),
-    lib.monetdb_time: ("time", None),
-    lib.monetdb_timestamp: ("timestamp", None),
+    lib.monetdb_blob: ("blob", py_bytes),
+    lib.monetdb_date: ("date", py_date),
+    lib.monetdb_time: ("time", py_time),
+    lib.monetdb_timestamp: ("timestamp", py_timestamp),
 
 }
 

@@ -1,10 +1,14 @@
 from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
+from collections import namedtuple
 from warnings import warn
 from monetdbe._cffi import extract, make_string
 from monetdbe.connection import Connection
 from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning
-from monetdbe.formatting import semicolumn_split_pattern, format_query, strip_split_and_clean
+from monetdbe.formatting import format_query, strip_split_and_clean
 
+
+Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
+                                         'null_ok'))
 
 class Cursor:
     lastrowid = 0
@@ -25,10 +29,22 @@ class Cursor:
         self.description: Optional[Tuple[str]] = None
 
     def __iter__(self):
+
+        from itertools import repeat
+
         columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             if not self.description:
-                self.description = tuple(make_string(rcol.name) for rcol in columns)
+                name = (make_string(rcol.name) for rcol in columns)
+                type_code = (rcol.type for rcol in columns)
+                display_size = repeat(None)
+                internal_size = repeat(None)
+                precision = repeat(None)
+                scale = repeat(None)
+                null_ok = repeat(None)
+
+                self.description = Description._make(*list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok)))
+
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
                 yield self.connection.row_factory(cur=self, row=row)

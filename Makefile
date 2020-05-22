@@ -8,7 +8,9 @@ DOCKER_IMAGE=gijzelaerr/monetdb
 all: docker
 
 docker:
-	docker build -t $(DOCKER_IMAGE) .
+
+force-build:
+	docker build --no-cache -t $(DOCKER_IMAGE) .
 
 
 wheels: docker

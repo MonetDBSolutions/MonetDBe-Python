@@ -34,7 +34,7 @@ class monetdbeTypeTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
         self.cur = self.con.cursor()
-        self.cur.execute("create table test(i integer, s varchar, f number, b blob)")
+        self.cur.execute("create table test(i BIGINT, s text, f float, b blob)")
 
     def tearDown(self):
         self.cur.close()
@@ -114,7 +114,9 @@ class DeclTypesTests(unittest.TestCase):
         self.con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_DECLTYPES)
         self.cur = self.con.cursor()
         self.cur.execute(
-            "create table test(i int, s str, f float, b bool, u unicode, foo foo, bin blob, n1 number, n2 number(5), bad bad)")
+            # note (gijs) modifed the types here
+            "create table test(i int, s string, f float, b bool, u string, foo string, bin blob, n1 DECIMAL, n2 DECIMAL(5), bad blob)")
+            #"create table test(i int, s str, f float, b bool, u unicode, foo foo, bin blob, n1 number, n2 number(5), bad bad)")
 
         # override float, make them always return the same number
         monetdbe.converters["FLOAT"] = lambda x: 47.2
@@ -248,7 +250,10 @@ class ColNamesTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_COLNAMES)
         self.cur = self.con.cursor()
-        self.cur.execute("create table test(x foo)")
+
+        # note (gijs) changed this to type string
+        self.cur.execute("create table test(x string)")
+        #self.cur.execute("create table test(x foo)")
 
         monetdbe.converters["FOO"] = lambda x: "[%s]" % x.decode("ascii")
         monetdbe.converters["BAR"] = lambda x: "<%s>" % x.decode("ascii")
@@ -411,8 +416,6 @@ class DateTimeTests(unittest.TestCase):
         ts2 = self.cur.fetchone()[0]
         self.assertEqual(ts, ts2)
 
-    @unittest.skipIf(monetdbe.monetdbe_version_info < (3, 1),
-                     'the date functions are available on 3.1 or later')
     def test_SqlTimestamp(self):
         now = datetime.datetime.utcnow()
         self.cur.execute("insert into test(ts) values (current_timestamp)")
@@ -428,6 +431,7 @@ class DateTimeTests(unittest.TestCase):
         ts2 = self.cur.fetchone()[0]
         self.assertEqual(ts, ts2)
 
+    @unittest.skip("note (gijs): we don't support microseconds, only ms")
     def test_DateTimeSubSecondsFloatingPoint(self):
         ts = monetdbe.Timestamp(2004, 2, 14, 7, 15, 0, 510241)
         self.cur.execute("insert into test(ts) values (?)", (ts,))
