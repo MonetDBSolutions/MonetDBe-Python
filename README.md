@@ -36,7 +36,7 @@ $ pip install .
 You need to have MonetDB available on the default search paths, if it is
 installed in a different location you need to specify `CFLAGS`:
 ```
-CFLAGS="-I<monetdb_prefix>/include/monetdb -I<monetdb_prefix>/lib/monetdb" pip install .
+CFLAGS="-I<monetdb_prefix>/include/monetdb -L<monetdb_prefix>/lib/monetdb" pip install .
 ```
  
 # development
@@ -49,6 +49,10 @@ You can use pytest to run the test suite from the source checkout:
 $ python3 -m venv venv
 $ venv/bin/pip install -e .
 $ venv/bin/pip install pytest
+$ venv/bin/pip install numpy pandas
 $ venv/bin/pytest
 ```
-
+If MonetDB is installed in a different location, set the LD\_LIBRARY\_PATH environment variable first:
+```
+$ export LD_LIBRARY_PATH=<monetdb_prefix>/lib:<monetdb_prefix>/lib/monetdb5
+```
