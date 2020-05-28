@@ -51,4 +51,3 @@ def oid(data):
     For now we will just return the string representation just like mclient does.
     """
     return oid
-

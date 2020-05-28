@@ -4,6 +4,7 @@ from typing import Optional, Any, Dict, Tuple, Callable
 
 from monetdbe.pythonize import py_date, py_time, py_timestamp
 from monetdbe import exceptions
+from monetdbe.converters import converters
 
 _logger = logging.getLogger(__name__)
 
@@ -17,18 +18,26 @@ except ImportError as e:
 
 def make_string(blob):
     if blob:
-        # b = blob.data[:blob.count]
         return ffi.string(blob).decode()
     else:
         return ""
 
 
-
 def make_blob(blob):
     if blob:
-        return ffi.string(blob)
+        return ffi.string(blob.data[0:blob.size])
     else:
         return ""
+
+def py_float(data):
+    if 'FLOAT' in converters:
+        return converters['FLOAT'](data)
+    elif 'DOUBLE' in converters:
+        return converters['DOUBLE'](data)
+    else:
+        return data
+
+
 
 def check_error(msg):
     if msg:
@@ -38,15 +47,15 @@ def check_error(msg):
 
 
 type_map: Dict[Any, Tuple[str, Optional[Callable]]] = {
-    lib.monetdb_bool: ("monetdb_bool", None),
+    lib.monetdb_bool: ("bool", bool),
     lib.monetdb_int8_t: ("int8_t", None),
     lib.monetdb_int16_t: ("int16_t", None),
     lib.monetdb_int32_t: ("int32_t", None),
     lib.monetdb_int64_t: ("int64_t", None),
     lib.monetdb_int128_t: ("int128_t", None),
     lib.monetdb_size_t: ("size_t", None),
-    lib.monetdb_float: ("float", None),
-    lib.monetdb_double: ("double", None),
+    lib.monetdb_float: ("float", py_float),
+    lib.monetdb_double: ("double", py_float),
     lib.monetdb_str: ("str", make_string),
     lib.monetdb_blob: ("blob", make_blob),
     lib.monetdb_date: ("date", py_date),

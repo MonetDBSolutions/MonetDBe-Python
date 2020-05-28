@@ -89,6 +89,9 @@ def convert(data: Any) -> str:
                 return func(data)
 
     if hasattr(data, '__conform__'):
-        return data.__conform__(PrepareProtocol)
+        try:
+            return data.__conform__(PrepareProtocol)
+        except Exception as e:
+            raise InterfaceError(e)
 
     raise InterfaceError("type %s not supported as value" % type(data))

@@ -58,6 +58,7 @@ class Cursor:
     def execute(self, operation: str, parameters: Optional[Iterable] = None):
         self._check()
         self.description = None  # which will be set later in fetchall
+        self._fetch_generator = None
 
         if self.result:
             self.connection.inter.cleanup_result(self.result)

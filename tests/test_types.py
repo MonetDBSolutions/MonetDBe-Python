@@ -22,12 +22,8 @@
 # 3. This notice may not be removed or altered from any source distribution.
 import datetime
 import unittest
+import zlib
 import monetdbe as monetdbe
-
-try:
-    import zlib
-except ImportError:
-    zlib = None  # type: ignore
 
 
 class monetdbeTypeTests(unittest.TestCase):
@@ -115,8 +111,8 @@ class DeclTypesTests(unittest.TestCase):
         self.cur = self.con.cursor()
         self.cur.execute(
             # note (gijs) modifed the types here
-            "create table test(i int, s string, f float, b bool, u string, foo string, bin blob, n1 DECIMAL, n2 DECIMAL(5), bad blob)")
-            #"create table test(i int, s str, f float, b bool, u unicode, foo foo, bin blob, n1 number, n2 number(5), bad bad)")
+            "create table test(i bigint, s string, f float, b bool, u string, foo string, bin blob, n1 NUMERIC, n2 NUMERIC(5), bad blob)")
+        # "create table test(i int, s str, f float, b bool, u unicode, foo foo, bin blob, n1 number, n2 number(5), bad bad)")
 
         # override float, make them always return the same number
         monetdbe.converters["FLOAT"] = lambda x: 47.2
@@ -189,6 +185,7 @@ class DeclTypesTests(unittest.TestCase):
         row = self.cur.fetchone()
         self.assertEqual(row[0], val)
 
+    @unittest.skip("we don't support custom types for now")
     def test_Foo(self):
         val = DeclTypesTests.Foo("bla")
         self.cur.execute("insert into test(foo) values (?)", (val,))
@@ -253,7 +250,7 @@ class ColNamesTests(unittest.TestCase):
 
         # note (gijs) changed this to type string
         self.cur.execute("create table test(x string)")
-        #self.cur.execute("create table test(x foo)")
+        # self.cur.execute("create table test(x foo)")
 
         monetdbe.converters["FOO"] = lambda x: "[%s]" % x.decode("ascii")
         monetdbe.converters["BAR"] = lambda x: "<%s>" % x.decode("ascii")
@@ -372,7 +369,6 @@ class ObjectAdaptationTests(unittest.TestCase):
         self.assertEqual(type(val), float)
 
 
-@unittest.skipUnless(zlib, "requires zlib")
 class BinaryConverterTests(unittest.TestCase):
     def convert(s):
         return zlib.decompress(s)
@@ -386,6 +382,7 @@ class BinaryConverterTests(unittest.TestCase):
     def tearDown(self):
         self.con.close()
 
+    @unittest.skip("note (gijs): skipping this test/functionality for now")
     def test_BinaryInputForConverter(self):
         testdata = b"abcdefg" * 10
         result = self.con.execute('select ? as "x [bin]"', (memoryview(zlib.compress(testdata)),)).fetchone()[0]
