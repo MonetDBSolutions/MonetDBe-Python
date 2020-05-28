@@ -1,7 +1,7 @@
-from datetime import datetime,  date, time
+from datetime import datetime, date, time
 import re
 
-Binary = memoryview
+Binary = bytes
 
 
 def strip(data):

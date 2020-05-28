@@ -41,11 +41,11 @@ def monet_bytes(data: bytes) -> str:
     """
     converts bytes to string
     """
-    return monet_escape(data.decode('utf8'))
+    return "'%s'" % data.hex()
 
 
 def monet_memoryview(data: memoryview) -> str:
-    return monet_escape(data.tobytes().decode('utf8'))
+    return "'%s'" % data.tobytes().hex()
 
 
 mapping = {
@@ -67,6 +67,16 @@ mapping = {
 mapping_dict = dict(mapping)
 
 
+class PrepareProtocol:
+    """
+    SQLite has a PrepareProtocol class that is passed to a values __conform__ method if it exists.
+
+    This is not well documented, and the __conform__ method seems rejected in PEP 246. Still, the SQLite
+    documentation mentions this
+    """
+    ...
+
+
 def convert(data: Any) -> str:
     """
     Return the appropriate conversion function based upon the python type.
@@ -77,4 +87,8 @@ def convert(data: Any) -> str:
         for type_, func in mapping:
             if issubclass(type(data), type_):
                 return func(data)
+
+    if hasattr(data, '__conform__'):
+        return data.__conform__(PrepareProtocol)
+
     raise InterfaceError("type %s not supported as value" % type(data))

@@ -1,4 +1,3 @@
-// todo gijs: check if just defining MT_Lock as void doesn't give any problems
 typedef void MT_Lock;
 
 typedef int8_t bit;
@@ -38,7 +37,6 @@ extern char *sa_strndup( sql_allocator *sa, const char *s, size_t l);
 extern char *sa_strdup( sql_allocator *sa, const char *s);
 extern char *sa_strconcat( sql_allocator *sa, const char *s1, const char *s2);
 extern size_t sa_size( sql_allocator *sa );
-
 typedef int (*fkeyvalue) (void *data);
 
 typedef struct sql_hash_e {
@@ -138,7 +136,6 @@ extern list *list_flaten(list *l);
 extern void list_hash_delete(list *l, void *data, fcmp cmp);
 extern void* list_hash_add(list *l, void *data, fcmp cmp);
 extern void list_hash_clear(list *l);
-
 typedef enum {
  Q_PARSE = 0,
  Q_TABLE = 1,
@@ -148,7 +145,6 @@ typedef enum {
  Q_PREPARE = 5,
  Q_BLOCK = 6
 } mapi_query_t;
-
 typedef enum sql_dependency {
  SCHEMA_DEPENDENCY = 1,
  TABLE_DEPENDENCY = 2,
@@ -166,7 +162,6 @@ typedef enum sql_dependency {
  BEDROPPED_DEPENDENCY = 14,
  TYPE_DEPENDENCY = 15
 } sql_dependency;
-
 extern const char *TID;
 
 typedef enum temp_t {
@@ -204,7 +199,6 @@ typedef enum comp_type {
  cmp_left = 17,
  cmp_left_project = 18
 } comp_type;
-
 typedef enum commit_action_t {
  CA_COMMIT,
  CA_DELETE,
@@ -314,7 +308,6 @@ typedef enum sql_class {
  EC_EXTERNAL,
  EC_MAX
 } sql_class;
-
 typedef struct sql_type {
  sql_base base;
 
@@ -354,7 +347,6 @@ typedef enum sql_ftype {
  F_ANALYTIC = 6,
  F_LOADER = 7
 } sql_ftype;
-
 typedef enum sql_flang {
  FUNC_LANG_INT = 0,
  FUNC_LANG_MAL = 1,
@@ -390,7 +382,6 @@ typedef struct sql_func {
  bit vararg;
  bit system;
  int fix_scale;
-
  sql_schema *s;
  sql_allocator *sa;
  void *rel;
@@ -513,7 +504,6 @@ typedef enum table_types {
  tt_remote = 5,
  tt_replica_table = 6
 } table_types;
-
 typedef struct sql_part_value {
  ptr value;
  size_t length;
@@ -669,14 +659,6 @@ extern void *sql_values_list_element_validate_and_insert(void *v1, void *v2, voi
 extern void *sql_range_part_validate_and_insert(void *v1, void *v2);
 extern void *sql_values_part_validate_and_insert(void *v1, void *v2);
 
-/*
-typedef struct {
- BAT *b;
- char* name;
- void* def;
-} sql_emit_col;
-*/
-
 typedef struct {
  unsigned char day;
  unsigned char month;
@@ -697,12 +679,15 @@ typedef struct {
 
 typedef struct {
  size_t size;
- void* data;
+ char* data;
 } monetdb_data_blob;
 
 typedef enum {
- monetdb_int8_t, monetdb_int16_t, monetdb_int32_t, monetdb_int64_t, monetdb_size_t,
- monetdb_float, monetdb_double,
+ monetdb_bool, monetdb_int8_t, monetdb_int16_t, monetdb_int32_t, monetdb_int64_t,
+
+ monetdb_int128_t,
+
+ monetdb_size_t, monetdb_float, monetdb_double,
  monetdb_str, monetdb_blob,
  monetdb_date, monetdb_time, monetdb_timestamp
 } monetdb_types;
@@ -722,10 +707,12 @@ typedef struct {
 } monetdb_result;
 
 typedef void* monetdb_connection;
+typedef struct { monetdb_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdb_column_bool;
 typedef struct { monetdb_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdb_column_int8_t;
 typedef struct { monetdb_types type; int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t value); } monetdb_column_int16_t;
 typedef struct { monetdb_types type; int32_t *data; size_t count; char *name; int32_t null_value; double scale; int (*is_null)(int32_t value); } monetdb_column_int32_t;
 typedef struct { monetdb_types type; int64_t *data; size_t count; char *name; int64_t null_value; double scale; int (*is_null)(int64_t value); } monetdb_column_int64_t;
+
 typedef struct { monetdb_types type; size_t *data; size_t count; char *name; size_t null_value; double scale; int (*is_null)(size_t value); } monetdb_column_size_t;
 
 typedef struct { monetdb_types type; float *data; size_t count; char *name; float null_value; double scale; int (*is_null)(float value); } monetdb_column_float;
@@ -740,11 +727,16 @@ typedef struct { monetdb_types type; monetdb_data_timestamp *data; size_t count;
 
 extern char* monetdb_connect(monetdb_connection *conn);
 extern char* monetdb_disconnect(monetdb_connection conn);
-extern char* monetdb_startup(char* dbdir, _Bool sequential);
-extern _Bool monetdb_is_initialized(void);
+extern char* monetdb_startup(char* dbdir, 
+                                                  _Bool 
+                                                       sequential);
+extern 
+               _Bool 
+                     monetdb_is_initialized(void);
 
 extern char* monetdb_get_autocommit(monetdb_connection conn, int* result);
 extern char* monetdb_set_autocommit(monetdb_connection conn, int value);
+
 extern char* monetdb_query(monetdb_connection conn, char* query, monetdb_result** result, lng* affected_rows, int* prepare_id);
 
 extern char* monetdb_result_fetch(monetdb_connection conn, monetdb_column** res, monetdb_result* mres, size_t column_index);

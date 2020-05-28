@@ -20,3 +20,4 @@ def shutdown():
 
 def init(_: str):
     warn("init() is deprecated and will be removed from future versions")
+

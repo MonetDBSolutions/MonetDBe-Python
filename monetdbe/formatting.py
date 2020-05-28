@@ -19,7 +19,7 @@ def strip_split_and_clean(script: str):
 
     results = []
     for q in semicolumn_split_pattern.split(script)[1::2]:
-        q = sub('^\s*--.*\n?', '', q)
+        q = sub(r'^\s*--.*\n?', '', q)
         q = sub(r'/*.*\*/', '', q, flags=DOTALL)
         q = q.strip()
         if q:
