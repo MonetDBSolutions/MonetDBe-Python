@@ -61,6 +61,7 @@ class Cursor:
 
         if self.result:
             self.connection.inter.cleanup_result(self.result)
+            self.result = None
 
         splitted = strip_split_and_clean(operation)
         if len(splitted) != 1:
