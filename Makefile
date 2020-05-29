@@ -8,10 +8,12 @@ DOCKER_IMAGE=gijzelaerr/monetdb
 all: docker
 
 docker:
-	docker build -t $(DOCKER_IMAGE) .
+	docker build -t $(DOCKER_IMAGE):wheel -f docker/wheel.docker .
+	docker build -t $(DOCKER_IMAGE):wheel -f docker/test38.docker .
 
 force-build:
-	docker build --no-cache -t $(DOCKER_IMAGE) .
+	docker build --force-build -t $(DOCKER_IMAGE):wheel -f docker/wheel.docker .
+	docker build --force-build -t $(DOCKER_IMAGE):wheel -f docker/test38.docker .
 
 
 wheels: docker
@@ -28,4 +30,4 @@ tests:
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE) sh -c "cd $(GITHUB_WORKSPACE); .inside/test.sh 3.8"
 
 push: docker
-	docker push $(DOCKER_IMAGE)
+	docker push $(DOCKER_IMAGE):wheel

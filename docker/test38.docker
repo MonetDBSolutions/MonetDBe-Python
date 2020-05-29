@@ -1,0 +1,22 @@
+FROM ubuntu:20.04
+ENV DEBIAN_FRONTEND noninteractve
+
+# install monetdb build dependencies
+RUN apt-get update && \
+    apt-get install -y cmake python3-dev python3-pip curl
+
+# download and extract monetdb
+RUN mkdir /build 
+WORKDIR /build 
+RUN curl -O https://dev.monetdb.org/hg/MonetDB/archive/mbedded.tar.bz2 
+RUN tar jxvf mbedded.tar.bz2 
+RUN mkdir /build/MonetDB-mbedded/build 
+WORKDIR /build/MonetDB-mbedded/build 
+RUN apt-get install -y bison libpcre3-dev
+RUN cmake .. 
+RUN make -j 4 
+RUN make install 
+
+# add shared libraries to wheels
+ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/usr/local/lib/monetdb5"
+
