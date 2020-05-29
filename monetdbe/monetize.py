@@ -1,7 +1,7 @@
 from typing import Any
 import datetime
 import decimal
-
+import numpy
 from monetdbe.exceptions import InterfaceError
 
 
@@ -62,6 +62,7 @@ mapping = {
     (datetime.timedelta, monet_escape),
     (bool, monet_bool),
     (type(None), monet_none),
+    (numpy.int64, int),
 }
 
 mapping_dict = dict(mapping)

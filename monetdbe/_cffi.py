@@ -179,6 +179,18 @@ class MonetEmbedded:
         check_error(lib.monetdb_result_fetch(_connection, p_rcol, result, c))
         return p_rcol[0]
 
+    def result_fetch_numpy(self, result, c: int):
+        raise NotImplemented
+        p_rcol = ffi.new("monetdb_column **")
+        check_error(lib.monetdb_result_fetch(_connection, p_rcol, result, c))
+        rcol = p_rcol[0]
+        cast_string, cast_function = type_map[rcol.type]
+        col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
+
+        buffer_size = np_arr.size * np_arr.dtype.itemsize
+        c_buffer = ffi.buffer(cffi_arr, buffer_size)
+        np_arr2 = np.frombuffer(c_buffer, dtype=np_arr.dtype)
+
     def clear_prepare(self):
         raise NotImplemented
         # lib.monetdb_clear_prepare()
@@ -195,9 +207,8 @@ class MonetEmbedded:
         raise NotImplemented
         # lib.monetdb_set_autocommit()
 
-    def append(self):
-        raise NotImplemented
-        # lib.monetdb_append()
+    def append(self, schema: str, table: str, batids, column_count: int):
+        check_error(lib.monetdb_append(_connection, schema.encode(), table.encode(), batids, column_count))
 
     def get_autocommit(self):
         raise NotImplemented

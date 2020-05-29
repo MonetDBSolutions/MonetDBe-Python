@@ -1,14 +1,27 @@
 from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
 from collections import namedtuple
+from itertools import repeat
 from warnings import warn
+import pandas
+import numpy
 from monetdbe._cffi import extract, make_string
+from monetdbe.monetize import monet_identifier_escape
 from monetdbe.connection import Connection
 from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning
 from monetdbe.formatting import format_query, strip_split_and_clean
 
-
 Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
                                          'null_ok'))
+
+
+def __convert_pandas_to_numpy_dict__(df):
+    if type(df) == pandas.DataFrame:
+        res = {}
+        for tpl in df.to_dict().items():
+            res[tpl[0]] = numpy.array(list(tpl[1].values()))
+        return res
+    return df
+
 
 class Cursor:
     lastrowid = 0
@@ -28,28 +41,41 @@ class Cursor:
         self._fetch_generator: Optional[Generator] = None
         self.description: Optional[Tuple[str]] = None
 
+    def _set_description(self, columns):
+        name = (make_string(rcol.name) for rcol in columns)
+        type_code = (rcol.type for rcol in columns)
+        display_size = repeat(None)
+        internal_size = repeat(None)
+        precision = repeat(None)
+        scale = repeat(None)
+        null_ok = repeat(None)
+        self.description = Description._make(
+            *list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok)))
+
     def __iter__(self):
-
-        from itertools import repeat
-
         columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             if not self.description:
-                name = (make_string(rcol.name) for rcol in columns)
-                type_code = (rcol.type for rcol in columns)
-                display_size = repeat(None)
-                internal_size = repeat(None)
-                precision = repeat(None)
-                scale = repeat(None)
-                null_ok = repeat(None)
-
-                self.description = Description._make(*list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok)))
+                self._set_description(columns)
 
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
                 yield self.connection.row_factory(cur=self, row=row)
             else:
                 yield row
+
+    def fetchnumpy(self):
+        self._check()
+        columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
+        if not self.description:
+            self._set_description(columns)
+        return self.connection.inter.result_fetch_numpy(self.result, r)
+
+
+    def fetchdf(self):
+        warn("fetchdf() will be deprecated in future releases")
+        self._check()
+        raise NotImplemented
 
     def _check(self):
         if not self.connection or not self.connection.inter:
@@ -77,6 +103,10 @@ class Cursor:
         return self
 
     def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]):
+        """
+        Prepare a database operation (query or command) and then execute it against all parameter sequences or
+        mappings found in the sequence seq_of_parameters.
+        """
         self._check()
         self.description = None  # which will be set later in fetchall
 
@@ -166,19 +196,77 @@ class Cursor:
         Creates a table from a set of values or a pandas DataFrame.
         """
         # note: this is a backwards compatibility function with with monetdblite
-        warn("set_autocommit() will be deprecated in future releases")
         self._check()
-        raise NotImplemented
 
-    def fetchnumpy(self):
-        warn("fetchnumpy() will be deprecated in future releases")
-        self._check()
-        raise NotImplemented
+        column_types = []
 
-    def fetchdf(self):
-        warn("fetchdf() will be deprecated in future releases")
-        self._check()
-        raise NotImplemented
+        if not isinstance(values, dict):
+            values = __convert_pandas_to_numpy_dict__(values)
+        else:
+            vals = {}
+            for tpl in values.items():
+                if isinstance(tpl[1], numpy.ma.core.MaskedArray):
+                    vals[tpl[0]] = tpl[1]
+                else:
+                    vals[tpl[0]] = numpy.array(tpl[1])
+            values = vals
+        if schema is None:
+            schema = "sys"
+        for key, value in values.items():
+            arr = numpy.array(value)
+            if arr.dtype == numpy.bool:
+                column_type = "BOOLEAN"
+            elif arr.dtype == numpy.int8:
+                column_type = 'TINYINT'
+            elif arr.dtype == numpy.int16 or arr.dtype == numpy.uint8:
+                column_type = 'SMALLINT'
+            elif arr.dtype == numpy.int32 or arr.dtype == numpy.uint16:
+                column_type = 'INT'
+            elif arr.dtype == numpy.int64 or arr.dtype == numpy.uint32 or arr.dtype == numpy.uint64:
+                column_type = 'BIGINT'
+            elif arr.dtype == numpy.float32:
+                column_type = 'REAL'
+            elif arr.dtype == numpy.float64:
+                column_type = 'DOUBLE'
+            elif numpy.issubdtype(arr.dtype, numpy.str_) or numpy.issubdtype(arr.dtype, numpy.unicode_):
+                column_type = 'STRING'
+            else:
+                raise Exception('Unsupported dtype: %s' % (str(arr.dtype)))
+            column_types.append(column_type)
+        query = 'CREATE TABLE %s.%s (' % (
+            monet_identifier_escape(schema), monet_identifier_escape(table))
+        index = 0
+        for key in values.keys():
+            query += '%s %s, ' % (monet_identifier_escape(key), column_types[index])
+            index += 1
+        query = query[:-2] + ");"
+        # create the table
+        self.execute(query)
+        # insert the data into the table
+        self.insert(table, values, schema=schema)
+
+    def insert(self, table, values, schema=None):
+        """
+        Inserts a set of values into the specified table.
+
+        The values must be either a pandas DataFrame or a dictionary of values. If no schema is specified, the "sys"
+        schema is used. If no client context is provided, the default client context is used.
+           """
+
+        if not isinstance(values, dict):
+            values = __convert_pandas_to_numpy_dict__(values)
+        else:
+            vals = {}
+            for tpl in values.items():
+                if isinstance(tpl[1], numpy.ma.core.MaskedArray):
+                    vals[tpl[0]] = tpl[1]
+                else:
+                    vals[tpl[0]] = numpy.array(tpl[1])
+            values = vals
+
+        for column, rows in values.items():
+            self.executemany(f"insert into {table} ({column}) values (?)", ((i,) for i in rows))
+        # return self.connection.inter.append(schema, table, values, column_count=len(values))
 
     def setoutputsize(self, *args, **kwargs):
         return
