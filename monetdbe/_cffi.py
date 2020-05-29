@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
-from typing import Optional, Any, Dict, Tuple, Callable
-
+from typing import Optional, Any, Dict, Tuple, Callable, Type
+import numpy as np
 from monetdbe.pythonize import py_date, py_time, py_timestamp
 from monetdbe import exceptions
 from monetdbe.converters import converters
@@ -46,21 +46,21 @@ def check_error(msg):
         raise exceptions.DatabaseError(decoded)
 
 
-type_map: Dict[Any, Tuple[str, Optional[Callable]]] = {
-    lib.monetdb_bool: ("bool", bool),
-    lib.monetdb_int8_t: ("int8_t", None),
-    lib.monetdb_int16_t: ("int16_t", None),
-    lib.monetdb_int32_t: ("int32_t", None),
-    lib.monetdb_int64_t: ("int64_t", None),
-    lib.monetdb_int128_t: ("int128_t", None),
-    lib.monetdb_size_t: ("size_t", None),
-    lib.monetdb_float: ("float", py_float),
-    lib.monetdb_double: ("double", py_float),
-    lib.monetdb_str: ("str", make_string),
-    lib.monetdb_blob: ("blob", make_blob),
-    lib.monetdb_date: ("date", py_date),
-    lib.monetdb_time: ("time", py_time),
-    lib.monetdb_timestamp: ("timestamp", py_timestamp),
+type_map: Dict[Any, Tuple[str, Optional[Callable], Type]] = {
+    lib.monetdb_bool: ("bool", bool, np.dtype(np.bool)),
+    lib.monetdb_int8_t: ("int8_t", None, np.dtype(np.int8)),
+    lib.monetdb_int16_t: ("int16_t", None, np.dtype(np.int16)),
+    lib.monetdb_int32_t: ("int32_t", None, np.dtype(np.int32)),
+    lib.monetdb_int64_t: ("int64_t", None, np.dtype(np.int64)),
+    lib.monetdb_int128_t: ("int128_t", None, None),
+    lib.monetdb_size_t: ("size_t", None, None),
+    lib.monetdb_float: ("float", py_float, np.dtype(np.float)),
+    lib.monetdb_double: ("double", py_float, np.dtype(np.float)),
+    lib.monetdb_str: ("str", make_string, np.dtype(np.str)),
+    lib.monetdb_blob: ("blob", make_blob, None),
+    lib.monetdb_date: ("date", py_date, np.dtype(np.datetime64)),
+    lib.monetdb_time: ("time", py_time, np.dtype(np.datetime64)),
+    lib.monetdb_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64)),
 }
 
 
@@ -70,7 +70,7 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
 
     The text_factory is optional, and wraps the value with a custom user supplied text function.
     """
-    cast_string, cast_function = type_map[rcol.type]
+    cast_string, cast_function, numpy_type = type_map[rcol.type]
     col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
     if col.is_null(col.data[r]):
         return None
@@ -174,22 +174,25 @@ class MonetEmbedded:
 
         return result, affected_rows[0], prepare_id[0]
 
-    def result_fetch(self, result, c: int):
+    def result_fetch(self, result, column: int):
         p_rcol = ffi.new("monetdb_column **")
-        check_error(lib.monetdb_result_fetch(_connection, p_rcol, result, c))
+        check_error(lib.monetdb_result_fetch(_connection, result, p_rcol, column))
         return p_rcol[0]
 
-    def result_fetch_numpy(self, result, c: int):
-        raise NotImplemented
-        p_rcol = ffi.new("monetdb_column **")
-        check_error(lib.monetdb_result_fetch(_connection, p_rcol, result, c))
-        rcol = p_rcol[0]
-        cast_string, cast_function = type_map[rcol.type]
-        col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
+    def result_fetch_numpy(self, monetdb_result):
 
-        buffer_size = np_arr.size * np_arr.dtype.itemsize
-        c_buffer = ffi.buffer(cffi_arr, buffer_size)
-        np_arr2 = np.frombuffer(c_buffer, dtype=np_arr.dtype)
+        result = {}
+        for c in range(monetdb_result.ncols):
+            p_rcol = ffi.new("monetdb_column **")
+            check_error(lib.monetdb_result_fetch(_connection, monetdb_result, p_rcol, c))
+            rcol = p_rcol[0]
+            name = make_string(rcol.name)
+            cast_string, cast_function, numpy_type = type_map[rcol.type]
+            buffer_size = monetdb_result.nrows * numpy_type.itemsize
+            c_buffer = ffi.buffer(rcol, buffer_size)
+            np_col = np.frombuffer(c_buffer, dtype=numpy_type)
+            result[name] = np_col
+        return result
 
     def clear_prepare(self):
         raise NotImplemented

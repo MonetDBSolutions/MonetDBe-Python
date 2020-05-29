@@ -2,8 +2,8 @@ from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
 from collections import namedtuple
 from itertools import repeat
 from warnings import warn
-import pandas
-import numpy
+import numpy as np
+import pandas as pd
 from monetdbe._cffi import extract, make_string
 from monetdbe.monetize import monet_identifier_escape
 from monetdbe.connection import Connection
@@ -15,10 +15,10 @@ Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'i
 
 
 def __convert_pandas_to_numpy_dict__(df):
-    if type(df) == pandas.DataFrame:
+    if type(df) == pd.DataFrame:
         res = {}
         for tpl in df.to_dict().items():
-            res[tpl[0]] = numpy.array(list(tpl[1].values()))
+            res[tpl[0]] = np.array(list(tpl[1].values()))
         return res
     return df
 
@@ -66,16 +66,11 @@ class Cursor:
 
     def fetchnumpy(self):
         self._check()
-        columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
-        if not self.description:
-            self._set_description(columns)
-        return self.connection.inter.result_fetch_numpy(self.result, r)
-
+        return self.connection.inter.result_fetch_numpy(self.result)
 
     def fetchdf(self):
-        warn("fetchdf() will be deprecated in future releases")
         self._check()
-        raise NotImplemented
+        return pd.DataFrame(self.fetchnumpy())
 
     def _check(self):
         if not self.connection or not self.connection.inter:
@@ -205,30 +200,30 @@ class Cursor:
         else:
             vals = {}
             for tpl in values.items():
-                if isinstance(tpl[1], numpy.ma.core.MaskedArray):
+                if isinstance(tpl[1], np.ma.core.MaskedArray):
                     vals[tpl[0]] = tpl[1]
                 else:
-                    vals[tpl[0]] = numpy.array(tpl[1])
+                    vals[tpl[0]] = np.array(tpl[1])
             values = vals
         if schema is None:
             schema = "sys"
         for key, value in values.items():
-            arr = numpy.array(value)
-            if arr.dtype == numpy.bool:
+            arr = np.array(value)
+            if arr.dtype == np.bool:
                 column_type = "BOOLEAN"
-            elif arr.dtype == numpy.int8:
+            elif arr.dtype == np.int8:
                 column_type = 'TINYINT'
-            elif arr.dtype == numpy.int16 or arr.dtype == numpy.uint8:
+            elif arr.dtype == np.int16 or arr.dtype == np.uint8:
                 column_type = 'SMALLINT'
-            elif arr.dtype == numpy.int32 or arr.dtype == numpy.uint16:
+            elif arr.dtype == np.int32 or arr.dtype == np.uint16:
                 column_type = 'INT'
-            elif arr.dtype == numpy.int64 or arr.dtype == numpy.uint32 or arr.dtype == numpy.uint64:
+            elif arr.dtype == np.int64 or arr.dtype == np.uint32 or arr.dtype == np.uint64:
                 column_type = 'BIGINT'
-            elif arr.dtype == numpy.float32:
+            elif arr.dtype == np.float32:
                 column_type = 'REAL'
-            elif arr.dtype == numpy.float64:
+            elif arr.dtype == np.float64:
                 column_type = 'DOUBLE'
-            elif numpy.issubdtype(arr.dtype, numpy.str_) or numpy.issubdtype(arr.dtype, numpy.unicode_):
+            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_):
                 column_type = 'STRING'
             else:
                 raise Exception('Unsupported dtype: %s' % (str(arr.dtype)))
@@ -258,10 +253,10 @@ class Cursor:
         else:
             vals = {}
             for tpl in values.items():
-                if isinstance(tpl[1], numpy.ma.core.MaskedArray):
+                if isinstance(tpl[1], np.ma.core.MaskedArray):
                     vals[tpl[0]] = tpl[1]
                 else:
-                    vals[tpl[0]] = numpy.array(tpl[1])
+                    vals[tpl[0]] = np.array(tpl[1])
             values = vals
 
         for column, rows in values.items():
@@ -273,3 +268,6 @@ class Cursor:
 
     def setinputsizes(self, *args, **kwargs):
         return
+
+    def commit(self):
+        self.connection.commit()
