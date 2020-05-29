@@ -15,7 +15,6 @@ except ImportError as e:
     _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
     raise
 
-
 def make_string(blob):
     if blob:
         return ffi.string(blob).decode()
@@ -29,7 +28,7 @@ def make_blob(blob):
     else:
         return ""
 
-def py_float(data):
+def py_float(data: ffi.CData):
     if 'FLOAT' in converters:
         return converters['FLOAT'](data)
     elif 'DOUBLE' in converters:
@@ -88,7 +87,7 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
 # Todo: hack to get around the single embed instance limitation
 _conn_params = {}
 _active = None
-_connection = ffi.NULL
+_connection: ffi.CData = ffi.NULL
 
 
 class MonetEmbedded:
@@ -128,7 +127,7 @@ class MonetEmbedded:
         _logger.info("shutdown called")
         check_error(lib.monetdb_shutdown())
 
-    def cleanup_result(self, result):
+    def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
         if result:
             check_error(lib.monetdb_cleanup_result(_connection, result))
@@ -174,12 +173,12 @@ class MonetEmbedded:
 
         return result, affected_rows[0], prepare_id[0]
 
-    def result_fetch(self, result, column: int):
+    def result_fetch(self, result: ffi.CData, column: int):
         p_rcol = ffi.new("monetdb_column **")
         check_error(lib.monetdb_result_fetch(_connection, result, p_rcol, column))
         return p_rcol[0]
 
-    def result_fetch_numpy(self, monetdb_result):
+    def result_fetch_numpy(self, monetdb_result: ffi.CData):
 
         result = {}
         for c in range(monetdb_result.ncols):
@@ -189,7 +188,7 @@ class MonetEmbedded:
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type = type_map[rcol.type]
             buffer_size = monetdb_result.nrows * numpy_type.itemsize
-            c_buffer = ffi.buffer(rcol, buffer_size)
+            c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=numpy_type)
             result[name] = np_col
         return result

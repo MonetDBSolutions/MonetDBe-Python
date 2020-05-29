@@ -77,7 +77,7 @@ class Connection:
     def commit(self, *args, **kwargs):
         # todo: not implemented yet on monetdb side
         self._check()
-        raise NotImplemented
+        # raise NotImplemented
 
     def close(self, *args, **kwargs):
         del self.inter
