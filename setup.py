@@ -34,7 +34,7 @@ setuptools.setup(
     python_requires='>=3.6',
     setup_requires=["cffi>=1.0.0"],
     extras_require=extras_require,
-    cffi_modules=["monetdbe/util/cffi_builder.py:ffibuilder"],  # "filename:global"
+    cffi_modules=["monetdbe/util/builder.py:ffibuilder"],
     install_requires=["cffi>=1.0.0"],
     tests_require=tests_require,
     test_suite="tests",

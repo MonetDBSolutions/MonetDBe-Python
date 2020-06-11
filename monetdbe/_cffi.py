@@ -9,7 +9,7 @@ from monetdbe.converters import converters
 _logger = logging.getLogger(__name__)
 
 try:
-    from _monetdbe_cffi import lib, ffi
+    from monetdbe._lowlevel import lib, ffi
 except ImportError as e:
     _logger.error(e)
     _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
