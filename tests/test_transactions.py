@@ -55,6 +55,7 @@ class TransactionTests(unittest.TestCase):
         except OSError:
             pass
 
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_DMLDoesNotAutoCommitBefore(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
@@ -63,6 +64,7 @@ class TransactionTests(unittest.TestCase):
         res = self.cur2.fetchall()
         self.assertEqual(len(res), 0)
 
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_InsertStartsTransaction(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
@@ -70,6 +72,7 @@ class TransactionTests(unittest.TestCase):
         res = self.cur2.fetchall()
         self.assertEqual(len(res), 0)
 
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_UpdateStartsTransaction(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
@@ -79,6 +82,7 @@ class TransactionTests(unittest.TestCase):
         res = self.cur2.fetchone()[0]
         self.assertEqual(res, 5)
 
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_DeleteStartsTransaction(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
@@ -88,6 +92,7 @@ class TransactionTests(unittest.TestCase):
         res = self.cur2.fetchall()
         self.assertEqual(len(res), 1)
 
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_ReplaceStartsTransaction(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
@@ -98,6 +103,7 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0][0], 5)
 
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_ToggleAutoCommit(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
@@ -114,16 +120,14 @@ class TransactionTests(unittest.TestCase):
         res = self.cur2.fetchall()
         self.assertEqual(len(res), 1)
 
-    @unittest.skipIf(monetdbe.monetdbe_version_info < (3, 2, 2),
-                     'test hangs on monetdbe versions older than 3.2.2')
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_RaiseTimeout(self):
         self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         with self.assertRaises(monetdbe.OperationalError):
             self.cur2.execute("insert into test(i) values (5)")
 
-    @unittest.skipIf(monetdbe.monetdbe_version_info < (3, 2, 2),
-                     'test hangs on monetdbe versions older than 3.2.2')
+    @unittest.skip("disabled: for MonetDBe both cursors are equal")
     def test_Locking(self):
         """
         This tests the improved concurrency with pymonetdbe 2.3.4. You needed
@@ -143,7 +147,7 @@ class TransactionTests(unittest.TestCase):
         """
         con = monetdbe.connect(":memory:")
         cur = con.cursor()
-        cur.execute("create table test(x)")
+        cur.execute("create table test(x int)")
         cur.execute("insert into test(x) values (5)")
         cur.execute("select 1 union select 2 union select 3")
 
@@ -163,6 +167,7 @@ class SpecialCommandTests(unittest.TestCase):
         self.cur.execute("insert into test(i) values (5)")
         self.cur.execute("drop table test")
 
+    @unittest.skip("disabled, we don't support pragma")
     def test_Pragma(self):
         # note (gijs): added int type
         self.cur.execute("create table test(i int)")
@@ -189,7 +194,7 @@ class TransactionalDDL(unittest.TestCase):
     def test_ImmediateTransactionalDDL(self):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
-        self.con.execute("begin immediate")
+        self.con.execute("begin transaction")
         self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
@@ -198,7 +203,7 @@ class TransactionalDDL(unittest.TestCase):
     def test_TransactionalDDL(self):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
-        self.con.execute("begin")
+        self.con.execute("begin transaction")
         self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
