@@ -6,14 +6,14 @@ RUN yum install -y cmake3
 # download and extract monetdb
 RUN mkdir /build && \
     cd /build && \
-    curl -O https://dev.monetdb.org/hg/MonetDB/archive/mbedded.tar.bz2 && \
-    tar jxvf mbedded.tar.bz2 && \
-    mkdir /build/MonetDB-mbedded/build && \
-    cd /build/MonetDB-mbedded/build && \
+    curl -O https://dev.monetdb.org/hg/MonetDB/archive/default.tar.bz2 && \
+    tar jxvf default.tar.bz2 && \
+    mkdir /build/MonetDB-default/build && \
+    cd /build/MonetDB-default/build && \
     cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python && \
     make -j 4 && \
     make install && \
-    cp /build/MonetDB-mbedded/clients/mapilib/mapi_querytype.h /usr/local/include/monetdb/ && \
+    cp /build/MonetDB-default/clients/mapilib/mapi_querytype.h /usr/local/include/monetdb/ && \
     cd / && \
     rm -rf /build
 

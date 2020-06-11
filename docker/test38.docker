@@ -8,10 +8,10 @@ RUN apt-get update && \
 # download and extract monetdb
 RUN mkdir /build 
 WORKDIR /build 
-RUN curl -O https://dev.monetdb.org/hg/MonetDB/archive/mbedded.tar.bz2 
-RUN tar jxvf mbedded.tar.bz2 
-RUN mkdir /build/MonetDB-mbedded/build 
-WORKDIR /build/MonetDB-mbedded/build 
+RUN curl -O https://dev.monetdb.org/hg/MonetDB/archive/default.tar.bz2 
+RUN tar jxvf default.tar.bz2 
+RUN mkdir /build/MonetDB-default/build 
+WORKDIR /build/MonetDB-default/build 
 RUN apt-get install -y bison libpcre3-dev
 RUN cmake .. 
 RUN make -j 4 
