@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any
-from warnings import warn
 
 from monetdbe import exceptions
 from monetdbe._cffi import MonetEmbedded
@@ -16,7 +15,9 @@ class Connection:
                  uri: bool = False,
                  timeout: float = 5.0,
                  detect_types: int = 0,
-                 check_same_thread: bool = True):
+                 check_same_thread: bool = True,
+                 autocommit: bool = False,
+                 ):
         """
         args:
             uri: if true, database is interpreted as a URI. This allows you to specify options. For example, to open a
@@ -40,7 +41,7 @@ class Connection:
             raise TypeError
 
         try:
-            self.inter = MonetEmbedded(dbdir=database)
+            self.lowlevel = MonetEmbedded(dbdir=database)
         except exceptions.DatabaseError as e:
             raise exceptions.OperationalError(e)
 
@@ -49,6 +50,9 @@ class Connection:
         self.text_factory: Optional[Callable[[str], Any]] = None
         self.total_changes = 0
         self.isolation_level = None
+        self.consistent = True
+
+        self.set_autocommit(autocommit)
 
     def __enter__(self):
         return self
@@ -60,12 +64,14 @@ class Connection:
         raise exceptions.ProgrammingError
 
     def _check(self):
-        if not self.inter:
+        if not self.lowlevel:
             raise exceptions.ProgrammingError
 
-    def execute(self, query: str, args: Optional[Iterable] = None):
-        from monetdbe.cursor import Cursor
-        return Cursor(con=self).execute(query, args)
+    def execute(self, query: str, args: Optional[Iterable] = None) -> 'Cursor':
+        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
+        cur = Cursor(con=self).execute(query, args)
+        self.consistent = True
+        return cur
 
     def executemany(self, query: str, args_seq: Iterable):
         from monetdbe.cursor import Cursor
@@ -75,13 +81,12 @@ class Connection:
         return cur
 
     def commit(self, *args, **kwargs):
-        # todo: not implemented yet on monetdb side
         self._check()
-        # raise NotImplemented
+        return self.execute("COMMIT")
 
     def close(self, *args, **kwargs):
-        del self.inter
-        self.inter = None
+        del self.lowlevel
+        self.lowlevel = None
 
     def cursor(self, factory: Optional[Type['Cursor']] = None):
 
@@ -92,7 +97,7 @@ class Connection:
         cursor = factory(con=self)
         if not cursor:
             raise TypeError
-        if not self.inter:
+        if not self.lowlevel:
             raise exceptions.ProgrammingError
         return cursor
 
@@ -137,16 +142,16 @@ class Connection:
 
     def rollback(self, *args, **kwargs):
         self._check()
-        raise NotImplemented
+        self.execute("ROLLBACK")
+        self.consistent = False
 
     @property
     def in_transaction(self):
-        raise NotImplemented
+        return self.lowlevel.in_tranaction()
 
-    def set_autocommit(self):
-        warn("set_autocommit() will be deprecated in future releases")
+    def set_autocommit(self, value: bool):
         self._check()
-        raise NotImplemented
+        return self.lowlevel.set_autocommit(value)
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

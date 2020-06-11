@@ -72,12 +72,8 @@ typedef struct { monetdb_types type; monetdb_data_timestamp *data; size_t count;
 
 extern char* monetdb_connect(monetdb_connection *conn);
 extern char* monetdb_disconnect(monetdb_connection conn);
-extern char* monetdb_startup(char* dbdir, 
-                                                  _Bool 
-                                                       sequential);
-extern 
-               _Bool 
-                     monetdb_is_initialized(void);
+extern char* monetdb_startup(char* dbdir,  _Bool sequential);
+extern _Bool  monetdb_is_initialized(void);
 
 extern char* monetdb_get_autocommit(monetdb_connection conn, int* result);
 extern char* monetdb_set_autocommit(monetdb_connection conn, int value);

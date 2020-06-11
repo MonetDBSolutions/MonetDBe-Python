@@ -7,7 +7,7 @@ import pandas as pd
 from monetdbe._cffi import extract, make_string
 from monetdbe.monetize import monet_identifier_escape
 from monetdbe.connection import Connection
-from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning
+from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
 
 Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
@@ -53,7 +53,7 @@ class Cursor:
             *list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok)))
 
     def __iter__(self):
-        columns = list(map(lambda x: self.connection.inter.result_fetch(self.result, x), range(self.result.ncols)))
+        columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             if not self.description:
                 self._set_description(columns)
@@ -66,14 +66,14 @@ class Cursor:
 
     def fetchnumpy(self):
         self._check()
-        return self.connection.inter.result_fetch_numpy(self.result)
+        return self.connection.lowlevel.result_fetch_numpy(self.result)
 
     def fetchdf(self):
         self._check()
         return pd.DataFrame(self.fetchnumpy())
 
     def _check(self):
-        if not self.connection or not self.connection.inter:
+        if not self.connection or not self.connection.lowlevel:
             raise ProgrammingError
 
     def execute(self, operation: str, parameters: Optional[Iterable] = None):
@@ -82,7 +82,7 @@ class Cursor:
         self._fetch_generator = None
 
         if self.result:
-            self.connection.inter.cleanup_result(self.result)
+            self.connection.lowlevel.cleanup_result(self.result)
             self.result = None
 
         splitted = strip_split_and_clean(operation)
@@ -91,7 +91,7 @@ class Cursor:
 
         formatted = format_query(operation, parameters)
         try:
-            self.result, self.rowcount, self.prepare_id = self.connection.inter.query(formatted, make_result=True)
+            self.result, self.rowcount, self.prepare_id = self.connection.lowlevel.query(formatted, make_result=True)
         except DatabaseError as e:
             raise OperationalError(e)
         self.connection.total_changes += self.rowcount
@@ -106,7 +106,7 @@ class Cursor:
         self.description = None  # which will be set later in fetchall
 
         if self.result:
-            self.connection.inter.cleanup_result(self.result)
+            self.connection.lowlevel.cleanup_result(self.result)
 
         total_affected_rows = 0
 
@@ -125,7 +125,7 @@ class Cursor:
                 break
 
             formatted = format_query(operation, parameters)
-            self.result, affected_rows, self.prepare_id = self.connection.inter.query(formatted, make_result=True)
+            self.result, affected_rows, self.prepare_id = self.connection.lowlevel.query(formatted, make_result=True)
             total_affected_rows += affected_rows
 
         self.rowcount = total_affected_rows
@@ -137,6 +137,9 @@ class Cursor:
 
     def fetchall(self):
         self._check()
+
+        if not self.connection.consistent:
+            raise InterfaceError("Tranaction rolled back, state inconsistent")
 
         if not self.result:
             return []

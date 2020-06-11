@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
 from typing import Optional, Any, Dict, Tuple, Callable, Type
+
 import numpy as np
-from monetdbe.pythonize import py_date, py_time, py_timestamp
+
 from monetdbe import exceptions
 from monetdbe.converters import converters
+from monetdbe.pythonize import py_date, py_time, py_timestamp
 
 _logger = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ except ImportError as e:
     _logger.error(e)
     _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
     raise
+
 
 def make_string(blob):
     if blob:
@@ -28,6 +31,7 @@ def make_blob(blob):
     else:
         return ""
 
+
 def py_float(data: ffi.CData):
     if 'FLOAT' in converters:
         return converters['FLOAT'](data)
@@ -35,7 +39,6 @@ def py_float(data: ffi.CData):
         return converters['DOUBLE'](data)
     else:
         return data
-
 
 
 def check_error(msg):
@@ -205,16 +208,16 @@ class MonetEmbedded:
         raise NotImplemented
         # lib.monetdb_send_close()
 
-    def set_autocommit(self):
-        raise NotImplemented
-        # lib.monetdb_set_autocommit()
+    def set_autocommit(self, value: bool):
+        check_error(lib.monetdb_set_autocommit(_connection, int(value)))
 
     def append(self, schema: str, table: str, batids, column_count: int):
         check_error(lib.monetdb_append(_connection, schema.encode(), table.encode(), batids, column_count))
 
     def get_autocommit(self):
-        raise NotImplemented
-        # lib.monetdb_get_autocommit()
+        value = ffi.new("int *")
+        check_error(lib.monetdb_get_autocommit(value))
+        return value[0]
 
     def get_columns(self):
         raise NotImplemented
@@ -225,5 +228,8 @@ class MonetEmbedded:
         # lib.monetdb_get_table()
 
     def is_initialized(self):
-        raise NotImplemented
-        # lib.monetdb_is_initialized()
+        return lib.monetdb_is_initialized()
+
+    def in_transaction(self):
+        return lib.monetdb_in_transaction()
+
