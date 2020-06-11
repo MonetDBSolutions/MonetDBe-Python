@@ -7,12 +7,11 @@ https://github.com/monetdBSolutions/MonetDBe-Python/
 
 For binary wheel installation you need:
 
- * Linux
+ * Linux or OSX 10.13+
  * pip >= 19.3
  * Python >= 3.6
 
-For non-binary wheel installation (Windows, OSX) you also (for now) need to
-have MonetDB installed.
+For non-binary wheel installation (Windows) you also need to have MonetDB installed.
 
 
 # install
@@ -33,7 +32,7 @@ $ cd MonetDB
 $ mkdir build
 $ cd build
 $ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=ON -DPY3INTEGRATION=OFF
-$ make -j10 embedded install
+$ make install
 ```
 
 You can also compile monetdbe from the source folder:
