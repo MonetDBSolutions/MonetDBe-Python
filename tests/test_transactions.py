@@ -21,25 +21,26 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-import os, unittest
+import os
+import unittest
+from tempfile import TemporaryDirectory
+
 import monetdbe as monetdbe
-
-
-def get_db_path():
-    return "monetdbe_testdb"
 
 
 class TransactionTests(unittest.TestCase):
     def setUp(self):
+        self.db_path = TemporaryDirectory().name
+
         try:
-            os.remove(get_db_path())
+            os.remove(self.db_path)
         except OSError:
             pass
 
-        self.con1 = monetdbe.connect(get_db_path(), timeout=0.1)
+        self.con1 = monetdbe.connect(self.db_path, timeout=0.1)
         self.cur1 = self.con1.cursor()
 
-        self.con2 = monetdbe.connect(get_db_path(), timeout=0.1)
+        self.con2 = monetdbe.connect(self.db_path, timeout=0.1)
         self.cur2 = self.con2.cursor()
 
     def tearDown(self):
@@ -50,27 +51,27 @@ class TransactionTests(unittest.TestCase):
         self.con2.close()
 
         try:
-            os.unlink(get_db_path())
+            os.unlink(self.db_path)
         except OSError:
             pass
 
     def test_DMLDoesNotAutoCommitBefore(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
-        self.cur1.execute("create table test2(j)")
+        self.cur1.execute("create table test2(j int)")
         self.cur2.execute("select i from test")
         res = self.cur2.fetchall()
         self.assertEqual(len(res), 0)
 
     def test_InsertStartsTransaction(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         self.cur2.execute("select i from test")
         res = self.cur2.fetchall()
         self.assertEqual(len(res), 0)
 
     def test_UpdateStartsTransaction(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         self.con1.commit()
         self.cur1.execute("update test set i=6")
@@ -79,7 +80,7 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(res, 5)
 
     def test_DeleteStartsTransaction(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         self.con1.commit()
         self.cur1.execute("delete from test")
@@ -88,7 +89,7 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(len(res), 1)
 
     def test_ReplaceStartsTransaction(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         self.con1.commit()
         self.cur1.execute("replace into test(i) values (6)")
@@ -98,7 +99,7 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(res[0][0], 5)
 
     def test_ToggleAutoCommit(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         self.con1.isolation_level = None
         self.assertEqual(self.con1.isolation_level, None)
@@ -116,7 +117,7 @@ class TransactionTests(unittest.TestCase):
     @unittest.skipIf(monetdbe.monetdbe_version_info < (3, 2, 2),
                      'test hangs on monetdbe versions older than 3.2.2')
     def test_RaiseTimeout(self):
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         with self.assertRaises(monetdbe.OperationalError):
             self.cur2.execute("insert into test(i) values (5)")
@@ -128,7 +129,7 @@ class TransactionTests(unittest.TestCase):
         This tests the improved concurrency with pymonetdbe 2.3.4. You needed
         to roll back con2 before you could commit con1.
         """
-        self.cur1.execute("create table test(i)")
+        self.cur1.execute("create table test(i int)")
         self.cur1.execute("insert into test(i) values (5)")
         with self.assertRaises(monetdbe.OperationalError):
             self.cur2.execute("insert into test(i) values (5)")
@@ -157,12 +158,14 @@ class SpecialCommandTests(unittest.TestCase):
         self.cur = self.con.cursor()
 
     def test_DropTable(self):
-        self.cur.execute("create table test(i)")
+        # note (gijs): added int type
+        self.cur.execute("create table test(i int)")
         self.cur.execute("insert into test(i) values (5)")
         self.cur.execute("drop table test")
 
     def test_Pragma(self):
-        self.cur.execute("create table test(i)")
+        # note (gijs): added int type
+        self.cur.execute("create table test(i int)")
         self.cur.execute("insert into test(i) values (5)")
         self.cur.execute("pragma count_changes=1")
 
@@ -178,7 +181,7 @@ class TransactionalDDL(unittest.TestCase):
     def test_DdlDoesNotAutostartTransaction(self):
         # For backwards compatibility reasons, DDL statements should not
         # implicitly start a transaction.
-        self.con.execute("create table test(i)")
+        self.con.execute("create table test(i int)")
         self.con.rollback()
         result = self.con.execute("select * from test").fetchall()
         self.assertEqual(result, [])
@@ -187,7 +190,7 @@ class TransactionalDDL(unittest.TestCase):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
         self.con.execute("begin immediate")
-        self.con.execute("create table test(i)")
+        self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
             self.con.execute("select * from test")
@@ -196,7 +199,7 @@ class TransactionalDDL(unittest.TestCase):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
         self.con.execute("begin")
-        self.con.execute("create table test(i)")
+        self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
             self.con.execute("select * from test")
