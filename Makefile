@@ -31,3 +31,7 @@ tests:
 
 push: docker
 	docker push $(DOCKER_IMAGE):wheel
+
+clean:
+	python3 setup.py clean
+	rm -rf build dist *.egg-info .eggs
