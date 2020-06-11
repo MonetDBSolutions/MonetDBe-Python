@@ -26,6 +26,16 @@ On supported platforms, this will download and install the Binary wheel, otherwi
 
 # compile
 
+You need a recent MonetDB installation with INT128 on and py3integration off: 
+```
+$ hg clone hg://dev.monetdb.org/hg/MonetDB
+$ cd MonetDB
+$ mkdir build
+$ cd build
+$ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=ON -DPY3INTEGRATION=OFF
+$ make -j10 embedded install
+```
+
 You can also compile monetdbe from the source folder:
 ```
 $ git clone https://github.com/MonetDBSolutions/MonetDBe-Python/
