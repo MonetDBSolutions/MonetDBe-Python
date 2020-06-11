@@ -1,5 +1,5 @@
 import unittest
-from _monetdbe_cffi import lib
+from monetdbe._lowlevel import lib
 
 
 class TestCffi(unittest.TestCase):
