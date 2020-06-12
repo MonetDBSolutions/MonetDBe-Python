@@ -7,7 +7,9 @@ class TestMultipleResultSets:
         monetdbe_cursor.execute('SELECT * FROM integers')
         monetdbe_cursor.execute('SELECT * FROM integers')
         result = monetdbe_cursor.fetchall()
-        assert result == [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [None]], "Incorrect result returned"
+
+        expected = [(i,) for i in range(10)] + [(None,)]
+        assert result == expected, "Incorrect result returned"
 
     def test_numpy_selection(self, monetdbe_cursor):
         monetdbe_cursor.execute('SELECT * FROM integers')

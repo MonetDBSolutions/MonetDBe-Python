@@ -1,11 +1,21 @@
 from re import compile, sub, DOTALL
 from string import Formatter
 from typing import Dict, Optional, Union, Iterable, Any, List
-from monetdbe.monetize import convert
+
 from monetdbe.exceptions import ProgrammingError
+from monetdbe.monetize import convert
 
 # use this pattern to split a string on non-escaped semicolumns
 semicolumn_split_pattern = compile(r'''((?:[^;"']|"[^"]*"|'[^']*')+)''')
+
+
+def remove_quoted_substrings(query: str):
+    """
+    This removes all quoted substrings. Note that this likely results in a broken query.
+    """
+    q = sub(r"\\'", "", query)  # first remove escaped quotes
+    q = sub(r"'(.*)'", "", q)  # then remove all quotes strings
+    return q
 
 
 def strip_split_and_clean(script: str):
@@ -53,14 +63,21 @@ def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str,
     if type(query) != str:
         raise TypeError
 
-    if parameters is not None:
-        if hasattr(type(parameters), '__getitem__') and hasattr(type(parameters), 'keys'):  # qmark style
+    cleaned_query = remove_quoted_substrings(query)
 
-            if '?' in query:
-                raise ProgrammingError("'?' in formatting with qmark style parameters")
+    if parameters is not None:
+        if hasattr(type(parameters), '__getitem__') and hasattr(type(parameters),
+                                                                'keys'):  # named, numeric or format style
+
+            if '?' in cleaned_query:
+                raise ProgrammingError("'?' in formatting with mapping as parameters")
 
             escaped: Dict[str, str] = {k: convert(v) for k, v in parameters.items()}
-            x = sub(r':(\w+)', r'{\1}', query)
+
+            if ':' in cleaned_query:  # qmark
+                x = sub(r':(\w+)', r'{\1}', query)
+            elif '%' in cleaned_query:  # pyformat
+                return query % escaped
 
             if hasattr(type(parameters), '__missing__'):
                 # this is something like a dict with a default value
@@ -73,18 +90,24 @@ def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str,
                 return x.format(**escaped)
             except KeyError as e:
                 raise ProgrammingError(e)
-        elif hasattr(type(parameters), '__iter__'):  # named style
-
-            if ':' in query:
-                raise ProgrammingError("':' in formatting with named style parameters")
+        elif hasattr(type(parameters), '__iter__'):  # qmark or pyformat style
 
             escaped: List[str] = [convert(i) for i in parameters]
-            return query.replace('?', '{}').format(*escaped)
+
+            if ':' in cleaned_query:
+                # raise ProgrammingError("':' in formatting with named style parameters")
+                x = sub(r':(\w+)', r'{\1}', query)
+                prefixed = [None] + escaped  # off by one error
+                return x.format(*prefixed)
+
+            if '?' in cleaned_query:  # named style
+                return query.replace('?', '{}').format(*escaped)
+            elif '%s' in cleaned_query:  # pyformat style
+                return query % tuple(escaped)
         else:
             raise ValueError(f"parameters '{parameters}' type '{type(parameters)}' not supported")
     else:
-        # TODO: (gijs) this should probably be a bit more elaborate, support for escaping for example
         for symbol in ':?':
-            if symbol in query:
+            if symbol in cleaned_query:
                 raise ProgrammingError(f"unexpected symbol '{symbol}' in operation")
         return query
