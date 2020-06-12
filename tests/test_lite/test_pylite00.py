@@ -1,11 +1,12 @@
-import monetdbe
-import numpy
 import os
 import shutil
+
+import numpy
 import pytest
 
+import monetdbe
 
-@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
+
 class TestmonetdbeBase(object):
     def test_uninitialized(self):
         # select before init

@@ -1,11 +1,12 @@
 import os
 import shutil
 import tempfile
-import monetdbe as mdbl
+
 import pytest
 
+import monetdbe as mdbl
 
-@pytest.mark.skipif(True, reason="monetdblite compatibility - not supported yet")
+
 class TestInitialization:
     def test_double_initialization(self, initialize_monetdbe):
         with pytest.raises(mdbl.exceptions.DatabaseError):

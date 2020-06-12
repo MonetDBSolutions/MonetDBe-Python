@@ -1,8 +1,8 @@
 import pytest
+
 import monetdbe
 
 
-@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
 class TestShutdown:
     def test_commited_on_restart(self, monetdbe_cursor_autocommit):
         (cursor, connection, dbfarm) = monetdbe_cursor_autocommit

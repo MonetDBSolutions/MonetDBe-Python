@@ -1,7 +1,3 @@
-import pytest
-
-
-@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
 class TestSimpleDBAPI:
     def test_regular_selection(self, monetdbe_cursor):
         monetdbe_cursor.execute('SELECT * FROM integers')

@@ -3,7 +3,6 @@ import numpy
 import pytest
 
 
-@pytest.mark.skipif(True, reason="monetdblite compatibl but: not supported yet")
 class TestMultipleResultSets:
     def test_string_insertion(self, monetdbe_cursor):
         monetdbe_cursor.execute('CREATE TABLE strings(s STRING)')
