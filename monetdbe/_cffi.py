@@ -48,21 +48,22 @@ def check_error(msg):
         raise exceptions.DatabaseError(decoded)
 
 
+# format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
 type_map: Dict[Any, Tuple[str, Optional[Callable], Type]] = {
-    lib.monetdb_bool: ("bool", bool, np.dtype(np.bool)),
-    lib.monetdb_int8_t: ("int8_t", None, np.dtype(np.int8)),
-    lib.monetdb_int16_t: ("int16_t", None, np.dtype(np.int16)),
-    lib.monetdb_int32_t: ("int32_t", None, np.dtype(np.int32)),
-    lib.monetdb_int64_t: ("int64_t", None, np.dtype(np.int64)),
-    lib.monetdb_int128_t: ("int128_t", None, None),
-    lib.monetdb_size_t: ("size_t", None, None),
-    lib.monetdb_float: ("float", py_float, np.dtype(np.float)),
-    lib.monetdb_double: ("double", py_float, np.dtype(np.float)),
-    lib.monetdb_str: ("str", make_string, np.dtype(np.str)),
-    lib.monetdb_blob: ("blob", make_blob, None),
-    lib.monetdb_date: ("date", py_date, np.dtype(np.datetime64)),
-    lib.monetdb_time: ("time", py_time, np.dtype(np.datetime64)),
-    lib.monetdb_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64)),
+    lib.monetdb_bool: ("bool", bool, np.dtype(np.bool), None),
+    lib.monetdb_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
+    lib.monetdb_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
+    lib.monetdb_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
+    lib.monetdb_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
+    lib.monetdb_int128_t: ("int128_t", None, None, None),
+    lib.monetdb_size_t: ("size_t", None, None, None),
+    lib.monetdb_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
+    lib.monetdb_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
+    lib.monetdb_str: ("str", make_string, np.dtype(np.str), None),
+    lib.monetdb_blob: ("blob", make_blob, None, None),
+    lib.monetdb_date: ("date", py_date, np.dtype(np.datetime64), None),
+    lib.monetdb_time: ("time", py_time, np.dtype(np.datetime64), None),
+    lib.monetdb_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64), None),
 }
 
 
@@ -72,7 +73,7 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
 
     The text_factory is optional, and wraps the value with a custom user supplied text function.
     """
-    cast_string, cast_function, numpy_type = type_map[rcol.type]
+    cast_string, cast_function, numpy_type, monetdb_null = type_map[rcol.type]
     col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
     if col.is_null(col.data[r]):
         return None
@@ -189,11 +190,21 @@ class MonetEmbedded:
             check_error(lib.monetdb_result_fetch(_connection, monetdb_result, p_rcol, c))
             rcol = p_rcol[0]
             name = make_string(rcol.name)
-            cast_string, cast_function, numpy_type = type_map[rcol.type]
+            cast_string, cast_function, numpy_type, monetdb_null = type_map[rcol.type]
             buffer_size = monetdb_result.nrows * numpy_type.itemsize
             c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=numpy_type)
-            result[name] = np_col
+
+            if monetdb_null:
+                mask = np_col == monetdb_null
+                if mask.any():
+                    masked = np.ma.masked_array(np_col, mask=mask)
+                else:
+                    masked = np_col
+            else:
+                masked = np_col
+
+            result[name] = masked
         return result
 
     def clear_prepare(self):
@@ -232,4 +243,3 @@ class MonetEmbedded:
 
     def in_transaction(self):
         return lib.monetdb_in_transaction()
-

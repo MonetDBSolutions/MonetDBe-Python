@@ -1,14 +1,15 @@
-from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
 from collections import namedtuple
 from itertools import repeat
-from warnings import warn
+from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
+
 import numpy as np
 import pandas as pd
+
 from monetdbe._cffi import extract, make_string
-from monetdbe.monetize import monet_identifier_escape
 from monetdbe.connection import Connection
 from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
+from monetdbe.monetize import monet_identifier_escape
 
 Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
                                          'null_ok'))
@@ -49,8 +50,9 @@ class Cursor:
         precision = repeat(None)
         scale = repeat(None)
         null_ok = repeat(None)
-        self.description = Description._make(
-            *list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok)))
+
+        descriptions = list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok))
+        self.description = [Description(*i) for i in descriptions]
 
     def __iter__(self):
         columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
@@ -110,7 +112,7 @@ class Cursor:
 
         total_affected_rows = 0
 
-        if operation[:6].lower() == 'select':
+        if operation[:6].lower().strip() == 'select':
             raise ProgrammingError("Don't use a SELECT statement with executemany()")
 
         if hasattr(seq_of_parameters, '__iter__'):
@@ -193,7 +195,7 @@ class Cursor:
         """
         Creates a table from a set of values or a pandas DataFrame.
         """
-        # note: this is a backwards compatibility function with with monetdblite
+        # note: this is a backwards compatibility function with monetdblite
         self._check()
 
         column_types = []
@@ -262,8 +264,15 @@ class Cursor:
                     vals[tpl[0]] = np.array(tpl[1])
             values = vals
 
-        for column, rows in values.items():
-            self.executemany(f"insert into {table} ({column}) values (?)", ((i,) for i in rows))
+        column_names = values.keys()
+        rows = values.values()
+
+        columns = ", ".join(column_names)
+        rows_zipped = list(zip(*rows))
+
+        qmarks = ", ".join(['?'] * len(column_names))
+
+        return self.executemany(f"insert into {table} ({columns}) values ({qmarks})", rows_zipped)
         # return self.connection.inter.append(schema, table, values, column_count=len(values))
 
     def setoutputsize(self, *args, **kwargs):
