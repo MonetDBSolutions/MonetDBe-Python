@@ -53,9 +53,10 @@ Timestamp = datetime.datetime
 
 
 def connect(*args, **kwargs):
-    if 'factory' in kwargs and 'database' in kwargs:
+    if 'factory' in kwargs: # and 'database' in kwargs:
         factory = kwargs.pop('factory')
-        return factory(database=kwargs['database'])
+        return factory(*args, **kwargs)
+        #return factory(database=kwargs['database'])
     return Connection(*args, **kwargs)
 
 

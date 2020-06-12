@@ -42,9 +42,11 @@ class Cursor:
         self._fetch_generator: Optional[Generator] = None
         self.description: Optional[Tuple[str]] = None
 
-    def _set_description(self, columns):
-        name = (make_string(rcol.name) for rcol in columns)
-        type_code = (rcol.type for rcol in columns)
+    def _set_description(self):
+        self._columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
+
+        name = (make_string(rcol.name) for rcol in self._columns)
+        type_code = (rcol.type for rcol in self._columns)
         display_size = repeat(None)
         internal_size = repeat(None)
         precision = repeat(None)
@@ -57,9 +59,6 @@ class Cursor:
     def __iter__(self):
         columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
-            if not self.description:
-                self._set_description(columns)
-
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
                 yield self.connection.row_factory(cur=self, row=row)
@@ -67,19 +66,25 @@ class Cursor:
                 yield row
 
     def fetchnumpy(self):
-        self._check()
+        self._check_connection()
+        self._check_result()
         return self.connection.lowlevel.result_fetch_numpy(self.result)
 
     def fetchdf(self):
-        self._check()
+        self._check_connection()
+        self._check_result()
         return pd.DataFrame(self.fetchnumpy())
 
-    def _check(self):
+    def _check_connection(self):
         if not self.connection or not self.connection.lowlevel:
-            raise ProgrammingError
+            raise ProgrammingError("no connection to lower level database available")
+
+    def _check_result(self):
+        if not self.result:
+            raise ProgrammingError("fetching data but no query executed")
 
     def execute(self, operation: str, parameters: Optional[Iterable] = None):
-        self._check()
+        self._check_connection()
         self.description = None  # which will be set later in fetchall
         self._fetch_generator = None
 
@@ -97,6 +102,7 @@ class Cursor:
         except DatabaseError as e:
             raise OperationalError(e)
         self.connection.total_changes += self.rowcount
+        self._set_description()
         return self
 
     def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]):
@@ -104,7 +110,7 @@ class Cursor:
         Prepare a database operation (query or command) and then execute it against all parameter sequences or
         mappings found in the sequence seq_of_parameters.
         """
-        self._check()
+        self._check_connection()
         self.description = None  # which will be set later in fetchall
 
         if self.result:
@@ -132,13 +138,15 @@ class Cursor:
 
         self.rowcount = total_affected_rows
         self.connection.total_changes += total_affected_rows
+        self._set_description()
         return self
 
     def close(self, *args, **kwargs):
         self.connection = None
 
     def fetchall(self):
-        self._check()
+        self._check_connection()
+        # self._check_result() sqlite test suite doesn't want us to bail out
 
         if not self.connection.consistent:
             raise InterfaceError("Tranaction rolled back, state inconsistent")
@@ -151,7 +159,8 @@ class Cursor:
         return rows
 
     def fetchmany(self, size=None):
-        self._check()
+        self._check_connection()
+        # self._check_result() sqlite test suite doesn't want us to bail out
 
         if not self.result:
             return []
@@ -170,7 +179,8 @@ class Cursor:
         return rows
 
     def fetchone(self, *args, **kwargs):
-        self._check()
+        self._check_connection()
+        # self._check_result() sqlite test suite doesn't want us to bail out
 
         if not self.result:
             return
@@ -183,7 +193,7 @@ class Cursor:
             return None
 
     def executescript(self, sql_script: str):
-        self._check()
+        self._check_connection()
 
         if not isinstance(sql_script, str):
             raise ValueError("script argument must be unicode.")
@@ -196,7 +206,7 @@ class Cursor:
         Creates a table from a set of values or a pandas DataFrame.
         """
         # note: this is a backwards compatibility function with monetdblite
-        self._check()
+        self._check_connection()
 
         column_types = []
 
@@ -272,7 +282,8 @@ class Cursor:
 
         qmarks = ", ".join(['?'] * len(column_names))
 
-        return self.executemany(f"insert into {table} ({columns}) values ({qmarks})", rows_zipped)
+        query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
+        return self.executemany(query, rows_zipped)
         # return self.connection.inter.append(schema, table, values, column_count=len(values))
 
     def setoutputsize(self, *args, **kwargs):
@@ -283,3 +294,12 @@ class Cursor:
 
     def commit(self):
         self.connection.commit()
+
+    def transaction(self):
+        return self.execute("BEGIN TRANSACTION")
+
+    def scroll(self, count: int, mode: str = 'relative'):
+        """
+        We dont support scrolling, since the full resultset is available.
+        """
+        raise NotImplementedError

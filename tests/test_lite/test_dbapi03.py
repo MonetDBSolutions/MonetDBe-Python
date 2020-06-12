@@ -11,14 +11,14 @@ class TestShutdown:
         cursor.executemany('INSERT INTO integers VALUES (%s)', [[x] for x in range(3)])
         cursor.execute('SELECT * FROM integers')
         result = cursor.fetchall()
-        assert result == [[0], [1], [2]], "Incorrect result returned"
+        assert result == [(0,), (1,), (2,)], "Incorrect result returned"
         cursor.commit()
         connection.close()
 
         connection = monetdbe.make_connection(dbfarm)
         cursor = connection.cursor()
         cursor.execute('SELECT * FROM integers')
-        assert result == [[0], [1], [2]], "Incorrect result returned"
+        assert result == [(0,), (1,), (2,)], "Incorrect result returned"
 
     def test_transaction_aborted_on_shutdown(self, monetdbe_cursor_autocommit):
         (cursor, connection, dbfarm) = monetdbe_cursor_autocommit
@@ -27,7 +27,7 @@ class TestShutdown:
         cursor.executemany('INSERT INTO integers VALUES (%s)', [[x] for x in range(3)])
         cursor.execute('SELECT * FROM integers')
         result = cursor.fetchall()
-        assert result == [[0], [1], [2]], "Incorrect result returned"
+        assert result == [(0,), (1,), (2,)], "Incorrect result returned"
         connection.close()
 
         connection = monetdbe.make_connection(dbfarm)
@@ -43,7 +43,7 @@ class TestShutdown:
             cursor.executemany('INSERT INTO integers VALUES (%s)', [[x] for x in range(10)])
             cursor.execute('SELECT MIN(i * 3 + 5) FROM integers')
             result = cursor.fetchall()
-            assert result == [[5]], "Incorrect result returned"
+            assert result == [(5,)], "Incorrect result returned"
             connection.close()
 
             connection = monetdbe.make_connection(dbfarm)
@@ -95,6 +95,7 @@ class TestShutdown:
 
         assert counter == 10
 
+    @pytest.mark.skip("we dont support scrolling")
     def test_scroll(self, monetdbe_cursor):
         monetdbe_cursor.execute("SELECT * FROM integers")
         monetdbe_cursor.scroll(5)
@@ -102,11 +103,13 @@ class TestShutdown:
         x = monetdbe_cursor.fetchone()
         assert x[0] == 6
 
+    @pytest.mark.skip("we dont support scrolling")
     def test_scroll_raises_for_incorrect_mode(self, monetdbe_cursor):
         monetdbe_cursor.execute("SELECT * FROM integers")
         with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_cursor.scroll(5, mode='abc')
 
+    @pytest.mark.skip("we dont support scrolling")
     def test_scroll_raises_for_out_of_bounds_offset(self, monetdbe_cursor):
         monetdbe_cursor.execute("SELECT * FROM integers")
         with pytest.raises(IndexError):

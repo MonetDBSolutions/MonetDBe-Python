@@ -6,10 +6,10 @@ import pytest
 class TestMultipleResultSets:
     def test_string_insertion(self, monetdbe_cursor):
         monetdbe_cursor.execute('CREATE TABLE strings(s STRING)')
-        monetdbe_cursor.executemany('INSERT INTO strings VALUES (%s)', ["'hello\" world\"'"])
+        monetdbe_cursor.executemany('INSERT INTO strings VALUES (%s)', [["'hello\" world\"'"]])
         monetdbe_cursor.execute('SELECT * FROM strings')
         result = monetdbe_cursor.fetchall()
-        assert result == [["'hello\" world\"'"]], "Incorrect result returned"
+        assert result == [("'hello\" world\"'",)], "Incorrect result returned"
 
     def test_table_name(self, monetdbe_cursor):
         sname = "table"

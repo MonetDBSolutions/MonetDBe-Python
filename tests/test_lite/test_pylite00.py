@@ -7,7 +7,9 @@ import pytest
 import monetdbe
 
 
+@pytest.mark.skip("we do support this")
 class TestmonetdbeBase(object):
+
     def test_uninitialized(self):
         # select before init
         with pytest.raises(monetdbe.DatabaseError):
@@ -60,9 +62,8 @@ class TestmonetdbeBase(object):
         result = monetdbe.sql('SELECT MIN(i) AS minimum FROM pylite05', client=conn)
         assert result['minimum'][0] == 0, "Incorrect result"
         # attempt to query the table from another client
-        if not PY26:
-            with pytest.raises(monetdbe.DatabaseError):
-                monetdbe.sql('SELECT * FROM pylite05', client=conn2)
+        with pytest.raises(monetdbe.DatabaseError):
+            monetdbe.sql('SELECT * FROM pylite05', client=conn2)
 
         # now commit the table
         monetdbe.sql('COMMIT', client=conn)
