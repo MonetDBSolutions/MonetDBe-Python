@@ -15,9 +15,9 @@ with open(path, 'r') as f:
 
 ffibuilder.set_source("monetdbe._lowlevel",
                       """
-#include "monetdb/monetdb_embedded.h"
+#include "monetdb/monetdbe.h"
                       """,
-                      libraries=['embedded'])
+                      libraries=['monetdbe'])
 
 if __name__ == "__main__":
     ffibuilder.compile(verbose=True)

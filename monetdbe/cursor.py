@@ -135,7 +135,7 @@ class Cursor:
 
         formatted = format_query(operation, parameters)
         try:
-            self.result, self.rowcount, self.prepare_id = self.connection.lowlevel.query(formatted, make_result=True)
+            self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)
         except DatabaseError as e:
             raise OperationalError(e)
         self.connection.total_changes += self.rowcount
@@ -174,7 +174,7 @@ class Cursor:
                 break
 
             formatted = format_query(operation, parameters)
-            self.result, affected_rows, self.prepare_id = self.connection.lowlevel.query(formatted, make_result=True)
+            self.result, affected_rows = self.connection.lowlevel.query(formatted, make_result=True)
             total_affected_rows += affected_rows
 
         self.rowcount = total_affected_rows

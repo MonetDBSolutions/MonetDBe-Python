@@ -19,6 +19,8 @@ try:
 except ImportError as e:
     _logger.error(e)
     _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
+
+
 #    raise
 
 
@@ -53,38 +55,38 @@ def check_error(msg):
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], Type]] = {
-    lib.monetdb_bool: ("bool", bool, np.dtype(np.bool), None),
-    lib.monetdb_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
-    lib.monetdb_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
-    lib.monetdb_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
-    lib.monetdb_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
-    lib.monetdb_int128_t: ("int128_t", None, None, None),
-    lib.monetdb_size_t: ("size_t", None, None, None),
-    lib.monetdb_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
-    lib.monetdb_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
-    lib.monetdb_str: ("str", make_string, np.dtype(np.str), None),
-    lib.monetdb_blob: ("blob", make_blob, None, None),
-    lib.monetdb_date: ("date", py_date, np.dtype(np.datetime64), None),
-    lib.monetdb_time: ("time", py_time, np.dtype(np.datetime64), None),
-    lib.monetdb_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64), None),
+type_map: Dict[Any, Tuple[str, Optional[Callable], Type,  Optional[Any]]] = {
+    lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
+    lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
+    lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
+    lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
+    lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
+    lib.monetdbe_int128_t: ("int128_t", None, None, None),
+    lib.monetdbe_size_t: ("size_t", None, None, None),
+    lib.monetdbe_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
+    lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
+    lib.monetdbe_str: ("str", make_string, np.dtype(np.str), None),
+    lib.monetdbe_blob: ("blob", make_blob, None, None),
+    lib.monetdbe_date: ("date", py_date, np.dtype(np.datetime64), None),
+    lib.monetdbe_time: ("time", py_time, np.dtype(np.datetime64), None),
+    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64), None),
 }
 
 
 def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
     """
-    Extracts values from a monetdb_column.
+    Extracts values from a monetdbe_column.
 
     The text_factory is optional, and wraps the value with a custom user supplied text function.
     """
-    cast_string, cast_function, numpy_type, monetdb_null = type_map[rcol.type]
-    col = ffi.cast(f"monetdb_column_{cast_string} *", rcol)
+    cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
+    col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
     if col.is_null(col.data[r]):
         return None
     else:
         if cast_function:
             result = cast_function(col.data[r])
-            if rcol.type == lib.monetdb_str and text_factory:
+            if rcol.type == lib.monetdbe_str and text_factory:
                 return text_factory(result)
             else:
                 return result
@@ -107,7 +109,6 @@ class MonetEmbedded:
         global _conn_params, _active
         if _active:
             self.disconnect()
-            self.shutdown()
         _conn_params.pop(self)
         _active = None
 
@@ -118,42 +119,33 @@ class MonetEmbedded:
         global _connection
         if _connection:
             self.disconnect()
-            self.shutdown()
         dbdir = _conn_params[self]
-        self.startup(dbdir)
-        _connection = self.connect()
+        _connection = self.connect(dbdir)
         self._active = self
-
-    def startup(self, dbdir: Optional[Path] = None, sequential: bool = False):
-        if not dbdir:
-            dbdir_c = ffi.NULL
-        else:
-            dbdir_c = ffi.new("char[]", str(dbdir).encode())
-        check_error(lib.monetdb_startup(dbdir_c, sequential))
-
-    def shutdown(self):
-        _logger.info("shutdown called")
-        check_error(lib.monetdb_shutdown())
 
     def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
         if result:
-            check_error(lib.monetdb_cleanup_result(_connection, result))
+            check_error(lib.monetdbe_cleanup_result(_connection, result))
 
-    def connect(self):
-        _logger.info("connect called")
-        pconn = ffi.new("monetdb_connection *")
-        check_error(lib.monetdb_connect(pconn))
+    def connect(self, dbdir: Optional[Path] = None):
+        if not dbdir:
+            dbdir_c = ffi.NULL
+        else:
+            dbdir_c = ffi.new("char[]", str(dbdir).encode())
+
+        pconn = ffi.new("monetdbe_database *")
+        check_error(lib.monetdbe_open(pconn, dbdir_c))
         return pconn[0]
 
     def disconnect(self):
         _logger.info("disconnect called")
         global _connection
         if _connection != ffi.NULL:
-            check_error(lib.monetdb_disconnect(_connection))
+            check_error(lib.monetdbe_close(_connection))
         _connection = ffi.NULL
 
-    def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int, int]:
+    def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
         Execute a query.
 
@@ -162,45 +154,45 @@ class MonetEmbedded:
                       result afterwards
 
         returns:
-            result, affected_rows, prepare_id
+            result, affected_rows
 
         """
         if make_result:
-            p_result = ffi.new("monetdb_result **")
+            p_result = ffi.new("monetdbe_result **")
         else:
             p_result = ffi.NULL
 
-        affected_rows = ffi.new("lng *")
-        prepare_id = ffi.new("int *")
-        check_error(lib.monetdb_query(_connection, query.encode(), p_result, affected_rows, prepare_id))
+        affected_rows = ffi.new("monetdbe_cnt *")
+
+        check_error(lib.monetdbe_query(_connection, query.encode(), p_result, affected_rows))
 
         if make_result:
             result = p_result[0]
         else:
             result = None
 
-        return result, affected_rows[0], prepare_id[0]
+        return result, affected_rows[0]
 
     def result_fetch(self, result: ffi.CData, column: int):
-        p_rcol = ffi.new("monetdb_column **")
-        check_error(lib.monetdb_result_fetch(_connection, result, p_rcol, column))
+        p_rcol = ffi.new("monetdbe_column **")
+        check_error(lib.monetdbe_result_fetch(_connection, result, p_rcol, column))
         return p_rcol[0]
 
-    def result_fetch_numpy(self, monetdb_result: ffi.CData):
+    def result_fetch_numpy(self, monetdbe_result: ffi.CData):
 
         result = {}
-        for c in range(monetdb_result.ncols):
-            p_rcol = ffi.new("monetdb_column **")
-            check_error(lib.monetdb_result_fetch(_connection, monetdb_result, p_rcol, c))
+        for c in range(monetdbe_result.ncols):
+            p_rcol = ffi.new("monetdbe_column **")
+            check_error(lib.monetdbe_result_fetch(_connection, monetdbe_result, p_rcol, c))
             rcol = p_rcol[0]
             name = make_string(rcol.name)
-            cast_string, cast_function, numpy_type, monetdb_null = type_map[rcol.type]
-            buffer_size = monetdb_result.nrows * numpy_type.itemsize
+            cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
+            buffer_size = monetdbe_result.nrows * numpy_type.itemsize
             c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=numpy_type)
 
-            if monetdb_null:
-                mask = np_col == monetdb_null
+            if monetdbe_null:
+                mask = np_col == monetdbe_null
                 if mask.any():
                     masked = np.ma.masked_array(np_col, mask=mask)
                 else:
@@ -211,39 +203,26 @@ class MonetEmbedded:
             result[name] = masked
         return result
 
-    def clear_prepare(self):
-        raise NotImplemented
-        # lib.monetdb_clear_prepare()
-
-    def result_fetch_rawcol(self):
-        raise NotImplemented
-        # lib.monetdb_result_fetch_rawcol()
-
-    def send_close(self):
-        raise NotImplemented
-        # lib.monetdb_send_close()
-
     def set_autocommit(self, value: bool):
-        check_error(lib.monetdb_set_autocommit(_connection, int(value)))
+        check_error(lib.monetdbe_set_autocommit(_connection, int(value)))
 
     def append(self, schema: str, table: str, batids, column_count: int):
-        check_error(lib.monetdb_append(_connection, schema.encode(), table.encode(), batids, column_count))
+        # todo (gijs): use :)
+        check_error(lib.monetdbe_append(_connection, schema.encode(), table.encode(), batids, column_count))
 
     def get_autocommit(self):
         value = ffi.new("int *")
-        check_error(lib.monetdb_get_autocommit(value))
+        check_error(lib.monetdbe_get_autocommit(value))
         return value[0]
 
-    def get_columns(self):
-        raise NotImplemented
-        # lib.monetdb_get_columns()
-
-    def get_table(self):
-        raise NotImplemented
-        # lib.monetdb_get_table()
-
     def is_initialized(self):
-        return lib.monetdb_is_initialized()
+        return lib.monetdbe_is_initialized()
 
     def in_transaction(self):
-        return lib.monetdb_in_transaction()
+        return lib.monetdbe_in_transaction()
+
+    def prepare(self, query):
+        # todo (gijs): use :)
+        stmt = ffi.new("monetdbe_statement **")
+        lib.monetdbe_prepare(_connection, query.encode(), stmt)
+        return stmt[0]
