@@ -7,7 +7,7 @@ tests_require = ['pytest']
 
 extras_require = {
     'test': tests_require,
-    'doc': ['sphinx'],
+    'doc': ['sphinx', 'sphinx_rtd_theme'],
 
 }
 

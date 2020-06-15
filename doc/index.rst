@@ -10,6 +10,10 @@ Welcome to monetdbe's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   installation
+   introduction
+   API
+   developer
 
 
 Indices and tables

@@ -1,3 +1,7 @@
+"""
+This module contains the CFFI code. It is a wrapper around the monetdbe embedded shared library, converting
+python calls and data into C and back.
+"""
 import logging
 from pathlib import Path
 from typing import Optional, Any, Dict, Tuple, Callable, Type
@@ -15,7 +19,7 @@ try:
 except ImportError as e:
     _logger.error(e)
     _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
-    raise
+#    raise
 
 
 def make_string(blob):

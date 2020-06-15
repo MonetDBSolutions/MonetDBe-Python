@@ -1,10 +1,34 @@
+=====================
+Developer information
+=====================
 
 
-windows wheel
--------------
+Making binary wheel for Linux
+=============================
 
-Compile MonetDB
-===============
+requirements:
+ * Docker
+ * make
+
+Then run
+
+.. code-block::
+
+    $ make wheels
+
+
+
+Making binary wheel for OSX
+===========================
+
+
+
+Making binary wheel for Windows
+===============================
+
+
+Compile MonetDB on Windows
+--------------------------
 
 install microsoft visual studio community edition:
 
@@ -24,5 +48,5 @@ https://github.com/MonetDB/MonetDB
 
 
 Compile monetdbe
-================
+----------------
 

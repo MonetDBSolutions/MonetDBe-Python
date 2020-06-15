@@ -1,8 +1,10 @@
+"""
+This module contains the monetdbe connection class.
+"""
 from pathlib import Path
-from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any
+from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any, Iterator
 
 from monetdbe import exceptions
-from monetdbe._cffi import MonetEmbedded
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -19,15 +21,27 @@ class Connection:
                  autocommit: bool = False,
                  ):
         """
-        args:
-            uri: if true, database is interpreted as a URI. This allows you to specify options. For example, to open a
-                 database in read-only mode you can use:
+        Args:
+            database: The path to you database. Leave empty or use the `:memory:` string to start an in-memory database.
+            uri: if true, database is interpreted as a URI. This allows you to specify options.
+            timeout: The connection timeout, which is unused and meaningless in the case of MonetDBe and exists for
+                     compatibility reasons.
+            detect_types:  defaults to 0 (i. e. off, no type detection), you can set it to any combination of
+                           PARSE_DECLTYPES and PARSE_COLNAMES to turn type detection on.
+            check_same_thread: By default, check_same_thread is True and only the creating thread may use the
+                               connection. If set False, the returned connection may be shared across multiple threads.
+                               When using multiple threads with the same connection writing operations should be
+                               serialized by the user to avoid data corruption.
+            autocommit: Enable autocommit mode
         """
         if uri:
-            raise NotImplemented
+            raise NotImplemented  # todo
 
         if not check_same_thread:
-            raise NotImplemented
+            raise NotImplemented  # todo
+
+        if detect_types != 0:
+            raise NotImplemented  # todo
 
         if not database:
             database = None
@@ -40,6 +54,7 @@ class Connection:
         else:
             raise TypeError
 
+        from monetdbe._cffi import MonetEmbedded
         try:
             self.lowlevel = MonetEmbedded(dbdir=database)
         except exceptions.DatabaseError as e:
@@ -68,27 +83,64 @@ class Connection:
             raise exceptions.ProgrammingError
 
     def execute(self, query: str, args: Optional[Iterable] = None) -> 'Cursor':
+        """
+        Execute a SQL query
+
+        This is a nonstandard and SQLite compatible shortcut that creates a cursor object by calling the cursor()
+        method, calls the cursor’s execute() method with the parameters given, and returns the cursor.
+
+        Args:
+            query: The SQL query to execute
+            args:  The optional SQL query arguments
+
+        Returns:
+            A new cursor.
+        """
         from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
         cur = Cursor(con=self).execute(query, args)
         self.consistent = True
         return cur
 
-    def executemany(self, query: str, args_seq: Iterable):
+    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
+        """
+        Prepare a database query and then execute it against all parameter sequences or mappings found in the
+        sequence seq_of_parameters.
+
+        This is a nonstandard and SQLite compatible shortcut that creates a cursor object by calling the cursor()
+        method, calls the cursor’s execute() method with the parameters given, and returns the cursor.
+
+        Args:
+            query: The SQL query to execute
+            args:  The optional SQL query arguments
+
+        Returns:
+            A new cursor.
+        """
         from monetdbe.cursor import Cursor
         cur = Cursor(con=self)
         for args in args_seq:
             cur.execute(query, args)
         return cur
 
-    def commit(self, *args, **kwargs):
+    def commit(self, *args, **kwargs) -> 'Cursor':
         self._check()
         return self.execute("COMMIT")
 
-    def close(self, *args, **kwargs):
+    def close(self, *args, **kwargs) -> None:
         del self.lowlevel
         self.lowlevel = None
 
-    def cursor(self, factory: Optional[Type['Cursor']] = None):
+    def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':
+        """
+        Create a new cursor.
+
+        Args:
+            factory: An optional factory. If supplied, this must be a callable returning an instance of Cursor or its
+                     subclasses.
+
+        Returns:
+            a new cursor.
+        """
 
         if not factory:
             from monetdbe.cursor import Cursor
@@ -141,6 +193,9 @@ class Connection:
         raise NotImplemented
 
     def rollback(self, *args, **kwargs):
+        """
+        Rolls back the current transaction.
+        """
         self._check()
         self.execute("ROLLBACK")
         self.consistent = False
@@ -149,7 +204,13 @@ class Connection:
     def in_transaction(self):
         return self.lowlevel.in_tranaction()
 
-    def set_autocommit(self, value: bool):
+    def set_autocommit(self, value: bool) -> None:
+        """
+        Set the connection to auto-commit mode.
+
+        Args:
+            value: a boolean value
+        """
         self._check()
         return self.lowlevel.set_autocommit(value)
 

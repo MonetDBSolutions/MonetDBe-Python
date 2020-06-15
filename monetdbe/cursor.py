@@ -1,11 +1,10 @@
 from collections import namedtuple
 from itertools import repeat
-from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator
+from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, List, Dict
 
 import numpy as np
 import pandas as pd
 
-from monetdbe._cffi import extract, make_string
 from monetdbe.connection import Connection
 from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
@@ -40,10 +39,14 @@ class Cursor:
         self.rowcount = -1
         self.prepare_id: Optional[int] = None
         self._fetch_generator: Optional[Generator] = None
-        self.description: Optional[Tuple[str]] = None
+        self.description: Optional[Description] = None
 
     def _set_description(self):
-        self._columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
+        self._columns = list(
+            map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
+
+        # we import this late, otherwise the whole monetdbe project is unimportable if we don't have access to monetdbe.so
+        from monetdbe._cffi import make_string
 
         name = (make_string(rcol.name) for rcol in self._columns)
         type_code = (rcol.type for rcol in self._columns)
@@ -57,6 +60,9 @@ class Cursor:
         self.description = [Description(*i) for i in descriptions]
 
     def __iter__(self):
+        # we import this late, otherwise the whole monetdbe project is unimportable if we don't have access to monetdbe.so
+        from monetdbe._cffi import extract
+
         columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
@@ -65,25 +71,56 @@ class Cursor:
             else:
                 yield row
 
-    def fetchnumpy(self):
+    def fetchnumpy(self) -> np.ndarray:
+        """
+        Fetch all results and return a numpy array.
+
+        like .fetchall(), but returns a numpy array.
+        """
         self._check_connection()
         self._check_result()
         return self.connection.lowlevel.result_fetch_numpy(self.result)
 
-    def fetchdf(self):
+    def fetchdf(self) -> pd.DataFrame:
+        """
+        Fetch all results and return a Pandas DataFrame.
+
+        like .fetchall(), but returns a Pandas DataFrame.
+        """
         self._check_connection()
         self._check_result()
         return pd.DataFrame(self.fetchnumpy())
 
-    def _check_connection(self):
+    def _check_connection(self) -> None:
+        """
+        Check if we are attached to the lower level interface
+
+        raises:
+            ProgrammingError if no lower level interface is attached
+        """
         if not self.connection or not self.connection.lowlevel:
             raise ProgrammingError("no connection to lower level database available")
 
     def _check_result(self):
+        """
+        Check if an operation has been executed and a result is available.
+
+        raises:
+            ProgrammingError if no result is available.
+        """
         if not self.result:
             raise ProgrammingError("fetching data but no query executed")
 
-    def execute(self, operation: str, parameters: Optional[Iterable] = None):
+    def execute(self, operation: str, parameters: Optional[Iterable] = None) -> 'Cursor':
+        """
+
+        Args:
+            operation: the query you want to execute
+            parameters: an optional iterable containing arguments for the operation.
+
+        Returns:
+            the cursor object itself
+        """
         self._check_connection()
         self.description = None  # which will be set later in fetchall
         self._fetch_generator = None
@@ -105,10 +142,14 @@ class Cursor:
         self._set_description()
         return self
 
-    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]):
+    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
         """
         Prepare a database operation (query or command) and then execute it against all parameter sequences or
         mappings found in the sequence seq_of_parameters.
+
+        Args:
+            operation: the SQL query to execute
+            seq_of_parameters: An optional iterator or iterable containing an iterable of arguments
         """
         self._check_connection()
         self.description = None  # which will be set later in fetchall
@@ -142,11 +183,26 @@ class Cursor:
         return self
 
     def close(self, *args, **kwargs):
+        """
+        Shut down the connection.
+        """
         self.connection = None
 
-    def fetchall(self):
+    def fetchall(self) -> List[Tuple]:
+        """
+        Fetch all (remaining) rows of a query result, returning them as a list of tuples).
+
+        Returns: all (remaining) rows of a query result as a list of tuples
+
+        Raises:
+              An Error exception is raised if the previous call to .execute*() did not
+              produce any result set or no call was issued yet.
+
+        """
         self._check_connection()
-        # self._check_result() sqlite test suite doesn't want us to bail out
+
+        # note (gijs): sqlite test suite doesn't want us to raise exception here, so for now I disable this
+        # self._check_result()
 
         if not self.connection.consistent:
             raise InterfaceError("Tranaction rolled back, state inconsistent")
@@ -159,6 +215,20 @@ class Cursor:
         return rows
 
     def fetchmany(self, size=None):
+        """
+        Fetch the next set of rows of a query result, returning a list of tuples). An empty sequence is returned when
+        no more rows are available.
+
+        args:
+            size: The number of rows to fetch. Fewer rows may be returned.
+
+        Raises:
+            An Error (or subclass) exception is raised if the previous call to .execute*() did not produce any result
+            set or no call was issued yet.
+
+        Returns: A number of rows from a query result as a list of tuples
+
+        """
         self._check_connection()
         # self._check_result() sqlite test suite doesn't want us to bail out
 
@@ -178,7 +248,17 @@ class Cursor:
                 break
         return rows
 
-    def fetchone(self, *args, **kwargs):
+    def fetchone(self) -> Optional[Tuple]:
+        """
+        Fetch the next row of a query result set, returning a single tuple, or None when no more data is available.
+
+        Raises:
+            An Error if the previous call to .execute*() did not produce any result set or no call was issued yet.
+
+
+        Returns:
+            One row from a result set.
+        """
         self._check_connection()
         # self._check_result() sqlite test suite doesn't want us to bail out
 
@@ -192,7 +272,17 @@ class Cursor:
         except StopIteration:
             return None
 
-    def executescript(self, sql_script: str):
+    def executescript(self, sql_script: str) -> None:
+        """
+        This is a nonstandard convenience and SQLite compatibility method for executing multiple SQL statements at once.
+        It issues a COMMIT statement first, then executes the SQL script it gets as a parameter.
+
+        Args:
+            sql_script: A string containing one or more SQL statements, split by ;
+
+        Returns:
+
+        """
         self._check_connection()
 
         if not isinstance(sql_script, str):
@@ -255,13 +345,15 @@ class Cursor:
         # insert the data into the table
         self.insert(table, values, schema=schema)
 
-    def insert(self, table, values, schema=None):
+    def insert(self, table: str, values: Union[pd.DataFrame, Dict[str, np.ndarray]], schema: str = 'sys'):
         """
         Inserts a set of values into the specified table.
 
-        The values must be either a pandas DataFrame or a dictionary of values. If no schema is specified, the "sys"
-        schema is used. If no client context is provided, the default client context is used.
-           """
+        Args:
+            table: The table to insert into
+            values: The values. must be either a pandas DataFrame or a dictionary of values.
+            schema: The SQL schema to use. If no schema is specified, the "sys" schema is used.
+       """
 
         if not isinstance(values, dict):
             values = __convert_pandas_to_numpy_dict__(values)
@@ -284,22 +376,50 @@ class Cursor:
 
         query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
         return self.executemany(query, rows_zipped)
+
+        # todo (gijs): use a faster embedded backend to directly insert data, which should be much faster
         # return self.connection.inter.append(schema, table, values, column_count=len(values))
 
-    def setoutputsize(self, *args, **kwargs):
-        return
+    def setoutputsize(self, *args, **kwargs) -> None:
+        """
+        This method would normally set a column buffer size for fetchion of large columns.
 
-    def setinputsizes(self, *args, **kwargs):
-        return
+        MonetDBe-Python does not require this, so calling this function has no effect.
+        """
+        ...
 
-    def commit(self):
+    def setinputsizes(self, *args, **kwargs) -> None:
+        """
+        This method would normally be used before the .execute*() method is invoked to reserve memory.
+
+        MonetDBe-Python does not require this, so calling this function has no effect.
+
+        """
+        ...
+
+    def commit(self) -> 'Cursor':
+        """
+        Commit the current pending transaction.
+
+        Returns:
+            the current cursor
+        """
         self.connection.commit()
+        return self
 
     def transaction(self):
+        """
+        Start a new transaction
+
+        Returns:
+            the current cursor
+        """
         return self.execute("BEGIN TRANSACTION")
 
     def scroll(self, count: int, mode: str = 'relative'):
         """
-        We dont support scrolling, since the full resultset is available.
+        Scroll the cursor in the result set to a new position according to mode.
+
+        We dont support scrolling, since the full result is available.
         """
         raise NotImplementedError
