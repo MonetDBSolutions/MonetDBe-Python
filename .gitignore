@@ -132,3 +132,9 @@ dmypy.json
 monetdbe/util/*.c
 
 tests/@test_*_tmp/
+
+# pycharm
+.idea/
+
+
+doc/_build
