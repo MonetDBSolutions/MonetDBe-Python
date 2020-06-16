@@ -58,7 +58,7 @@ class Connection:
         try:
             self.lowlevel = MonetEmbedded(dbdir=database)
         except exceptions.DatabaseError as e:
-            raise exceptions.OperationalError(e)
+            raise exceptions.OperationalError(e) from None
 
         self.result = None
         self.row_factory: Optional[Type[Row]] = None

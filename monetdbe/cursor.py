@@ -137,7 +137,7 @@ class Cursor:
         try:
             self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)
         except DatabaseError as e:
-            raise OperationalError(e)
+            raise OperationalError(e) from None
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
