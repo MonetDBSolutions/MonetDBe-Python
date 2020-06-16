@@ -95,24 +95,25 @@ class Cursor:
         """
         Check if we are attached to the lower level interface
 
-        raises:
-            ProgrammingError if no lower level interface is attached
+        Raises:
+            ProgrammingError: if no lower level interface is attached
         """
         if not self.connection or not self.connection.lowlevel:
             raise ProgrammingError("no connection to lower level database available")
 
-    def _check_result(self):
+    def _check_result(self) -> None:
         """
         Check if an operation has been executed and a result is available.
 
-        raises:
-            ProgrammingError if no result is available.
+        Raises:
+            ProgrammingError: if no result is available.
         """
         if not self.result:
             raise ProgrammingError("fetching data but no query executed")
 
     def execute(self, operation: str, parameters: Optional[Iterable] = None) -> 'Cursor':
         """
+        Execute operation
 
         Args:
             operation: the query you want to execute
@@ -120,6 +121,9 @@ class Cursor:
 
         Returns:
             the cursor object itself
+
+        Raises:
+            OperationalError: if the execution failed
         """
         self._check_connection()
         self.description = None  # which will be set later in fetchall
@@ -192,12 +196,11 @@ class Cursor:
         """
         Fetch all (remaining) rows of a query result, returning them as a list of tuples).
 
-        Returns: all (remaining) rows of a query result as a list of tuples
+        Returns:
+            all (remaining) rows of a query result as a list of tuples
 
         Raises:
-              An Error exception is raised if the previous call to .execute*() did not
-              produce any result set or no call was issued yet.
-
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
         """
         self._check_connection()
 
@@ -222,11 +225,10 @@ class Cursor:
         args:
             size: The number of rows to fetch. Fewer rows may be returned.
 
-        Raises:
-            An Error (or subclass) exception is raised if the previous call to .execute*() did not produce any result
-            set or no call was issued yet.
-
         Returns: A number of rows from a query result as a list of tuples
+
+        Raises:
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
 
         """
         self._check_connection()
@@ -252,12 +254,12 @@ class Cursor:
         """
         Fetch the next row of a query result set, returning a single tuple, or None when no more data is available.
 
-        Raises:
-            An Error if the previous call to .execute*() did not produce any result set or no call was issued yet.
-
-
         Returns:
             One row from a result set.
+
+        Raises:
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
+
         """
         self._check_connection()
         # self._check_result() sqlite test suite doesn't want us to bail out
@@ -280,7 +282,8 @@ class Cursor:
         Args:
             sql_script: A string containing one or more SQL statements, split by ;
 
-        Returns:
+        Raises:
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
 
         """
         self._check_connection()
