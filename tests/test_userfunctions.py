@@ -24,6 +24,7 @@
 
 import unittest
 import unittest.mock
+
 import monetdbe as monetdbe
 
 
@@ -172,6 +173,7 @@ class AggrSum:
 
     def finalize(self):
         return self.val
+
 
 @unittest.skip("user functions not yet supported (see issue #20)")
 class FunctionTests(unittest.TestCase):
@@ -337,6 +339,7 @@ class FunctionTests(unittest.TestCase):
             self.con.create_function("deterministic", 0, int, True)
 
 
+@unittest.skip("user functions not yet supported (see issue #20)")
 class AggregateTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
@@ -450,6 +453,7 @@ class AggregateTests(unittest.TestCase):
         self.assertEqual(val, 60)
 
 
+@unittest.skip("user functions not yet supported (see issue #20)")
 class AuthorizerTests(unittest.TestCase):
     @staticmethod
     def authorizer_cb(action, arg1, arg2, dbname, source):
@@ -487,6 +491,7 @@ class AuthorizerTests(unittest.TestCase):
         self.assertIn('prohibited', str(cm.exception))
 
 
+@unittest.skip("user functions not yet supported (see issue #20)")
 class AuthorizerRaiseExceptionTests(AuthorizerTests):
     @staticmethod
     def authorizer_cb(action, arg1, arg2, dbname, source):
@@ -497,6 +502,7 @@ class AuthorizerRaiseExceptionTests(AuthorizerTests):
         return monetdbe.monetdbe_OK
 
 
+@unittest.skip("user functions not yet supported (see issue #20)")
 class AuthorizerIllegalTypeTests(AuthorizerTests):
     @staticmethod
     def authorizer_cb(action, arg1, arg2, dbname, source):
@@ -507,6 +513,7 @@ class AuthorizerIllegalTypeTests(AuthorizerTests):
         return monetdbe.monetdbe_OK
 
 
+@unittest.skip("user functions not yet supported (see issue #20)")
 class AuthorizerLargeIntegerTests(AuthorizerTests):
     @staticmethod
     def authorizer_cb(action, arg1, arg2, dbname, source):

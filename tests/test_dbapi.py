@@ -522,6 +522,7 @@ class CursorTests(unittest.TestCase):
         self.assertEqual(results, expected)
 
 
+@unittest.skip("todo (gijs): for now we dont support or check for multi-threading")
 class ThreadTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")

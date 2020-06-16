@@ -4,6 +4,7 @@ import unittest
 import monetdbe as monetdbe
 
 
+@unittest.skip("todo (gijs): for now we dont support dump")
 class DumpTests(unittest.TestCase):
     def setUp(self):
         self.cx = monetdbe.connect(":memory:")

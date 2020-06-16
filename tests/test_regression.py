@@ -28,7 +28,7 @@ import weakref
 import functools
 from test import support
 
-
+@unittest.skip("todo (gijs): for now we dont check for sqlite regressions")
 class RegressionTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")

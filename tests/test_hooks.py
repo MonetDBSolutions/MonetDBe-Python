@@ -26,7 +26,7 @@ import monetdbe as monetdbe
 
 from test.support import TESTFN, unlink
 
-
+@unittest.skip("todo (gijs): for now we dont support hooks")
 class CollationTests(unittest.TestCase):
     def test_CreateCollationNotString(self):
         con = monetdbe.connect(":memory:")
@@ -135,7 +135,7 @@ class CollationTests(unittest.TestCase):
             con.execute("select 'a' as x union select 'b' as x order by x collate mycoll")
         self.assertEqual(str(cm.exception), 'no such collation sequence: mycoll')
 
-
+@unittest.skip("todo (gijs): for now we dont support hooks")
 class ProgressTests(unittest.TestCase):
     def test_ProgressHandlerUsed(self):
         """
@@ -212,7 +212,7 @@ class ProgressTests(unittest.TestCase):
         con.execute("select 1 union select 2 union select 3").fetchall()
         self.assertEqual(action, 0, "progress handler was not cleared")
 
-
+@unittest.skip("todo (gijs): for now we dont support hooks")
 class TraceCallbackTests(unittest.TestCase):
     def test_TraceCallbackUsed(self):
         """

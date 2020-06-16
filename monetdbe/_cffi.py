@@ -188,7 +188,7 @@ class MonetEmbedded:
         result = {}
         for c in range(monetdbe_result.ncols):
             p_rcol = ffi.new("monetdbe_column **")
-            check_error(lib.monetdbe_result_fetch(_connection, monetdbe_result, p_rcol, c))
+            check_error(lib.monetdbe_result_fetch(monetdbe_result, p_rcol, c))
             rcol = p_rcol[0]
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
