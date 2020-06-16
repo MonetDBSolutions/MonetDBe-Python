@@ -19,9 +19,7 @@ try:
 except ImportError as e:
     _logger.error(e)
     _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
-
-
-#    raise
+    raise
 
 
 def make_string(blob):
@@ -55,7 +53,7 @@ def check_error(msg):
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], Type,  Optional[Any]]] = {
+type_map: Dict[Any, Tuple[str, Optional[Callable], Type, Optional[Any]]] = {
     lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
     lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
@@ -95,55 +93,62 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
 
 
 # Todo: hack to get around the single embed instance limitation
-_conn_params = {}
-_active = None
-_connection: ffi.CData = ffi.NULL
+
+_active_python = None
+_connection: Optional[ffi.CData] = None
+
+_opened = []
+_closed = []
 
 
 class MonetEmbedded:
     def __init__(self, dbdir: Optional[Path] = None):
-        _conn_params[self] = dbdir
+        self.dbdir = dbdir
         self._switch()
 
     def __del__(self):
-        global _conn_params, _active
-        if _active:
-            self.disconnect()
-        _conn_params.pop(self)
-        _active = None
+        self.close()
 
     def _switch(self):
-        global _active, _conn_params
-        if _active == self:
+        global _active_python, _connection
+        if _active_python == self:
             return
-        global _connection
-        if _connection:
-            self.disconnect()
-        dbdir = _conn_params[self]
-        _connection = self.connect(dbdir)
-        self._active = self
+
+        self.close()
+        _opened.append(self)
+        _connection = self.open(self.dbdir)
+        _active_python = self
 
     def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
         if result:
             check_error(lib.monetdbe_cleanup_result(_connection, result))
 
-    def connect(self, dbdir: Optional[Path] = None):
+    def open(self, dbdir: Optional[Path] = None):
         if not dbdir:
-            dbdir_c = ffi.NULL
+            url = ffi.NULL
         else:
-            dbdir_c = ffi.new("char[]", str(dbdir).encode())
+            url = str(dbdir).encode()  # ffi.new("char[]", str(dbdir).encode())
 
-        pconn = ffi.new("monetdbe_database *")
-        check_error(lib.monetdbe_open(pconn, dbdir_c))
-        return pconn[0]
+        p_connection = ffi.new("monetdbe_database *")
+        p_options = ffi.new("monetdbe_options *")
 
-    def disconnect(self):
-        _logger.info("disconnect called")
-        global _connection
-        if _connection != ffi.NULL:
+        # options.memorylimit = ffi.NULL
+        # options.nr_threads = ffi.NULL
+
+        check_error(lib.monetdbe_open(p_connection, url, p_options))
+        return p_connection[0]
+
+    def close(self):
+        _logger.info("close called")
+        global _active_python, _closed, _connection
+        if _active_python:
+            _closed.append(_active_python)
+            _active_python = None
+
+        if _connection:
             check_error(lib.monetdbe_close(_connection))
-        _connection = ffi.NULL
+            _connection = None
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
@@ -175,7 +180,7 @@ class MonetEmbedded:
 
     def result_fetch(self, result: ffi.CData, column: int):
         p_rcol = ffi.new("monetdbe_column **")
-        check_error(lib.monetdbe_result_fetch(_connection, result, p_rcol, column))
+        check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
         return p_rcol[0]
 
     def result_fetch_numpy(self, monetdbe_result: ffi.CData):
@@ -206,10 +211,6 @@ class MonetEmbedded:
     def set_autocommit(self, value: bool):
         check_error(lib.monetdbe_set_autocommit(_connection, int(value)))
 
-    def append(self, schema: str, table: str, batids, column_count: int):
-        # todo (gijs): use :)
-        check_error(lib.monetdbe_append(_connection, schema.encode(), table.encode(), batids, column_count))
-
     def get_autocommit(self):
         value = ffi.new("int *")
         check_error(lib.monetdbe_get_autocommit(value))
@@ -221,8 +222,35 @@ class MonetEmbedded:
     def in_transaction(self):
         return lib.monetdbe_in_transaction()
 
+    def append(self, schema: str, table: str, batids, column_count: int):
+        # todo (gijs): use :)
+        check_error(lib.monetdbe_append(_connection, schema.encode(), table.encode(), batids, column_count))
+
     def prepare(self, query):
         # todo (gijs): use :)
         stmt = ffi.new("monetdbe_statement **")
         lib.monetdbe_prepare(_connection, query.encode(), stmt)
         return stmt[0]
+
+    def bind(self, statement, data, parameter_nr):
+        ...
+        # todo (gijs): use :)
+        #     extern char* monetdbe_bind(monetdbe_statement *stmt, void *data, size_t parameter_nr);
+
+    def execute(self, statement):
+        ...
+        # todo (gijs): use :)
+        # extern char* monetdbe_execute(monetdbe_statement *stmt, monetdbe_result **result, monetdbe_cnt* affected_rows);
+
+    def cleanup_statement(self, statement):
+        ...
+        # todo (gijs): use :)
+        # extern char* monetdbe_cleanup_statement(monetdbe_database dbhdl, monetdbe_statement *stmt);
+
+    def dump_database(self, backupfile: Path):
+        # todo (gijs): use :)
+        lib.monetdbe_dump_database(_connection, str(backupfile).encode())
+
+    def dump_table(self, schema_name, table_name, backupfile: Path):
+        # todo (gijs): use :)
+        lib.monetdbe_dump_table(_connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
