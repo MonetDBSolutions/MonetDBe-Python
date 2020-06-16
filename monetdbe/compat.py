@@ -2,7 +2,7 @@
 compatibility with MonetDBLite
 """
 from warnings import warn
-
+from sqlite3 import complete_statement
 from monetdbe.dbapi2 import connect
 
 
