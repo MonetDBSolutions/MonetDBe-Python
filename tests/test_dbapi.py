@@ -491,6 +491,7 @@ class CursorTests(unittest.TestCase):
                 self.cu.execute(sql.format(statement), (1, 'foo'))
                 self.assertEqual(self.cu.lastrowid, 1)
 
+    @unittest.skip("skipping this test, we don't support 'insert or '")
     def test_LastRowIDOnIgnore(self):
         self.cu.execute(
             "insert or ignore into test(unique_test) values (?)",
@@ -501,7 +502,7 @@ class CursorTests(unittest.TestCase):
             ('test',))
         self.assertEqual(self.cu.lastrowid, 2)
 
-    @unittest.skip("TODO: (gijs) this crashes monetdb")
+    @unittest.skip("skipping this test, we don't support 'insert or '")
     def test_LastRowIDInsertOR(self):
         results = []
         for statement in ('FAIL', 'ABORT', 'ROLLBACK'):

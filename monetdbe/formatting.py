@@ -90,9 +90,13 @@ def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str,
                 return x.format(**escaped)
             except KeyError as e:
                 raise ProgrammingError(e)
-        elif hasattr(type(parameters), '__iter__'):  # qmark or pyformat style
 
-            escaped: List[str] = [convert(i) for i in parameters]
+        # qmark or pyformat style
+        elif hasattr(type(parameters), '__iter__') \
+                or (hasattr(type(parameters), '__len__') and hasattr(type(parameters), '__getitem__')):
+
+            # we do this a bit strange to make sure the test_ExecuteParamSequence sqlite test passes
+            escaped: List[str] = [convert(parameters[i]) for i in range(len(parameters))]
 
             if ':' in cleaned_query:
                 # raise ProgrammingError("':' in formatting with named style parameters")
@@ -101,6 +105,11 @@ def format_query(query: str, parameters: Optional[Union[Iterable[str], Dict[str,
                 return x.format(*prefixed)
 
             if '?' in cleaned_query:  # named style
+
+                if cleaned_query.count('?') != len(escaped):
+                    raise ProgrammingError(f"Number of arguments ({len(escaped)}) doesn't "
+                                           f"match number of '?' ({cleaned_query.count('?')})")
+
                 return query.replace('?', '{}').format(*escaped)
             elif '%s' in cleaned_query:  # pyformat style
                 return query % tuple(escaped)
