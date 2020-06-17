@@ -183,6 +183,7 @@ class TransactionalDDL(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
 
+    @unittest.skip("monetdbe does not support this")
     def test_DdlDoesNotAutostartTransaction(self):
         # For backwards compatibility reasons, DDL statements should not
         # implicitly start a transaction.
@@ -191,10 +192,11 @@ class TransactionalDDL(unittest.TestCase):
         result = self.con.execute("select * from test").fetchall()
         self.assertEqual(result, [])
 
+    @unittest.skip("This is now a duplicate of test below")
     def test_ImmediateTransactionalDDL(self):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
-        self.con.execute("begin transaction")
+        #self.con.execute("begin transaction")  # disabled, we don't support nested transactions
         self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
@@ -203,7 +205,7 @@ class TransactionalDDL(unittest.TestCase):
     def test_TransactionalDDL(self):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
-        self.con.execute("begin transaction")
+        #self.con.execute("begin transaction")
         self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
