@@ -17,6 +17,9 @@ RUN cmake ..
 RUN make -j 4 
 RUN make install 
 
+# preinstall dependencies
+RUN pip3 install --upgrade pip pytest numpy pandas
+
 # add shared libraries to wheels
-ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/usr/local/lib/monetdb5"
+ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/usr/local/lib"
 

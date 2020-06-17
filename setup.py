@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-tests_require = ['pytest']
+tests_require = ['pytest', 'mypy', 'pyflake']
 
 extras_require = {
     'test': tests_require,

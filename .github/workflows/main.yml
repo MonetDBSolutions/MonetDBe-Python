@@ -9,19 +9,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-18.04
-    container: gijzelaerr/monetdb:latest
+    container: gijzelaerr/monetdb:test38
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.8]
 
     steps:
     - uses: actions/checkout@v2
     - name: run test action
-      run: .inside/test.sh ${{ matrix.python-version }}
+      run: .inside/test.sh
 
   wheel:
     runs-on: ubuntu-18.04
-    container: gijzelaerr/monetdb:latest
+    container: gijzelaerr/monetdb:wheel
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
