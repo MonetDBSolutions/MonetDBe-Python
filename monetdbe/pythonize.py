@@ -1,5 +1,5 @@
-from datetime import datetime, date, time
 import re
+from datetime import datetime, date, time
 
 Binary = bytes
 

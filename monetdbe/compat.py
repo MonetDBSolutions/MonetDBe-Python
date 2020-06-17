@@ -2,7 +2,7 @@
 compatibility with MonetDBLite
 """
 from warnings import warn
-from sqlite3 import complete_statement
+
 from monetdbe.dbapi2 import connect
 
 
@@ -26,9 +26,11 @@ def sql(query: str):
     warn("sql() is deprecated and will be removed from future versions")
     return connect().execute(query)
 
+
 def create(*args, **kwargs):
     warn("create() is deprecated and will be removed from future versions")
     return connect().cursor().create(*args, **kwargs)
+
 
 def insert(*args, **kwargs):
     warn("insert() is deprecated and will be removed from future versions")

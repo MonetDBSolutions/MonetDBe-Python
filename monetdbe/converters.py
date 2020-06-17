@@ -1,9 +1,10 @@
-from datetime import datetime, time, date
+from datetime import datetime, date
 
 PARSE_DECLTYPES = 1
 PARSE_COLNAMES = 2
 converters = {}
 adapters = {}
+
 
 def register_adapter(k, v):
     global adapters

@@ -2,8 +2,6 @@
 definition of MonetDB column types, for more info:
 http://www.monetdb.org/Documentation/Manuals/SQLreference/Datatypes
 """
-import datetime
-import time
 
 CHAR = 'char'  # (L) character string with length L
 VARCHAR = 'varchar'  # (L) string with atmost length L
@@ -52,4 +50,3 @@ CHARACHTER_LARGE_OBJECT = CLOB
 BINARY_LARGE_OBJECT = BLOB
 NUMERIC = DECIMAL
 DOUBLE_PRECISION = DOUBLE
-

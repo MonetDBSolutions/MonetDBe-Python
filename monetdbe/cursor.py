@@ -5,11 +5,11 @@ from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, L
 import numpy as np
 import pandas as pd
 
+from monetdbe._cffi import type_map
 from monetdbe.connection import Connection
-from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning, InterfaceError
+from monetdbe.exceptions import ProgrammingError, Warning, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
 from monetdbe.monetize import monet_identifier_escape
-from monetdbe._cffi import type_map
 
 Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
                                          'null_ok'))
