@@ -83,7 +83,7 @@ def check_error(msg: ffi.CData) -> None:
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], Type, Optional[Any]]] = {
+type_map: Dict[Any, Tuple[str, Optional[Callable], Optional[Type], Optional[Any]]] = {
     lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
     lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
@@ -222,7 +222,8 @@ class MonetEmbedded:
             rcol = p_rcol[0]
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
-            buffer_size = monetdbe_result.nrows * numpy_type.itemsize
+            # todo (gijs): typing
+            buffer_size = monetdbe_result.nrows * numpy_type.itemsize  # type: ignore
             c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=numpy_type)
 

@@ -18,7 +18,7 @@ RUN make -j 4
 RUN make install 
 
 # preinstall dependencies
-RUN pip3 install --upgrade pip pytest numpy pandas
+RUN pip3 install --upgrade pip pytest numpy pandas mypy pycodestyle
 
 # add shared libraries to wheels
 ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/usr/local/lib"

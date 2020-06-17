@@ -205,7 +205,8 @@ class RegressionTests(unittest.TestCase):
         The Python 3.0 port of the module didn't cope with values of subclasses of str.
         """
 
-        class MyStr(str): pass
+        class MyStr(str):
+            pass
 
         self.con.execute("select ?", (MyStr("abc"),))
 

@@ -73,7 +73,7 @@ def func_isfloat(v):
 
 
 def func_isnone(v):
-    return type(v) is type(None)
+    return isinstance(v, type(None))
 
 
 def func_isblob(v):

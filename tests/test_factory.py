@@ -117,9 +117,9 @@ class RowFactoryTests(unittest.TestCase):
         self.assertEqual(row["a_1"], 1, "by name: wrong result for column 'a_1'")
         self.assertEqual(row["b"], 2, "by name: wrong result for column 'b'")
 
-        # skip, we are case sensitive
-        #self.assertEqual(row["A_1"], 1, "by name: wrong result for column 'A_1'")
-        #self.assertEqual(row["B"], 2, "by name: wrong result for column 'B'")
+        # - skip, we are case sensitive
+        # self.assertEqual(row["A_1"], 1, "by name: wrong result for column 'A_1'")
+        # self.assertEqual(row["B"], 2, "by name: wrong result for column 'B'")
 
         self.assertEqual(row[0], 1, "by index: wrong result for column 0")
         self.assertEqual(row[1], 2, "by index: wrong result for column 1")

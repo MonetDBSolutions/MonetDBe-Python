@@ -32,10 +32,20 @@ jobs:
       run: .inside/make_wheel.sh ${{ matrix.python-version }} 
 
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
+    container: gijzelaerr/monetdb:test38
     steps:
-      - name: Python Code Quality and Lint
-        uses: ricardochaves/python-lint@v1.1.0
+    - uses: actions/checkout@v2
+    - name: run test action
+      run: .inside/mypy.sh
+
+  pycodestyle:
+    runs-on: ubuntu-18.04
+    container: gijzelaerr/monetdb:test38
+    steps:
+    - uses: actions/checkout@v2
+    - name: run test action
+      run: .inside/pycodestyle.sh
 
   windows:
     runs-on: windows-2019

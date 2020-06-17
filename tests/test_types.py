@@ -209,14 +209,16 @@ class DeclTypesTests(unittest.TestCase):
             self.cur.execute("insert into test(bad) values (:val)", {"val": val})
 
     def test_UnsupportedSeq(self):
-        class Bar: pass
+        class Bar:
+            pass
 
         val = Bar()
         with self.assertRaises(monetdbe.InterfaceError):
             self.cur.execute("insert into test(f) values (?)", (val,))
 
     def test_UnsupportedDict(self):
-        class Bar: pass
+        class Bar:
+            pass
 
         val = Bar()
         with self.assertRaises(monetdbe.InterfaceError):
@@ -357,7 +359,7 @@ class ObjectAdaptationTests(unittest.TestCase):
         self.con = monetdbe.connect(":memory:")
         try:
             del monetdbe.adapters[int]
-        except:
+        except Exception:
             pass
         monetdbe.register_adapter(int, ObjectAdaptationTests.cast)
         self.cur = self.con.cursor()

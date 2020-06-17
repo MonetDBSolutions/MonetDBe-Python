@@ -2,7 +2,7 @@
 
 """
 import collections.abc
-from typing import Union, Generator, Optional, Any, List
+from typing import Union, Generator, Optional, Any, Tuple
 
 from monetdbe.cursor import Cursor
 
@@ -22,7 +22,12 @@ class Row:
 
         self._cur = cur
         self._row = tuple(row)
-        self._keys = tuple(i.name for i in self._cur.description)
+
+        if self._cur.description:
+            self._keys = tuple(i.name for i in self._cur.description)
+        else:
+            self._keys = tuple()
+
         self._key_map = dict(zip(self._keys, range(len(self._keys))))
 
     def __hash__(self):
@@ -54,8 +59,9 @@ class Row:
         else:
             raise TypeError(f"type {type(item)} not supported")
 
-    def keys(self) -> List[str]:
-        return [i.name for i in self._cur.description]
+    def keys(self) -> Tuple[Any]:
+        # todo (gijs): type
+        return self._keys  # type: ignore
 
 
 collections.abc.Sequence.register(Row)

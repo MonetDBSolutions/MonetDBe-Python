@@ -23,9 +23,9 @@
 
 import threading
 import unittest
-import monetdbe as monetdbe
-
 from test.support import TESTFN, rmtree
+
+import monetdbe as monetdbe
 
 
 class ModuleTests(unittest.TestCase):
@@ -464,12 +464,14 @@ class CursorTests(unittest.TestCase):
 
     def test_WrongCursorCallable(self):
         with self.assertRaises(TypeError):
-            def f(): pass
+            def f():
+                ...
 
             cur = self.cx.cursor(f)
 
     def test_CursorWrongClass(self):
-        class Foo: pass
+        class Foo:
+            ...
 
         foo = Foo()
         with self.assertRaises(TypeError):
@@ -537,7 +539,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -555,7 +557,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -573,7 +575,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -591,7 +593,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -609,7 +611,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -627,7 +629,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -645,7 +647,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -664,7 +666,7 @@ class ThreadTests(unittest.TestCase):
                 return
             except monetdbe.ProgrammingError:
                 return
-            except:
+            except Exception:
                 errors.append("raised wrong exception")
 
         errors = []
@@ -785,7 +787,8 @@ class ClosedConTests(unittest.TestCase):
         con = monetdbe.connect(":memory:")
         con.close()
 
-        def f(x): return 17
+        def f(x):
+            return 17
 
         with self.assertRaises(monetdbe.ProgrammingError):
             con.create_function("foo", 1, f)
@@ -821,7 +824,8 @@ class ClosedConTests(unittest.TestCase):
         con = monetdbe.connect(":memory:")
         con.close()
 
-        def progress(): pass
+        def progress():
+            pass
 
         with self.assertRaises(monetdbe.ProgrammingError):
             con.set_progress_handler(progress, 100)
@@ -850,6 +854,7 @@ class ClosedCurTests(unittest.TestCase):
             with self.assertRaises(monetdbe.ProgrammingError):
                 method = getattr(cur, method_name)
                 method(*params)
+
 
 @unittest.skip("We don't support INSERT OR syntax")
 class monetdbeOnConflictTests(unittest.TestCase):

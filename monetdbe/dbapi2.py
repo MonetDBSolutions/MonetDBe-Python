@@ -19,10 +19,8 @@
 # 2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
-import datetime
-import time
-
-
+from datetime import date, time, datetime
+from time import localtime
 
 from monetdbe.connection import Connection
 
@@ -34,21 +32,19 @@ from monetdbe.exceptions import (
 
 OptimizedUnicode = str
 
-
-
 paramstyle = "qmark"
 threadsafety = 1
 apilevel = "2.0"
-Date = datetime.date
-Time = datetime.time
-Timestamp = datetime.datetime
+Date = date
+Time = time
+Timestamp = datetime
 
 
 def connect(*args, **kwargs):
-    if 'factory' in kwargs: # and 'database' in kwargs:
+    if 'factory' in kwargs:  # and 'database' in kwargs:
         factory = kwargs.pop('factory')
         return factory(*args, **kwargs)
-        #return factory(database=kwargs['database'])
+        # return factory(database=kwargs['database'])
     return Connection(*args, **kwargs)
 
 
@@ -56,16 +52,15 @@ connect.__doc__ = Connection.__init__.__doc__
 
 
 def DateFromTicks(ticks):
-    return Date(*time.localtime(ticks)[:3])
+    return Date(*localtime(ticks)[:3])
 
 
 def TimeFromTicks(ticks):
-    return Time(*time.localtime(ticks)[3:6])
+    return Time(*localtime(ticks)[3:6])
 
 
 def TimestampFromTicks(ticks):
-    return Timestamp(*time.localtime(ticks)[:6])
+    return Timestamp(*localtime(ticks)[:6])
 
 
 Binary = memoryview
-

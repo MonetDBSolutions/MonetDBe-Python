@@ -20,7 +20,7 @@ test: setup
 
 
 docker-build:
-	#docker build -t $(DOCKER_IMAGE):wheel -f docker/wheel.docker .
+	docker build -t $(DOCKER_IMAGE):wheel -f docker/wheel.docker .
 	docker build -t $(DOCKER_IMAGE):test38 -f docker/test38.docker .
 
 docker-force-build:
@@ -38,10 +38,12 @@ shell:
 
 docker-tests: docker-build
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/test.sh"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/mypy.sh"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/pycodestyle.sh"
 
 push: docker
 	docker push $(DOCKER_IMAGE):wheel
-	docker push $(DOCKER_IMAGE):test
+	docker push $(DOCKER_IMAGE):test38
 
 clean:
 	python3 setup.py clean

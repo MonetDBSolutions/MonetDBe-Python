@@ -266,12 +266,13 @@ class Cursor:
         # self._check_result() sqlite test suite doesn't want us to bail out
 
         if not self.result:
-            return
+            return None
 
         if not self._fetch_generator:
             self._fetch_generator = self.__iter__()
         try:
-            return next(self._fetch_generator)
+            # todo (gijs): type
+            return next(self._fetch_generator)  # type: ignore
         except StopIteration:
             return None
 

@@ -1,13 +1,13 @@
 import datetime
 import decimal
-from typing import Any
+from typing import Any, Dict, Type, Callable, Tuple, List
 
 import numpy
 
 from monetdbe.exceptions import InterfaceError
 
 
-def monet_none(data: type(None)) -> str:
+def monet_none(data: None) -> str:
     """
     returns a NULL string
     """
@@ -50,7 +50,7 @@ def monet_memoryview(data: memoryview) -> str:
     return "'%s'" % data.tobytes().hex()
 
 
-mapping = {
+mapping: List[Tuple[Type, Callable]] = [
     (str, monet_escape),
     (bytes, monet_bytes),
     (memoryview, monet_memoryview),
@@ -66,10 +66,9 @@ mapping = {
     (type(None), monet_none),
     (numpy.int64, int),
     (numpy.ma.core.MaskedConstant, monet_none),
+]
 
-}
-
-mapping_dict = dict(mapping)
+mapping_dict: Dict[Type, Callable] = dict(mapping)
 
 
 class PrepareProtocol:

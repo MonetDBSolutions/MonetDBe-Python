@@ -196,7 +196,7 @@ class TransactionalDDL(unittest.TestCase):
     def test_ImmediateTransactionalDDL(self):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
-        #self.con.execute("begin transaction")  # disabled, we don't support nested transactions
+        self.con.execute("begin transaction")
         self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):
@@ -205,7 +205,7 @@ class TransactionalDDL(unittest.TestCase):
     def test_TransactionalDDL(self):
         # You can achieve transactional DDL by issuing a BEGIN
         # statement manually.
-        #self.con.execute("begin transaction")
+        # self.con.execute("begin transaction") - disabled, we don';t support nested transactions
         self.con.execute("create table test(i int)")
         self.con.rollback()
         with self.assertRaises(monetdbe.OperationalError):

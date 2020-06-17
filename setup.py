@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-tests_require = ['pytest', 'mypy', 'pyflake']
+tests_require = ['pytest', 'mypy', 'pycodestyle']
 
 extras_require = {
     'test': tests_require,
@@ -13,7 +13,7 @@ extras_require = {
 
 setuptools.setup(
     name="monetdbe",
-    version="0.6",
+    version="0.7",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",

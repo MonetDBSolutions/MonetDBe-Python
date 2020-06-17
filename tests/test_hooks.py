@@ -22,9 +22,10 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 import unittest
+from test.support import TESTFN, unlink
+
 import monetdbe as monetdbe
 
-from test.support import TESTFN, unlink
 
 @unittest.skip("todo (gijs): for now we dont support hooks")
 class CollationTests(unittest.TestCase):
@@ -50,7 +51,10 @@ class CollationTests(unittest.TestCase):
                 return None
 
         con = monetdbe.connect(":memory:")
-        mycoll = lambda x, y: -((x > y) - (x < y))
+
+        def mycoll(x, y):
+            return -((x > y) - (x < y))
+
         con.create_collation(BadUpperStr("mycoll"), mycoll)
         result = con.execute("""
             select x from (
@@ -135,6 +139,7 @@ class CollationTests(unittest.TestCase):
             con.execute("select 'a' as x union select 'b' as x order by x collate mycoll")
         self.assertEqual(str(cm.exception), 'no such collation sequence: mycoll')
 
+
 @unittest.skip("todo (gijs): for now we dont support hooks")
 class ProgressTests(unittest.TestCase):
     def test_ProgressHandlerUsed(self):
@@ -211,6 +216,7 @@ class ProgressTests(unittest.TestCase):
         con.set_progress_handler(None, 1)
         con.execute("select 1 union select 2 union select 3").fetchall()
         self.assertEqual(action, 0, "progress handler was not cleared")
+
 
 @unittest.skip("todo (gijs): for now we dont support hooks")
 class TraceCallbackTests(unittest.TestCase):

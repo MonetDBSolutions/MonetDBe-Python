@@ -128,7 +128,8 @@ class Connection:
 
     def close(self, *args, **kwargs) -> None:
         del self.lowlevel
-        self.lowlevel = None
+        # todo (gijs): typing
+        self.lowlevel = None  # type: ignore
 
     def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':
         """
