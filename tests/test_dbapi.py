@@ -856,7 +856,7 @@ class ClosedCurTests(unittest.TestCase):
                 method = getattr(cur, method_name)
                 method(*params)
 
-
+@unittest.skip("We don't support INSERT OR syntax")
 class monetdbeOnConflictTests(unittest.TestCase):
     """
     Tests for monetdbe's "insert on conflict" feature.

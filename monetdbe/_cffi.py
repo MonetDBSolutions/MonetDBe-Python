@@ -4,6 +4,7 @@ python calls and data into C and back.
 """
 import logging
 from pathlib import Path
+from re import compile, DOTALL
 from typing import Optional, Any, Dict, Tuple, Callable, Type
 
 import numpy as np
@@ -22,21 +23,21 @@ except ImportError as e:
     raise
 
 
-def make_string(blob):
+def make_string(blob: ffi.CData) -> str:
     if blob:
         return ffi.string(blob).decode()
     else:
         return ""
 
 
-def make_blob(blob):
+def make_blob(blob: ffi.CData) -> str:
     if blob:
         return ffi.string(blob.data[0:blob.size])
     else:
         return ""
 
 
-def py_float(data: ffi.CData):
+def py_float(data: ffi.CData) -> float:
     if 'FLOAT' in converters:
         return converters['FLOAT'](data)
     elif 'DOUBLE' in converters:
@@ -45,11 +46,40 @@ def py_float(data: ffi.CData):
         return data
 
 
-def check_error(msg):
+# MonetDB error codes
+errors = {
+    '2D000': exceptions.IntegrityError,    # COMMIT: failed
+    '40000': exceptions.IntegrityError,    # DROP TABLE: FOREIGN KEY constraint violated
+    '40002': exceptions.IntegrityError,    # INSERT INTO: UNIQUE constraint violated
+    '42000': exceptions.OperationalError,  # SELECT: identifier 'asdf' unknown
+    '42S02': exceptions.OperationalError,  # no such table
+    'M0M29': exceptions.IntegrityError,    # The code monetdb emmitted before Jun2020
+    '25001': exceptions.OperationalError,  # START TRANSACTION: cannot start a transaction within a transaction
+}
+
+error_match = compile(pattern=r"^(?P<exception_type>.*):(?P<namespace>.*):(?P<code>.*)!(?P<msg>.*)$", flags=DOTALL)
+
+
+def check_error(msg: ffi.CData) -> None:
+    """
+    Raises:
+         exceptions.Error: or subclass in case of error, which exception depends on the error type.
+    """
     if msg:
         decoded = ffi.string(msg).decode()
         _logger.error(decoded)
-        raise exceptions.DatabaseError(decoded)
+        match = error_match.match(decoded)
+
+        if not match:
+            raise exceptions.DatabaseError(decoded)
+
+        _, _, error, msg = match.groups()
+
+        if error not in errors:
+            ...
+
+        exception = errors.get(error, exceptions.DatabaseError)
+        raise exception(msg)
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)

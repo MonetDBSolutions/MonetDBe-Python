@@ -40,6 +40,7 @@ class Cursor:
         self.prepare_id: Optional[int] = None
         self._fetch_generator: Optional[Generator] = None
         self.description: Optional[Description] = None
+        self.row_factory = None
 
     def _set_description(self):
         self._columns = list(
@@ -68,6 +69,8 @@ class Cursor:
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
                 yield self.connection.row_factory(cur=self, row=row)
+            elif self.row_factory:  # Sqlite backwards compatibly
+                yield self.row_factory(self, row)
             else:
                 yield row
 
@@ -138,10 +141,7 @@ class Cursor:
             raise Warning("Multiple queries in one execute() call")
 
         formatted = format_query(operation, parameters)
-        try:
-            self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)
-        except DatabaseError as e:
-            raise OperationalError(e) from None
+        self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
