@@ -22,11 +22,13 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 import datetime
-import unittest
-import monetdbe as monetdbe
-import weakref
 import functools
+import unittest
+import weakref
 from test import support
+
+import monetdbe as monetdbe
+
 
 @unittest.skip("todo (gijs): for now we dont check for sqlite regressions")
 class RegressionTests(unittest.TestCase):
@@ -408,17 +410,7 @@ class RegressionTests(unittest.TestCase):
             method(None)
 
 
-def suite():
-    regression_suite = unittest.makeSuite(RegressionTests, "Check")
-    return unittest.TestSuite((
-        regression_suite,
-    ))
-
-
-def test():
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
-
-
-if __name__ == "__main__":
-    test()
+class TestMonetDBeRegressions(unittest.TestCase):
+    def test_crash_on_url(self):
+        with self.assertRaises(monetdbe.OperationalError):
+            monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")

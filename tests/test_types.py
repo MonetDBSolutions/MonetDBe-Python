@@ -395,7 +395,7 @@ class BinaryConverterTests(unittest.TestCase):
 
 class DateTimeTests(unittest.TestCase):
     def setUp(self):
-        self.con = monetdbe.connect(":memory:") #, detect_types=monetdbe.PARSE_DECLTYPES)
+        self.con = monetdbe.connect(":memory:")  # , detect_types=monetdbe.PARSE_DECLTYPES)
         self.cur = self.con.cursor()
         self.cur.execute("create table test(d date, ts timestamp)")
 
@@ -441,22 +441,20 @@ class DateTimeTests(unittest.TestCase):
         self.assertEqual(ts, ts2)
 
 
-def suite():
-    monetdbe_type_suite = unittest.makeSuite(monetdbeTypeTests, "Check")
-    decltypes_type_suite = unittest.makeSuite(DeclTypesTests, "Check")
-    colnames_type_suite = unittest.makeSuite(ColNamesTests, "Check")
-    adaptation_suite = unittest.makeSuite(ObjectAdaptationTests, "Check")
-    bin_suite = unittest.makeSuite(BinaryConverterTests, "Check")
-    date_suite = unittest.makeSuite(DateTimeTests, "Check")
-    cte_suite = unittest.makeSuite(CommonTableExpressionTests, "Check")
-    return unittest.TestSuite((monetdbe_type_suite, decltypes_type_suite, colnames_type_suite, adaptation_suite,
-                               bin_suite, date_suite, cte_suite))
+@unittest.skip("todo: complex types not yet supported, see issue #58")
+class monetdbeTypeComplexTests(unittest.TestCase):
+    def setUp(self):
+        self.con = monetdbe.connect(":memory:")
+        self.cur = self.con.cursor()
+        self.cur.execute("create table test(c complex)")
 
+    def tearDown(self):
+        self.cur.close()
+        self.con.close()
 
-def test():
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
-
-
-if __name__ == "__main__":
-    test()
+    def test_complex(self):
+        val = complex(10, 20)
+        self.cur.execute("insert into test(c) values (?)", (val,))
+        self.cur.execute("select c from test")
+        row = self.cur.fetchone()
+        self.assertEqual(row[0], val)
