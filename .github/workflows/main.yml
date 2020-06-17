@@ -15,9 +15,9 @@ jobs:
         python-version: [3.8]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: run test action
-      run: .inside/test.sh
+      - uses: actions/checkout@v2
+      - name: run test action
+        run: .inside/test.sh
 
   wheel:
     runs-on: ubuntu-18.04
@@ -27,40 +27,38 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: make wheels
-      run: .inside/make_wheel.sh ${{ matrix.python-version }} 
+      - uses: actions/checkout@v2
+      - name: make wheels
+        run: .inside/make_wheel.sh ${{ matrix.python-version }}
 
   quality:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:test38
     steps:
-    - uses: actions/checkout@v2
-    - name: run test action
-      run: .inside/mypy.sh
+      - uses: actions/checkout@v2
+      - name: run test action
+        run: .inside/mypy.sh
 
   pycodestyle:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:test38
     steps:
-    - uses: actions/checkout@v2
-    - name: run test action
-      run: .inside/pycodestyle.sh
+      - uses: actions/checkout@v2
+      - name: run test action
+        run: .inside/pycodestyle.sh
 
-  windows:
-    runs-on: windows-2019
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v2    
-      - name: build
-        run: python3 setup.py build
-
-  osx:
-    runs-on: macos-10.15
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v2    
-      - name: build
-        run: python3 setup.py build
-
-
+#  windows:
+#    runs-on: windows-2019
+#    continue-on-error: true
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: build
+#        run: python3 setup.py build
+#
+#  osx:
+#    runs-on: macos-10.15
+#    continue-on-error: true
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: build
+#        run: python3 setup.py build
