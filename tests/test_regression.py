@@ -411,6 +411,7 @@ class RegressionTests(unittest.TestCase):
 
 
 class TestMonetDBeRegressions(unittest.TestCase):
+    @unittest.skip("skip this test until #49 is fixed")
     def test_crash_on_url(self):
         with self.assertRaises(monetdbe.OperationalError):
             monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")
