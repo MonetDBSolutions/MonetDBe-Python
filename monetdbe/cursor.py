@@ -9,6 +9,7 @@ from monetdbe.connection import Connection
 from monetdbe.exceptions import ProgrammingError, DatabaseError, OperationalError, Warning, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
 from monetdbe.monetize import monet_identifier_escape
+from monetdbe._cffi import type_map
 
 Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
                                          'null_ok'))
@@ -50,7 +51,7 @@ class Cursor:
         from monetdbe._cffi import make_string
 
         name = (make_string(rcol.name) for rcol in self._columns)
-        type_code = (rcol.type for rcol in self._columns)
+        type_code = (type_map[rcol.type][2] for rcol in self._columns)
         display_size = repeat(None)
         internal_size = repeat(None)
         precision = repeat(None)

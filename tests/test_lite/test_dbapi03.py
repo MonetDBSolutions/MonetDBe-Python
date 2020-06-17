@@ -50,10 +50,12 @@ class TestShutdown:
             connection.set_autocommit(True)
             cursor = connection.cursor()
 
+    @pytest.mark.skip("this is in conflict with the DB API and SQLite test suite")
     def test_fetchone_without_executing_raises(self, monetdbe_empty_cursor):
         with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.fetchone()
 
+    @pytest.mark.skip("this is in conflict with the DB API and SQLite test suite")
     def test_fetchall_without_executing_raises(self, monetdbe_empty_cursor):
         with pytest.raises(monetdbe.ProgrammingError):
             monetdbe_empty_cursor.fetchall()
