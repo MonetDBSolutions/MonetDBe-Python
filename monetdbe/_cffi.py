@@ -122,13 +122,10 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
             return col.data[r]
 
 
-# Todo: hack to get around the single embed instance limitation
-
+# Todo: workaround to get around the single embed instance limitation. can be class property also.
 _active_python = None
 _connection: Optional[ffi.CData] = None
-
-_opened = []
-_closed = []
+in_memory_active = False
 
 
 class MonetEmbedded:
@@ -140,14 +137,21 @@ class MonetEmbedded:
         self.close()
 
     def _switch(self):
-        global _active_python, _connection
+        global _active_python, _connection, in_memory_active
+
+        # todo (gijs): see issue #5
+        # if not self.dbdir and in_memory_active:
+        #    raise exceptions.NotSupportedError(
+        #        "You can't open a new in-memory MonetDBe database while an old one is still open.")
+
         if _active_python == self:
             return
 
         self.close()
-        _opened.append(self)
         _connection = self.open(self.dbdir)
         _active_python = self
+        if not self.dbdir:
+            in_memory_active = True
 
     def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
@@ -171,14 +175,16 @@ class MonetEmbedded:
 
     def close(self):
         _logger.info("close called")
-        global _active_python, _closed, _connection
+        global _active_python, _connection, in_memory_active
         if _active_python:
-            _closed.append(_active_python)
             _active_python = None
 
         if _connection:
             check_error(lib.monetdbe_close(_connection))
             _connection = None
+
+        if not self.dbdir:
+            in_memory_active = False
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
