@@ -202,7 +202,7 @@ class Connection:
 
     @property
     def in_transaction(self):
-        return self.lowlevel.in_tranaction()
+        return self.lowlevel.in_transaction()
 
     def set_autocommit(self, value: bool) -> None:
         """

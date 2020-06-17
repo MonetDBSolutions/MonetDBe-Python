@@ -246,11 +246,8 @@ class MonetEmbedded:
         check_error(lib.monetdbe_get_autocommit(value))
         return value[0]
 
-    def is_initialized(self):
-        return lib.monetdbe_is_initialized()
-
-    def in_transaction(self):
-        return lib.monetdbe_in_transaction()
+    def in_transaction(self) -> bool:
+        return bool(lib.monetdbe_in_transaction(_connection))
 
     def append(self, schema: str, table: str, batids, column_count: int):
         # todo (gijs): use :)

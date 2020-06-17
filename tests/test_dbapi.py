@@ -96,11 +96,9 @@ class ConnectionTests(unittest.TestCase):
     def tearDown(self):
         self.cx.close()
 
-    @unittest.skip("TODO: Not yet implemented, see issue #4")
     def test_Commit(self):
         self.cx.commit()
 
-    @unittest.skip("TODO: Not yet implemented, see issue #4")
     def test_CommitAfterNoChanges(self):
         """
         A commit should also work when no changes were made to the database.
@@ -108,11 +106,9 @@ class ConnectionTests(unittest.TestCase):
         self.cx.commit()
         self.cx.commit()
 
-    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_Rollback(self):
         self.cx.rollback()
 
-    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_RollbackAfterNoChanges(self):
         """
         A rollback should also work when no changes were made to the database.
@@ -144,14 +140,13 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(self.cx.ProgrammingError, monetdbe.ProgrammingError)
         self.assertEqual(self.cx.NotSupportedError, monetdbe.NotSupportedError)
 
-    @unittest.skip("TODO (gijs): Not yet implemented")
     def test_InTransaction(self):
         # Can't use db from setUp because we want to test initial state.
         cx = monetdbe.connect(":memory:")
         cu = cx.cursor()
         self.assertEqual(cx.in_transaction, False)
-        cu.execute("create table transactiontest(id integer primary key, name text)")
-        self.assertEqual(cx.in_transaction, False)
+        cu.execute("create table transactiontest(id integer auto_increment primary key, name text)")
+        self.assertEqual(cx.in_transaction, True)
         cu.execute("insert into transactiontest(name) values (?)", ("foo",))
         self.assertEqual(cx.in_transaction, True)
         cu.execute("select name from transactiontest where name=?", ["foo"])
@@ -161,7 +156,7 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(cx.in_transaction, False)
         cu.execute("select name from transactiontest where name=?", ["foo"])
         row = cu.fetchone()
-        self.assertEqual(cx.in_transaction, False)
+        self.assertEqual(cx.in_transaction, True)
 
     def test_InTransactionRO(self):
         with self.assertRaises(AttributeError):
@@ -480,7 +475,7 @@ class CursorTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             cur = monetdbe.Cursor(foo)
 
-    @unittest.skip("TODO: (gijs) this crashes monetdb")
+    @unittest.skip("monetdb doesn't support INSERT OR REPLACE")
     def test_LastRowIDOnReplace(self):
         """
         INSERT OR REPLACE and REPLACE INTO should produce the same behavior.
