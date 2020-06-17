@@ -50,17 +50,17 @@ CFLAGS="-I<monetdb_prefix>/include/monetdb -L<monetdb_prefix>/lib/monetdb" pip i
  
 # development
 
-![Python package](https://github.com/monetdBSolutions/MonetDBe-Python//workflows/Python%20package/badge.svg)
+![Run test suite and build wheels](https://github.com/MonetDBSolutions/MonetDBe-Python/workflows/Run%20test%20suite%20and%20build%20wheels/badge.svg)
 
 
 You can use pytest to run the test suite from the source checkout:
 ```
 $ python3 -m venv venv
-$ venv/bin/pip install -e .
-$ venv/bin/pip install pytest
-$ venv/bin/pip install numpy pandas
-$ venv/bin/pytest
+$ source venv/bin/activate
+$ pip install -e ".[test,doc]"
+$ pytest
 ```
+
 If MonetDB is installed in a different location, set the LD\_LIBRARY\_PATH environment variable first:
 ```
 $ export LD_LIBRARY_PATH=<monetdb_prefix>/lib:<monetdb_prefix>/lib/monetdb5
