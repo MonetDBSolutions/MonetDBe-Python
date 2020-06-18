@@ -206,7 +206,7 @@ class MonetEmbedded:
         affected_rows = ffi.new("monetdbe_cnt *")
 
         if not _connection:
-            raise Exception("gijs")
+            raise RuntimeError("This should not happen, see bug #60")
 
         check_error(lib.monetdbe_query(_connection, query.encode(), p_result, affected_rows))
 
