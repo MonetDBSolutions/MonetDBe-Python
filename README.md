@@ -3,6 +3,8 @@ MonetDBe - the Python embedded MonetDB
 
 https://github.com/monetdBSolutions/MonetDBe-Python/
 
+documentation: https://monetdbe.readthedocs.io/en/latest/
+
 # requirements
 
 For binary wheel installation you need:
