@@ -10,8 +10,9 @@ Welcome to monetdbe's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   installation
    introduction
+   migrations
+   installation
    API
    developer
 
