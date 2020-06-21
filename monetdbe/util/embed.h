@@ -80,8 +80,8 @@ typedef struct { monetdbe_types type; monetdbe_data_date *data; size_t count; ch
 typedef struct { monetdbe_types type; monetdbe_data_time *data; size_t count; char *name; monetdbe_data_time null_value; double scale; int (*is_null)(monetdbe_data_time value); } monetdbe_column_time;
 typedef struct { monetdbe_types type; monetdbe_data_timestamp *data; size_t count; char *name; monetdbe_data_timestamp null_value; double scale; int (*is_null)(monetdbe_data_timestamp value); } monetdbe_column_timestamp;
 
-extern char* monetdbe_open(monetdbe_database *db, char *url, monetdbe_options *opts);
-extern char* monetdbe_close(monetdbe_database db);
+extern int monetdbe_open(monetdbe_database *db, char *url, monetdbe_options *opts);
+extern int monetdbe_close(monetdbe_database db);
 
 extern char* monetdbe_get_autocommit(monetdbe_database dbhdl, int* result);
 extern char* monetdbe_set_autocommit(monetdbe_database dbhdl, int value);

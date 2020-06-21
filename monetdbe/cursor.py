@@ -161,6 +161,7 @@ class Cursor:
 
         if self.result:
             self.connection.lowlevel.cleanup_result(self.result)
+            self.result = None
 
         total_affected_rows = 0
 

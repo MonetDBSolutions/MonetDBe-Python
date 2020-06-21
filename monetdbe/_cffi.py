@@ -170,7 +170,8 @@ class MonetEmbedded:
         # options.memorylimit = ffi.NULL
         # options.nr_threads = ffi.NULL
 
-        check_error(lib.monetdbe_open(p_connection, url, p_options))
+        if lib.monetdbe_open(p_connection, url, p_options):
+            raise exceptions.DatabaseError("Failed to open database")
         return p_connection[0]
 
     def close(self):
@@ -180,7 +181,8 @@ class MonetEmbedded:
             _active_python = None
 
         if _connection:
-            check_error(lib.monetdbe_close(_connection))
+            if lib.monetdbe_close(_connection):
+                raise exceptions.DatabaseError("Failed to close database")
             _connection = None
 
         if not self.dbdir:
