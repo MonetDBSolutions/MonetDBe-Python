@@ -155,7 +155,7 @@ class MonetEmbedded:
 
     def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
-        if result:
+        if result and _connection:
             check_error(lib.monetdbe_cleanup_result(_connection, result))
 
     def open(self, dbdir: Optional[Path] = None):
@@ -206,6 +206,9 @@ class MonetEmbedded:
             p_result = ffi.NULL
 
         affected_rows = ffi.new("monetdbe_cnt *")
+
+        if not _connection:
+            raise RuntimeError("This should not happen, see bug #60")
 
         check_error(lib.monetdbe_query(_connection, query.encode(), p_result, affected_rows))
 
