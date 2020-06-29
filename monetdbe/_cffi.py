@@ -48,12 +48,12 @@ def py_float(data: ffi.CData) -> float:
 
 # MonetDB error codes
 errors = {
-    '2D000': exceptions.IntegrityError,    # COMMIT: failed
-    '40000': exceptions.IntegrityError,    # DROP TABLE: FOREIGN KEY constraint violated
-    '40002': exceptions.IntegrityError,    # INSERT INTO: UNIQUE constraint violated
+    '2D000': exceptions.IntegrityError,  # COMMIT: failed
+    '40000': exceptions.IntegrityError,  # DROP TABLE: FOREIGN KEY constraint violated
+    '40002': exceptions.IntegrityError,  # INSERT INTO: UNIQUE constraint violated
     '42000': exceptions.OperationalError,  # SELECT: identifier 'asdf' unknown
     '42S02': exceptions.OperationalError,  # no such table
-    'M0M29': exceptions.IntegrityError,    # The code monetdb emmitted before Jun2020
+    'M0M29': exceptions.IntegrityError,  # The code monetdb emmitted before Jun2020
     '25001': exceptions.OperationalError,  # START TRANSACTION: cannot start a transaction within a transaction
 }
 
@@ -165,13 +165,26 @@ class MonetEmbedded:
             url = str(dbdir).encode()  # ffi.new("char[]", str(dbdir).encode())
 
         p_connection = ffi.new("monetdbe_database *")
-        p_options = ffi.new("monetdbe_options *")
+        #p_options = ffi.new("monetdbe_options *")
+        #p_options.memorylimit = 0
+        #p_options.querytimeout = 0
+        #p_options.sessiontimeout = 0
+        #p_options.nr_threads = 0
+        #p_options.have_hge = False
 
-        # options.memorylimit = ffi.NULL
-        # options.nr_threads = ffi.NULL
+        p_options = ffi.NULL
 
-        if lib.monetdbe_open(p_connection, url, p_options):
-            raise exceptions.DatabaseError("Failed to open database")
+        result_code = lib.monetdbe_open(p_connection, url, p_options)
+
+        errors = {
+            0: "OK",
+            -1: "Allocation failed",
+            -2: "Error in DB",
+        }
+
+        if result_code:
+            error = errors.get(result_code, "unknown error")
+            raise exceptions.DatabaseError(f"Failed to open database: {error} (code {result_code})")
         return p_connection[0]
 
     def close(self):
