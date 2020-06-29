@@ -37,6 +37,8 @@ A minimal example to see if everything works as expected::
     c.execute('SELECT count(*) FROM tables')
     print(c.fetchone())
 
+A small collection of example programs can be found in the `monetdbe-examples <https://github.com/MonetDBSolutions/monetdbe-examples>`_ repository.
+
 Storage options
 ===============
 One of the key factors in an embedded database system is the location of the persistent data, if it needs to persist at all.  In
