@@ -1,5 +1,5 @@
 ============
-installation
+Installation
 ============
 
 Binary wheel install (recommended)
@@ -14,7 +14,7 @@ You need:
  * pip >= 19.3
  * Python >= 3.6
 
-For non-binary wheel installation (Windows) you also need to have MonetDB installed.
+For the non-binary wheel installation (Windows) you also need to have MonetDB installed.
 
 .. code-block::
 

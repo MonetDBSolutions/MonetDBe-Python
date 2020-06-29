@@ -46,13 +46,13 @@ Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
 The following functionality is not supported by MonetDBe or contains syntax/semantic differences.
 
-- `COPY into statement <https://duckdb.org/docs/data/csv>`_
-- `Appender function <https://duckdb.org/docs/data/appender>`_
-- `Loading parquet files <https://duckdb.org/docs/data/parquet>`_
-- `R connector <//https://duckdb.org/docs/api/r>`_
-- `JDBC connector <//https://duckdb.org/docs/api/java>`_
-- `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_
-- `Pandas registration as SQL view <https://duckdb.org/docs/api/python>`_
+- `COPY into statement <https://duckdb.org/docs/data/csv>`_.
+- `Appender function <https://duckdb.org/docs/data/appender>`_.
+- `Loading parquet files <https://duckdb.org/docs/data/parquet>`_.
+- `R connector <//https://duckdb.org/docs/api/r>`_.
+- `JDBC connector <//https://duckdb.org/docs/api/java>`_.
+- `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_.
+- `Pandas registration as SQL view <https://duckdb.org/docs/api/python>`_.
 
 Reporting issues
 ----------------

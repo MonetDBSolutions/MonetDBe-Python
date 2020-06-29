@@ -25,10 +25,10 @@ a result set. MonetDBe has a much richer basic type system that includes e.g. th
 Likewise, transaction management in MonetDBe is based on `MVCC <https://www.monetdb.org/blog/optimistic-concurrency-control>`_
 without explicit levels of isolations.  A remnant of the past when systems were based on explicit locking.
 
-How does it work?
-====================
+How does it work
+================
 
-Using the library starts with simply getting the module into your Python environment, ‘pip install monetdbe’:
+Using the library starts with simply getting the module into your Python environment, ‘pip install monetdbe’.
 A minimal example to see if everything works as expected::
 
     import monetdbe
@@ -57,8 +57,8 @@ For debugging you can rely on the logging scheme available in every MonetDBe ins
 Alternatively, the Python debugger gives information up to the point the code switches to the underlying C function.
 Consider this a natural barrier not to cross, because the database kernel code is highly complex.
 
-What are the caveats?
-=====================
+What are the caveats
+====================
 
 There are a few caveats to the approach presented. SQLite and MonetDBe do not align 100% on the same interpretation of
 the SQL standard. MonetDBe is much more strict. This may result in minor differences in error handling or even some surprises
