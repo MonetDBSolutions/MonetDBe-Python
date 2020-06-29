@@ -47,7 +47,7 @@ $ pip install .
 You need to have MonetDB available on the default search paths, if it is
 installed in a different location you need to specify `CFLAGS`:
 ```
-CFLAGS="-I<monetdb_prefix>/include/monetdb -L<monetdb_prefix>/lib/monetdb" pip install .
+CFLAGS="-I<monetdb_prefix>/include -L<monetdb_prefix>/lib" pip install .
 ```
  
 # development

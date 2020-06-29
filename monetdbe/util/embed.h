@@ -86,6 +86,8 @@ typedef struct { monetdbe_types type; monetdbe_data_timestamp *data; size_t coun
 extern int monetdbe_open(monetdbe_database *db, char *url, monetdbe_options *opts);
 extern int monetdbe_close(monetdbe_database db);
 
+extern char* monetdbe_error(monetdbe_database db);
+
 extern char* monetdbe_get_autocommit(monetdbe_database dbhdl, int* result);
 extern char* monetdbe_set_autocommit(monetdbe_database dbhdl, int value);
 extern int monetdbe_in_transaction(monetdbe_database dbhdl);
