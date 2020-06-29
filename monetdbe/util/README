@@ -1,7 +1,7 @@
 
 For now, I manually construct embed.h with:
 
-gcc -E /opt/monetdb/include/monetdb/monetdb_embedded.h | grep -v ^# | grep -v __ | cat -s > embed.h
+gcc -E ~/Opt/monetdb/include/monetdb/monetdbe.h | grep -v ^# | grep -v __ | cat -s > embed.h
 
 and then some manual editing:
  * Remove all system and BAT definition up to sql_ref

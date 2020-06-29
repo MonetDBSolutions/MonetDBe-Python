@@ -58,8 +58,11 @@ typedef struct {
 typedef void* monetdbe_database;
 
 typedef struct {
- monetdbe_cnt memorylimit;
+ int memorylimit;
+ int querytimeout;
+ int sessiontimeout;
  int nr_threads;
+ _Bool have_hge;
 } monetdbe_options;
 
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdbe_column_bool;
@@ -97,6 +100,7 @@ extern char* monetdbe_execute(monetdbe_statement *stmt, monetdbe_result **result
 extern char* monetdbe_cleanup_statement(monetdbe_database dbhdl, monetdbe_statement *stmt);
 
 extern char* monetdbe_append(monetdbe_database dbhdl, const char* schema, const char* table, monetdbe_column **input, size_t column_count);
+extern const void* monetdbe_null(monetdbe_database dbhdl, monetdbe_types t);
 
 extern char* monetdbe_get_table(monetdbe_database dbhdl, monetdbe_table** table, const char* schema_name, const char* table_name);
 extern char* monetdbe_get_columns(monetdbe_database dbhdl, const char* schema_name, const char *table_name, size_t *column_count, char ***column_names, int **column_types);
