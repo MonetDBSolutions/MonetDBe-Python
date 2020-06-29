@@ -34,7 +34,7 @@ The following functionality is not supported by MonetDBe or contains syntax/sema
 - `REPLACE <https://www.sqlite.org/lang_replace.html>`_ not supported
 - `ATTACH and DETACH <https://www.sqlite.org/lang_attach.html>`_ replaced by connect().
 - `Collating Sequences <https://www.sqlite.org/c3ref/create_collation.html>`_.
-- `FTS5 <https://www.sqlite.org/fts5.html.`_ not supported.
+- `FTS5 <https://www.sqlite.org/fts5.html>`_ not supported.
 - `Rtree <https://www.sqlite.org/rtree.html>`_ not supported.
 
 Porting DuckDB programs
@@ -46,18 +46,19 @@ Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
 The following functionality is not supported by MonetDBe or contains syntax/semantic differences.
 
-- `COPY into statement <https://duckdb.org/docs/data/csv>` 
-- `Appender function <https://duckdb.org/docs/data/appender>` 
-- `Loading parquet files <https://duckdb.org/docs/data/parquet>`  
-- `R connector <//https://duckdb.org/docs/api/r>` 
-- `JDBC connector <//https://duckdb.org/docs/api/java>` 
-- `PRAGMA <https://duckdb.org/docs/sql/pragmas>` 
-- `Pandas registration as SQL view <https://duckdb.org/docs/api/python>` 
+- `COPY into statement <https://duckdb.org/docs/data/csv>`_
+- `Appender function <https://duckdb.org/docs/data/appender>`_
+- `Loading parquet files <https://duckdb.org/docs/data/parquet>`_
+- `R connector <//https://duckdb.org/docs/api/r>`_
+- `JDBC connector <//https://duckdb.org/docs/api/java>`_
+- `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_
+- `Pandas registration as SQL view <https://duckdb.org/docs/api/python>`_
 
 Reporting issues
 ----------------
 
-We highly appreciate user feed back for migrations undertaken in the MonetDB issue tracker on GitHub.
+We highly appreciate user feed back for migrations undertaken in the MonetDB issue tracker on GitHub
+or stackoverflow.
 Both as a warning and best practices for those who follow, but also to assess the need for
 features hitherto not available in MonetDBe
 
