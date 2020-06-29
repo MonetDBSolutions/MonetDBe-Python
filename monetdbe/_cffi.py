@@ -83,7 +83,7 @@ def check_error(msg: ffi.CData) -> None:
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], Optional[Type], Optional[Any]]] = {
+type_map: Dict[Any, Tuple[str, Optional[Callable], Optional[np.dtype], Optional[Any]]] = {
     lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
     lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
@@ -95,9 +95,9 @@ type_map: Dict[Any, Tuple[str, Optional[Callable], Optional[Type], Optional[Any]
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_str: ("str", make_string, np.dtype(np.str), None),
     lib.monetdbe_blob: ("blob", make_blob, None, None),
-    lib.monetdbe_date: ("date", py_date, np.dtype(np.datetime64), None),
-    lib.monetdbe_time: ("time", py_time, np.dtype(np.datetime64), None),
-    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64), None),
+    lib.monetdbe_date: ("date", py_date, np.dtype('datetime64[D]'), None),
+    lib.monetdbe_time: ("time", py_time, np.dtype('datetime64[ns]'), None),
+    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('datetime64[ns]'), None),
 }
 
 
@@ -158,21 +158,28 @@ class MonetEmbedded:
         if result and _connection:
             check_error(lib.monetdbe_cleanup_result(_connection, result))
 
-    def open(self, dbdir: Optional[Path] = None):
+    def open(
+            self,
+            dbdir: Optional[Path] = None,
+            memorylimit: int = 0,
+            querytimeout: int = 0,
+            sessiontimeout: int = 0,
+            nr_threads: int = 0,
+            have_hge: bool = False
+    ):
+
         if not dbdir:
             url = ffi.NULL
         else:
-            url = str(dbdir).encode()  # ffi.new("char[]", str(dbdir).encode())
+            url = str(dbdir).encode()
 
         p_connection = ffi.new("monetdbe_database *")
-        #p_options = ffi.new("monetdbe_options *")
-        #p_options.memorylimit = 0
-        #p_options.querytimeout = 0
-        #p_options.sessiontimeout = 0
-        #p_options.nr_threads = 0
-        #p_options.have_hge = False
-
-        p_options = ffi.NULL
+        p_options = ffi.new("monetdbe_options *")
+        p_options.memorylimit = memorylimit
+        p_options.querytimeout = querytimeout
+        p_options.sessiontimeout = sessiontimeout
+        p_options.nr_threads = nr_threads
+        p_options.have_hge = have_hge
 
         result_code = lib.monetdbe_open(p_connection, url, p_options)
 
@@ -188,7 +195,6 @@ class MonetEmbedded:
         return p_connection[0]
 
     def close(self):
-        _logger.info("close called")
         global _active_python, _connection, in_memory_active
         if _active_python:
             _active_python = None
