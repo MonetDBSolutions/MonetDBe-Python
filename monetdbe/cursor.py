@@ -5,7 +5,6 @@ from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, L
 import numpy as np
 import pandas as pd
 
-from monetdbe._cffi import type_map
 from monetdbe.connection import Connection
 from monetdbe.exceptions import ProgrammingError, Warning, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
@@ -51,7 +50,10 @@ class Cursor:
         from monetdbe._cffi import make_string
 
         name = (make_string(rcol.name) for rcol in self._columns)
+
+        from monetdbe._cffi import type_map  # import here otherwise import cursor fails if module not compiled
         type_code = (type_map[rcol.type][2] for rcol in self._columns)
+
         display_size = repeat(None)
         internal_size = repeat(None)
         precision = repeat(None)

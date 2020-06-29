@@ -42,6 +42,9 @@ docker-tests: docker-build
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/mypy.sh"
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/pycodestyle.sh"
 
+docker-doc:
+	docker build -t $(DOCKER_IMAGE):doc -f docker/doc.docker .
+
 push: docker-force-build
 	docker push $(DOCKER_IMAGE):wheel
 	docker push $(DOCKER_IMAGE):test38
