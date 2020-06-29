@@ -43,12 +43,13 @@ def monetdbe_cursor_autocommit(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
     def finalizer():
-        monetdbe.shutdown()
+        connection = monetdbe.connect(test_dbfarm)
+        connection.close()
         if tmp_path.is_dir():
-            shutil.rmtree(test_dbfarm)
+            shutil.rmtree(test_dbfarm, ignore_errors=True)
 
     request.addfinalizer(finalizer)
-    connection = monetdbe.make_connection(test_dbfarm)
+    connection = monetdbe.connect(test_dbfarm)
     connection.set_autocommit(True)
     cursor = connection.cursor()
     return cursor, connection, test_dbfarm
@@ -59,10 +60,11 @@ def initialize_monetdbe(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
     def finalizer():
-        monetdbe.shutdown()
+        connection = monetdbe.connect(test_dbfarm)
+        connection.close()
         if tmp_path.is_dir():
-            shutil.rmtree(test_dbfarm)
+            shutil.rmtree(test_dbfarm, ignore_errors=True)
 
     request.addfinalizer(finalizer)
-    monetdbe.init(test_dbfarm)
+    monetdbe.connect(test_dbfarm)
     return test_dbfarm
