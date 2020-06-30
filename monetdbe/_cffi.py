@@ -83,18 +83,18 @@ def check_error(msg: ffi.CData) -> None:
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], Optional[np.dtype], Optional[Any]]] = {
+type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
     lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
     lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
     lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
-    lib.monetdbe_int128_t: ("int128_t", None, None, None),
-    lib.monetdbe_size_t: ("size_t", None, None, None),
+    lib.monetdbe_int128_t: ("int128_t", None, np.dtype(np.int64), None),  # todo: add 128bit support
+    lib.monetdbe_size_t: ("size_t", None, np.dtype(np.uint), None),
     lib.monetdbe_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
-    lib.monetdbe_str: ("str", make_string, np.dtype(np.str), None),
-    lib.monetdbe_blob: ("blob", make_blob, None, None),
+    lib.monetdbe_str: ("str", make_string, np.dtype('=O'), None),
+    lib.monetdbe_blob: ("blob", make_blob, np.dtype('=O'), None),
     lib.monetdbe_date: ("date", py_date, np.dtype('datetime64[D]'), None),
     lib.monetdbe_time: ("time", py_time, np.dtype('datetime64[ns]'), None),
     lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('datetime64[ns]'), None),
@@ -252,10 +252,16 @@ class MonetEmbedded:
             rcol = p_rcol[0]
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
-            # todo (gijs): typing
-            buffer_size = monetdbe_result.nrows * numpy_type.itemsize  # type: ignore
+
+            if numpy_type.char == 'O':
+                lib.PyUnicode_FromString(rcol.data)
+                char_value = ffi.cast("char *", rcol.data)
+                data = ffi.string(char_value)
+                data.decode('utf-8')
+
+            buffer_size = monetdbe_result.nrows * numpy_type.itemsize
             c_buffer = ffi.buffer(rcol.data, buffer_size)
-            np_col = np.frombuffer(c_buffer, dtype=numpy_type)
+            np_col: np.ndarray = np.frombuffer(c_buffer, dtype=numpy_type)
 
             if monetdbe_null:
                 mask = np_col == monetdbe_null
