@@ -5,7 +5,7 @@ python calls and data into C and back.
 import logging
 from pathlib import Path
 from re import compile, DOTALL
-from typing import Optional, Any, Dict, Tuple, Callable, Type
+from typing import Optional, Any, Dict, Tuple, Callable
 
 import numpy as np
 
@@ -83,21 +83,21 @@ def check_error(msg: ffi.CData) -> None:
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], Optional[Type], Optional[Any]]] = {
+type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
     lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
     lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
     lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
-    lib.monetdbe_int128_t: ("int128_t", None, None, None),
-    lib.monetdbe_size_t: ("size_t", None, None, None),
+    lib.monetdbe_int128_t: ("int128_t", None, np.dtype(np.int64), None),  # todo: add 128bit support
+    lib.monetdbe_size_t: ("size_t", None, np.dtype(np.uint), None),
     lib.monetdbe_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
-    lib.monetdbe_str: ("str", make_string, np.dtype(np.str), None),
-    lib.monetdbe_blob: ("blob", make_blob, None, None),
-    lib.monetdbe_date: ("date", py_date, np.dtype(np.datetime64), None),
-    lib.monetdbe_time: ("time", py_time, np.dtype(np.datetime64), None),
-    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype(np.datetime64), None),
+    lib.monetdbe_str: ("str", make_string, np.dtype('=O'), None),
+    lib.monetdbe_blob: ("blob", make_blob, np.dtype('=O'), None),
+    lib.monetdbe_date: ("date", py_date, np.dtype('=O'), None),  # np.dtype('datetime64[D]')
+    lib.monetdbe_time: ("time", py_time, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
+    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
 }
 
 
@@ -169,21 +169,29 @@ class MonetEmbedded:
         if result and self._connection:
             check_error(lib.monetdbe_cleanup_result(self._connection, result))
 
-    def open(self, dbdir: Optional[Path] = None):
+    def open(
+            self,
+            dbdir: Optional[Path] = None,
+            memorylimit: int = 0,
+            querytimeout: int = 0,
+            sessiontimeout: int = 0,
+            nr_threads: int = 0,
+            have_hge: bool = False
+    ):
+
         if not dbdir:
             url = ffi.NULL
         else:
-            url = str(dbdir).encode()  # ffi.new("char[]", str(dbdir).encode())
+            url = str(dbdir).encode()
 
         p_connection = ffi.new("monetdbe_database *")
-        # p_options = ffi.new("monetdbe_options *")
-        # p_options.memorylimit = 0
-        # p_options.querytimeout = 0
-        # p_options.sessiontimeout = 0
-        # p_options.nr_threads = 0
-        # p_options.have_hge = False
 
-        p_options = ffi.NULL
+        p_options = ffi.new("monetdbe_options *")
+        p_options.memorylimit = memorylimit
+        p_options.querytimeout = querytimeout
+        p_options.sessiontimeout = sessiontimeout
+        p_options.nr_threads = nr_threads
+        p_options.have_hge = have_hge
 
         result_code = lib.monetdbe_open(p_connection, url, p_options)
         connection = p_connection[0]
@@ -204,7 +212,7 @@ class MonetEmbedded:
 
         return connection
 
-    def close(self):
+    def close(self) -> None:
         if self._connection:
             if lib.monetdbe_close(self._connection):
                 raise exceptions.OperationalError("Failed to close database")
@@ -258,10 +266,13 @@ class MonetEmbedded:
             rcol = p_rcol[0]
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
-            # todo (gijs): typing
-            buffer_size = monetdbe_result.nrows * numpy_type.itemsize  # type: ignore
-            c_buffer = ffi.buffer(rcol.data, buffer_size)
-            np_col = np.frombuffer(c_buffer, dtype=numpy_type)
+
+            if numpy_type.char == 'O':
+                np_col: np.ndarray = np.array([extract(rcol, r) for r in range(monetdbe_result.nrows)])
+            else:
+                buffer_size = monetdbe_result.nrows * numpy_type.itemsize
+                c_buffer = ffi.buffer(rcol.data, buffer_size)
+                np_col = np.frombuffer(c_buffer, dtype=numpy_type)
 
             if monetdbe_null:
                 mask = np_col == monetdbe_null
