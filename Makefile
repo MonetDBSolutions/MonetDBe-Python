@@ -35,11 +35,12 @@ wheels: docker venv/
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); .inside/make_wheel.sh 3.8"
 	
 shell:
-	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE) sh -c "cd $(GITHUB_WORKSPACE); bash"
+	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); bash"
 
 docker-tests: docker-build
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/mypy.sh"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/pycodestyle.sh"
+	# docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/mypy.sh"
+	# docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/pycodestyle.sh"
+	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/test.sh"
 
 docker-info: docker-build
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/info.sh"
@@ -51,9 +52,9 @@ push: docker-force-build
 	docker push $(DOCKER_IMAGE):wheel
 	docker push $(DOCKER_IMAGE):test38
 
-clean:
-	python3 setup.py clean
-	rm -rf build dist *.egg-info .eggs monetdbe/*.so monetdbe/*.dylib
+clean: venv/
+	venv/bin/python3 setup.py clean
+	rm -rf build dist *.egg-info .eggs monetdbe/*.so monetdbe/*.dylib .*_cache
 
 venv/bin/mypy: venv/
 	venv/bin/pip install mypy

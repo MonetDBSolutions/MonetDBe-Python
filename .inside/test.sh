@@ -1,6 +1,6 @@
 #!/bin/bash -ve
 
-pip3 install -e .
-py.test
+pip3 install .
+py.test -vv
                                                                     
 
