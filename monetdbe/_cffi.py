@@ -1,5 +1,5 @@
 """
-This module contains the CFFI code. It is a wrapper around the monetdbe embedded shared library, converting
+This module contains the CFFI code. It is a wrapper around the monetdbe shared library, converting
 python calls and data into C and back.
 """
 import logging
@@ -19,7 +19,7 @@ try:
     from monetdbe._lowlevel import lib, ffi
 except ImportError as e:
     _logger.error(e)
-    _logger.error("try setting LD_LIBRARY_PATH to point to the location of libembedded.so")
+    _logger.error("try setting LD_LIBRARY_PATH to point to the location of libmonetdbe.so")
     raise
 
 
