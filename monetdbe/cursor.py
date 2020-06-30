@@ -140,8 +140,10 @@ class Cursor:
             self.result = None
 
         splitted = strip_split_and_clean(operation)
-        if len(splitted) != 1:
-            raise Warning("Multiple queries in one execute() call")
+        if len(splitted) == 0:
+            raise ProgrammingError("Empty query")
+        if len(splitted) > 1:
+            raise ProgrammingError("Multiple queries in one execute() call")
 
         formatted = format_query(operation, parameters)
         self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)  # type: ignore
