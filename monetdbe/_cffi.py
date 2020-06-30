@@ -122,36 +122,41 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
             return col.data[r]
 
 
-# Todo: workaround to get around the single embed instance limitation. can be class property also.
-_active_context = None
-in_memory_active = False
-
-
 class MonetEmbedded:
+    _active_context = None
+    in_memory_active = False
+
     def __init__(self, dbdir: Optional[Path] = None):
         self.dbdir = dbdir
         self._connection: Optional[ffi.CData] = None
         self._switch()
 
+    @classmethod
+    def set_active_context(cls, active_context: Optional['MonetEmbedded']):
+        cls._active_context = active_context
+
+    @classmethod
+    def set_in_memory_active(cls, value: bool):
+        cls.in_memory_active = value
+
     def __del__(self):
         self.close()
 
     def _switch(self):
-        global _active_context, in_memory_active
-
         # todo (gijs): see issue #5
-        # if not self.dbdir and in_memory_active:
+        # if not self.dbdir and self.in_memory_active:
         #    raise exceptions.NotSupportedError(
         #        "You can't open a new in-memory MonetDBe database while an old one is still open.")
 
-        if _active_context == self:
+        if self._active_context == self:
             return
 
         self.close()
         self._connection = self.open(self.dbdir)
-        _active_context = self
+        self.set_active_context(self)
+
         if not self.dbdir:
-            in_memory_active = True
+            self.set_in_memory_active(True)
 
     def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
@@ -188,9 +193,8 @@ class MonetEmbedded:
         return p_connection[0]
 
     def close(self):
-        global _active_context, in_memory_active
-        if _active_context:
-            _active_context = None
+        if self._active_context:
+            self.set_active_context(None)
 
         if self._connection:
             if lib.monetdbe_close(self._connection):
