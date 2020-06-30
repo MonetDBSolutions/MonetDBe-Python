@@ -2,7 +2,7 @@
 API
 ===
 
-This page contains a list of all functions and classes in MonetDBe-python (monetdbe).
+This page contains a list of all functions and classes in MonetDBe-Python project (monetdbe).
 
 Connection
 ==========

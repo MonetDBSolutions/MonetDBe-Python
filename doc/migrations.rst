@@ -3,31 +3,31 @@ Application Migration
 =====================
 
 In many situations there are already applications running for quite some time and
-the question arises if it is worth to switch over to MonetDBe. In those cases,
-the effort required should be kept to a minimum. Note that MonetDBe provides a wealth
+the question arises if it is worth to switch over to MonetDB/e. In those cases,
+the effort required should be kept to a minimum. Note that MonetDB/e provides a wealth
 of SQL features derived from Monetdb directly, i.e. enriched base types, 
 controlled parallelism, persistent stored modules, UDFs,...
 which are not necessarily available in the systems mentioned below.
 Using such features may improve the performance of you program, but also could
-hinder a reversion from a MonetDBe application into your hitherto favored system.
+hinder a reversion from a MonetDB/e application into your hitherto favored system.
 
 
 Porting SQLite3 programs
 ------------------------
 
-A plethora of programs are written in `SQLite 3 <https://www.sqlite.org/index.html>` and 
+A plethora of programs are written in `SQLite 3 <https://www.sqlite.org/index.html>`_ and 
 its website contains an extensive account on the particulars.  
 
 Migration starts with replacing all occurrences of the sqlite3 with `monetdbe` in the Python program.
 
-The following functionality is not supported by MonetDBe or contains syntax/semantic differences.
+The following functionality is not supported by MonetDB/e or contains syntax/semantic differences.
 
-- SQLite is based on manifest typing, MonetDBe on rigid types.
+- SQLite is based on manifest typing, MonetDB/e on rigid types.
 - SQLite allows current access to the same local database using file-based locking?
 - No cross platform data exchange format (big- little- endians)
 - `Thread safety <https://www.sqlite.org/threadsafe.html>`_ no specific control.
 - `Copy statement <https://www.uniplot.de/documents/en/src/articles/SQLite.html#copy>`_ delimiters may be different.
-- INTEGER PRIMARY KEY  should be mapped to the SERIAL type in MonetDBe.
+- INTEGER PRIMARY KEY  should be mapped to the SERIAL type in MonetDB/e.
 - VACUUM is not supported. Garbage collection is implicit.
 - EXPLAIN is based on the MonetDB abstract machine.
 - PRAGMAs are not recognized.
@@ -47,10 +47,10 @@ DuckDB is a research prototype developed by the next generation of database rese
 It is focused on data analytic workflows in an embedded setting with an emphasis on R.
 Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
-The following functionality is not supported by MonetDBe or contains syntax/semantic differences.
+The following functionality is not supported by MonetDB/e or contains syntax/semantic differences.
 
-- `COPY into statement <https://duckdb.org/docs/data/csv>`_.
-- `Appender function <https://duckdb.org/docs/data/appender>`_.
+- `COPY into statement <https://duckdb.org/docs/data/csv>`_ uses a different delimiter structure.
+- `Appender function <https://duckdb.org/docs/data/appender>`_ currently in C-version.
 - `Loading parquet files <https://duckdb.org/docs/data/parquet>`_.
 - `R connector <https://duckdb.org/docs/api/r>`_.
 - `JDBC connector <https://duckdb.org/docs/api/java>`_.
@@ -63,5 +63,5 @@ Reporting issues
 We highly appreciate user feed back for migrations undertaken in the MonetDB issue tracker on GitHub
 or stackoverflow.
 Both as a warning and best practices for those who follow, but also to assess the need for
-features hitherto not available in MonetDBe
+features hitherto not available in MonetDB/e
 
