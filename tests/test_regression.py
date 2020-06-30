@@ -417,7 +417,6 @@ class TestMonetDBeRegressions(unittest.TestCase):
         with self.assertRaises(monetdbe.OperationalError):
             monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")
 
-
     def test_multiple_memory_db_issue60(self):
         q = "create table test(i int)"
         m = monetdbe.connect()
