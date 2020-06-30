@@ -123,12 +123,12 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
 
 
 class MonetEmbedded:
-    _active_context = None
-    in_memory_active = False
+    _active_context: Optional['MonetEmbedded'] = None
+    in_memory_active: bool = False
+    _connection: Optional[ffi.CData] = None
 
     def __init__(self, dbdir: Optional[Path] = None):
         self.dbdir = dbdir
-        self._connection: Optional[ffi.CData] = None
         self._switch()
 
     @classmethod
@@ -138,6 +138,10 @@ class MonetEmbedded:
     @classmethod
     def set_in_memory_active(cls, value: bool):
         cls.in_memory_active = value
+
+    @classmethod
+    def set_connection(cls, connection: Optional[ffi.CData]):
+        cls._connection = connection
 
     def __del__(self):
         self.close()
@@ -152,7 +156,7 @@ class MonetEmbedded:
             return
 
         self.close()
-        self._connection = self.open(self.dbdir)
+        self.set_connection(self.open(self.dbdir))
         self.set_active_context(self)
 
         if not self.dbdir:
@@ -199,10 +203,10 @@ class MonetEmbedded:
         if self._connection:
             if lib.monetdbe_close(self._connection):
                 raise exceptions.OperationalError("Failed to close database")
-            self._connection = None
+            self.set_connection(None)
 
         if not self.dbdir:
-            in_memory_active = False
+            self.set_in_memory_active(True)
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
