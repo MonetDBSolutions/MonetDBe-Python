@@ -314,13 +314,13 @@ class ColNamesTests(unittest.TestCase):
         self.assertIsNone(self.cur.description)
 
 
-@unittest.skipIf(monetdbe.monetdbe_version_info < (3, 8, 3), "CTEs not supported")
+#@unittest.skipIf(monetdbe.monetdbe_version_info < (3, 8, 3), "CTEs not supported")
 class CommonTableExpressionTests(unittest.TestCase):
 
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
         self.cur = self.con.cursor()
-        self.cur.execute("create table test(x foo)")
+        self.cur.execute("create table test(x int)")
 
     def tearDown(self):
         self.cur.close()
@@ -329,7 +329,7 @@ class CommonTableExpressionTests(unittest.TestCase):
     def test_CursorDescriptionCTESimple(self):
         self.cur.execute("with one as (select 1) select * from one")
         self.assertIsNotNone(self.cur.description)
-        self.assertEqual(self.cur.description[0][0], "1")
+        self.assertEqual(self.cur.description[0][0], "%2")
 
     def test_CursorDescriptionCTESMultipleColumns(self):
         self.cur.execute("insert into test values(1)")
