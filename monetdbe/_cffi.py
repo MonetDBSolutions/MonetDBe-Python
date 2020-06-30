@@ -71,7 +71,7 @@ def check_error(msg: ffi.CData) -> None:
         match = error_match.match(decoded)
 
         if not match:
-            raise exceptions.DatabaseError(decoded)
+            raise exceptions.OperationalError(decoded)
 
         _, _, error, msg = match.groups()
 
@@ -122,41 +122,52 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
             return col.data[r]
 
 
-# Todo: workaround to get around the single embed instance limitation. can be class property also.
-_active_python = None
-_connection: Optional[ffi.CData] = None
-in_memory_active = False
-
-
 class MonetEmbedded:
+    _active_context: Optional['MonetEmbedded'] = None
+    in_memory_active: bool = False
+    _connection: Optional[ffi.CData] = None
+
     def __init__(self, dbdir: Optional[Path] = None):
         self.dbdir = dbdir
         self._switch()
 
+    @classmethod
+    def set_active_context(cls, active_context: Optional['MonetEmbedded']):
+        cls._active_context = active_context
+
+    @classmethod
+    def set_in_memory_active(cls, value: bool):
+        cls.in_memory_active = value
+
+    @classmethod
+    def set_connection(cls, connection: Optional[ffi.CData]):
+        cls._connection = connection
+
     def __del__(self):
-        self.close()
+        if self._active_context == self:
+            # only close if we are deleting the active context
+            self.close()
 
     def _switch(self):
-        global _active_python, _connection, in_memory_active
-
         # todo (gijs): see issue #5
-        # if not self.dbdir and in_memory_active:
+        # if not self.dbdir and self.in_memory_active:
         #    raise exceptions.NotSupportedError(
         #        "You can't open a new in-memory MonetDBe database while an old one is still open.")
 
-        if _active_python == self:
+        if self._active_context == self:
             return
 
         self.close()
-        _connection = self.open(self.dbdir)
-        _active_python = self
+        self.set_connection(self.open(self.dbdir))
+        self.set_active_context(self)
+
         if not self.dbdir:
-            in_memory_active = True
+            self.set_in_memory_active(True)
 
     def cleanup_result(self, result: ffi.CData):
         _logger.info("cleanup_result called")
-        if result and _connection:
-            check_error(lib.monetdbe_cleanup_result(_connection, result))
+        if result and self._connection:
+            check_error(lib.monetdbe_cleanup_result(self._connection, result))
 
     def open(self, dbdir: Optional[Path] = None):
         if not dbdir:
@@ -165,16 +176,17 @@ class MonetEmbedded:
             url = str(dbdir).encode()  # ffi.new("char[]", str(dbdir).encode())
 
         p_connection = ffi.new("monetdbe_database *")
-        #p_options = ffi.new("monetdbe_options *")
-        #p_options.memorylimit = 0
-        #p_options.querytimeout = 0
-        #p_options.sessiontimeout = 0
-        #p_options.nr_threads = 0
-        #p_options.have_hge = False
+        # p_options = ffi.new("monetdbe_options *")
+        # p_options.memorylimit = 0
+        # p_options.querytimeout = 0
+        # p_options.sessiontimeout = 0
+        # p_options.nr_threads = 0
+        # p_options.have_hge = False
 
         p_options = ffi.NULL
 
         result_code = lib.monetdbe_open(p_connection, url, p_options)
+        connection = p_connection[0]
 
         errors = {
             0: "OK",
@@ -183,23 +195,26 @@ class MonetEmbedded:
         }
 
         if result_code:
-            error = errors.get(result_code, "unknown error")
-            raise exceptions.DatabaseError(f"Failed to open database: {error} (code {result_code})")
-        return p_connection[0]
+            if result_code == -2:
+                error = ffi.string(lib.monetdbe_error(connection)).decode()
+                lib.monetdbe_close(connection)
+            else:
+                error = errors.get(result_code, "unknown error")
+            raise exceptions.OperationalError(f"Failed to open database: {error} (code {result_code})")
+
+        return connection
 
     def close(self):
-        _logger.info("close called")
-        global _active_python, _connection, in_memory_active
-        if _active_python:
-            _active_python = None
+        if self._connection:
+            if lib.monetdbe_close(self._connection):
+                raise exceptions.OperationalError("Failed to close database")
+            self.set_connection(None)
 
-        if _connection:
-            if lib.monetdbe_close(_connection):
-                raise exceptions.DatabaseError("Failed to close database")
-            _connection = None
+        if self._active_context:
+            self.set_active_context(None)
 
         if not self.dbdir:
-            in_memory_active = False
+            self.set_in_memory_active(True)
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
@@ -220,10 +235,7 @@ class MonetEmbedded:
 
         affected_rows = ffi.new("monetdbe_cnt *")
 
-        if not _connection:
-            raise RuntimeError("This should not happen, see bug #60")
-
-        check_error(lib.monetdbe_query(_connection, query.encode(), p_result, affected_rows))
+        check_error(lib.monetdbe_query(self._connection, query.encode(), p_result, affected_rows))
 
         if make_result:
             result = p_result[0]
@@ -264,7 +276,7 @@ class MonetEmbedded:
         return result
 
     def set_autocommit(self, value: bool):
-        check_error(lib.monetdbe_set_autocommit(_connection, int(value)))
+        check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
 
     def get_autocommit(self):
         value = ffi.new("int *")
@@ -272,16 +284,16 @@ class MonetEmbedded:
         return value[0]
 
     def in_transaction(self) -> bool:
-        return bool(lib.monetdbe_in_transaction(_connection))
+        return bool(lib.monetdbe_in_transaction(self._connection))
 
     def append(self, schema: str, table: str, batids, column_count: int):
         # todo (gijs): use :)
-        check_error(lib.monetdbe_append(_connection, schema.encode(), table.encode(), batids, column_count))
+        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), batids, column_count))
 
     def prepare(self, query):
         # todo (gijs): use :)
         stmt = ffi.new("monetdbe_statement **")
-        lib.monetdbe_prepare(_connection, query.encode(), stmt)
+        lib.monetdbe_prepare(self._connection, query.encode(), stmt)
         return stmt[0]
 
     def bind(self, statement, data, parameter_nr):
@@ -301,8 +313,8 @@ class MonetEmbedded:
 
     def dump_database(self, backupfile: Path):
         # todo (gijs): use :)
-        lib.monetdbe_dump_database(_connection, str(backupfile).encode())
+        lib.monetdbe_dump_database(self._connection, str(backupfile).encode())
 
     def dump_table(self, schema_name, table_name, backupfile: Path):
         # todo (gijs): use :)
-        lib.monetdbe_dump_table(_connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
+        lib.monetdbe_dump_table(self._connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
