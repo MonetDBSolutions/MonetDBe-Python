@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Any
 from unittest import TestCase
-
+from math import isnan
 from pandas import DataFrame
 
 from monetdbe import connect, Timestamp
@@ -17,9 +17,10 @@ def _connect(values: List[Any], type: str) -> DataFrame:
 
 class TestDataFrame(TestCase):
     def test_timestamp(self):
+        now = datetime.now().replace(microsecond=0)  # monetdb doesn't support microseconds
         values = [
-            datetime.now(),
-            Timestamp(2004, 2, 14, 7, 15, 0, 510241),
+            now,
+            Timestamp(2004, 2, 14, 7, 15, 0, 510000),
         ]
         df = _connect(values, 'timestamp')
         self.assertEqual(values, list(df['d']))
@@ -32,7 +33,8 @@ class TestDataFrame(TestCase):
     def test_float(self):
         values = [5.0, 10.0, -100.0, float('nan')]
         df = _connect(values, 'float')
-        self.assertEqual(values, list(df['d']))
+        self.assertEqual(values[:-1], list(df['d'])[:-1])
+        self.assertTrue(isnan(df['d'].iloc[-1]))
 
     def test_char(self):
         values = ['a', 'i', 'é']

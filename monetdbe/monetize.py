@@ -50,13 +50,20 @@ def monet_memoryview(data: memoryview) -> str:
     return "'%s'" % data.tobytes().hex()
 
 
+def monet_float(data: float) -> str:
+    if data != data:  # yes this is how you can check if a float is a NaN
+        return 'NULL'
+    else:
+        return str(data)
+
+
 mapping: List[Tuple[Type, Callable]] = [
     (str, monet_escape),
     (bytes, monet_bytes),
     (memoryview, monet_memoryview),
     (int, str),
     (complex, str),
-    (float, str),
+    (float, monet_float),
     (decimal.Decimal, str),
     (datetime.datetime, monet_escape),
     (datetime.time, monet_escape),

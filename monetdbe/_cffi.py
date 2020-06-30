@@ -95,9 +95,9 @@ type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_str: ("str", make_string, np.dtype('=O'), None),
     lib.monetdbe_blob: ("blob", make_blob, np.dtype('=O'), None),
-    lib.monetdbe_date: ("date", py_date, np.dtype('datetime64[D]'), None),
-    lib.monetdbe_time: ("time", py_time, np.dtype('datetime64[ns]'), None),
-    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('datetime64[ns]'), None),
+    lib.monetdbe_date: ("date", py_date, np.dtype('=O'), None),  # np.dtype('datetime64[D]')
+    lib.monetdbe_time: ("time", py_time, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
+    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
 }
 
 
@@ -268,14 +268,11 @@ class MonetEmbedded:
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
 
             if numpy_type.char == 'O':
-                lib.PyUnicode_FromString(rcol.data)
-                char_value = ffi.cast("char *", rcol.data)
-                data = ffi.string(char_value)
-                data.decode('utf-8')
-
-            buffer_size = monetdbe_result.nrows * numpy_type.itemsize
-            c_buffer = ffi.buffer(rcol.data, buffer_size)
-            np_col: np.ndarray = np.frombuffer(c_buffer, dtype=numpy_type)
+                np_col: np.ndarray = np.array([extract(rcol, r) for r in range(monetdbe_result.nrows)])
+            else:
+                buffer_size = monetdbe_result.nrows * numpy_type.itemsize
+                c_buffer = ffi.buffer(rcol.data, buffer_size)
+                np_col = np.frombuffer(c_buffer, dtype=numpy_type)
 
             if monetdbe_null:
                 mask = np_col == monetdbe_null
