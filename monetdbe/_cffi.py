@@ -186,6 +186,7 @@ class MonetEmbedded:
         p_options = ffi.NULL
 
         result_code = lib.monetdbe_open(p_connection, url, p_options)
+        connection = p_connection[0]
 
         errors = {
             0: "OK",
@@ -194,9 +195,14 @@ class MonetEmbedded:
         }
 
         if result_code:
-            error = errors.get(result_code, "unknown error")
+            if result_code == -2:
+                error = ffi.string(lib.monetdbe_error(connection)).decode()
+                lib.monetdbe_close(connection)
+            else:
+                error = errors.get(result_code, "unknown error")
             raise exceptions.OperationalError(f"Failed to open database: {error} (code {result_code})")
-        return p_connection[0]
+
+        return connection
 
     def close(self):
         if self._connection:
