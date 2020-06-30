@@ -144,7 +144,9 @@ class MonetEmbedded:
         cls._connection = connection
 
     def __del__(self):
-        self.close()
+        if self._active_context == self:
+            # only close if we are deleting the active context
+            self.close()
 
     def _switch(self):
         # todo (gijs): see issue #5
@@ -197,13 +199,13 @@ class MonetEmbedded:
         return p_connection[0]
 
     def close(self):
-        if self._active_context:
-            self.set_active_context(None)
-
         if self._connection:
             if lib.monetdbe_close(self._connection):
                 raise exceptions.OperationalError("Failed to close database")
             self.set_connection(None)
+
+        if self._active_context:
+            self.set_active_context(None)
 
         if not self.dbdir:
             self.set_in_memory_active(True)
