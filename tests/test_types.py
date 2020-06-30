@@ -314,7 +314,6 @@ class ColNamesTests(unittest.TestCase):
         self.assertIsNone(self.cur.description)
 
 
-#@unittest.skipIf(monetdbe.monetdbe_version_info < (3, 8, 3), "CTEs not supported")
 class CommonTableExpressionTests(unittest.TestCase):
 
     def setUp(self):
