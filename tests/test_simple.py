@@ -11,7 +11,7 @@ def test_simple():
     print(rows)
 
     con2 = connect()
-    cur2 = con.cursor()
+    cur2 = con2.cursor()
     cur2.execute("CREATE TABLE test (x integer, y string)")
     cur2.execute("INSERT INTO test VALUES (42, 'Hello'), (NULL, 'World')")
     cur2.execute("SELECT x, y FROM test; ")
