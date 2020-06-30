@@ -211,7 +211,7 @@ class CursorTests(unittest.TestCase):
             self.cu.execute("select asdf")
 
     def test_ExecuteTooMuchSql(self):
-        with self.assertRaises(monetdbe.Warning):
+        with self.assertRaises(monetdbe.ProgrammingError):
             self.cu.execute("select 5+4; select 4+5")
 
     def test_ExecuteTooMuchSql2(self):
@@ -225,6 +225,14 @@ class CursorTests(unittest.TestCase):
             foo
             */
             """)
+
+    def test_empty_query(self):
+        conn = monetdbe.connect(':memory:')
+        with self.assertRaises(monetdbe.ProgrammingError):
+            conn.execute("")
+
+        with self.assertRaises(monetdbe.ProgrammingError):
+            conn.execute(";")
 
     def test_ExecuteWrongSqlArg(self):
         with self.assertRaises(TypeError):

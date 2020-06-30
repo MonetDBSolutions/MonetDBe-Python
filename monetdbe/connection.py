@@ -55,10 +55,7 @@ class Connection:
             raise TypeError
 
         from monetdbe._cffi import MonetEmbedded
-        try:
-            self.lowlevel = MonetEmbedded(dbdir=database)
-        except exceptions.DatabaseError as e:
-            raise exceptions.OperationalError(e) from None
+        self.lowlevel: Optional[MonetEmbedded] = MonetEmbedded(dbdir=database)
 
         self.result = None
         self.row_factory: Optional[Type[Row]] = None
@@ -129,7 +126,7 @@ class Connection:
     def close(self, *args, **kwargs) -> None:
         del self.lowlevel
         # todo (gijs): typing
-        self.lowlevel = None  # type: ignore
+        self.lowlevel = None
 
     def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':
         """
@@ -213,7 +210,7 @@ class Connection:
             value: a boolean value
         """
         self._check()
-        return self.lowlevel.set_autocommit(value)
+        return self.lowlevel.set_autocommit(value)   # type: ignore
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

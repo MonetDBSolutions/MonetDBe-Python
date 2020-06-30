@@ -1,5 +1,5 @@
 #!/bin/bash -ve
 
-pip3 install -e .
+pip3 install .
 pycodestyle monetdbe tests
 

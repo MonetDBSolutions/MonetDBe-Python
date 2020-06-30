@@ -416,3 +416,22 @@ class TestMonetDBeRegressions(unittest.TestCase):
     def test_crash_on_url(self):
         with self.assertRaises(monetdbe.OperationalError):
             monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")
+
+    def test_multiple_memory_db_issue60(self):
+        q = "create table test(i int)"
+        m = monetdbe.connect()
+        c = m.cursor()
+        c.execute(q)
+        del m.lowlevel
+        del m
+        m = monetdbe.connect()
+        c = m.cursor()
+        c.execute(q)
+
+    def test_proper_error_on_empty_query_issue63(self):
+        conn = monetdbe.connect(':memory:')
+        with self.assertRaises(monetdbe.ProgrammingError):
+            conn.execute("")
+
+        with self.assertRaises(monetdbe.ProgrammingError):
+            conn.execute(";")

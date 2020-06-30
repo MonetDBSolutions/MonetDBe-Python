@@ -85,7 +85,7 @@ class Cursor:
         """
         self._check_connection()
         self._check_result()
-        return self.connection.lowlevel.result_fetch_numpy(self.result)
+        return self.connection.lowlevel.result_fetch_numpy(self.result)  # type: ignore
 
     def fetchdf(self) -> pd.DataFrame:
         """
@@ -136,15 +136,17 @@ class Cursor:
         self._fetch_generator = None
 
         if self.result:
-            self.connection.lowlevel.cleanup_result(self.result)
+            self.connection.lowlevel.cleanup_result(self.result)  # type: ignore
             self.result = None
 
         splitted = strip_split_and_clean(operation)
-        if len(splitted) != 1:
-            raise Warning("Multiple queries in one execute() call")
+        if len(splitted) == 0:
+            raise ProgrammingError("Empty query")
+        if len(splitted) > 1:
+            raise ProgrammingError("Multiple queries in one execute() call")
 
         formatted = format_query(operation, parameters)
-        self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)
+        self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)  # type: ignore
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
@@ -162,7 +164,7 @@ class Cursor:
         self.description = None  # which will be set later in fetchall
 
         if self.result:
-            self.connection.lowlevel.cleanup_result(self.result)
+            self.connection.lowlevel.cleanup_result(self.result)  # type: ignore
             self.result = None
 
         total_affected_rows = 0
@@ -182,7 +184,7 @@ class Cursor:
                 break
 
             formatted = format_query(operation, parameters)
-            self.result, affected_rows = self.connection.lowlevel.query(formatted, make_result=True)
+            self.result, affected_rows = self.connection.lowlevel.query(formatted, make_result=True)  # type: ignore
             total_affected_rows += affected_rows
 
         self.rowcount = total_affected_rows
