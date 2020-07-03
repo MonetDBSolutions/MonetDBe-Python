@@ -42,9 +42,7 @@ The following functionality is not supported by MonetDB/e or contains syntax/sem
 Porting DuckDB programs
 -----------------------
 
-DuckDB is a research prototype developed by the next generation of database researchers at
-`CWI <https://www.cwi.nl>`_.
-It is focused on data analytic workflows in an embedded setting with an emphasis on R.
+[DuckDB](https://www.duckdb.org) is an embedded analytical data management system.
 Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
 The following functionality is not supported by MonetDB/e or contains syntax/semantic differences.
