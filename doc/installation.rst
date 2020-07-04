@@ -26,6 +26,33 @@ On supported platforms, this will download and install the Binary wheel, otherwi
 Source installation
 ===================
 
-see the detailed online installation documentation for instructions to build from source:
+To compile MonetDBe-Python from source, you need to have MonetDB installed. Download the latest MonetDB, or compile
+from source. Make sure you have INT128 support enabled:
 
-https://monetdbe.readthedocs.io/en/latest/installation.html#source-installation
+.. code-block::
+
+    $ hg clone hg://dev.monetdb.org/hg/MonetDB
+    $ cd MonetDB
+    $ mkdir build
+    $ cd build
+    $ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=ON -DWITH_CRYPTO=OFF -DPY3INTEGRATION=OFF
+    $ make install
+
+
+Don't forget to replace `<monetdb_prefix>` with where you want to have MonetDB installed, for example `/opt/monetdb`.
+
+Now obtain the MonetDBe-Python source code from github:
+
+.. code-block::
+
+    $ git clone https://github.com/MonetDBSolutions/MonetDBe-Python/
+    $ cd MonetDBe-Python
+    $ pip install .
+
+
+If MonetDB is not installed in the default search paths (like `/usr/local`), you need to set some `CFLAGS` environment
+variables to have pip find MonetDB:
+
+.. code-block::
+
+    $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib/monetdb" pip install .
