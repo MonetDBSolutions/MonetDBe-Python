@@ -33,7 +33,7 @@ $ hg clone hg://dev.monetdb.org/hg/MonetDB
 $ cd MonetDB
 $ mkdir build
 $ cd build
-$ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=ON -DPY3INTEGRATION=OFF
+$ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=ON -DPY3INTEGRATION=OFF -DWITH_CRYPTO=OFF 
 $ make install
 ```
 

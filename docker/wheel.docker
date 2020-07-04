@@ -6,14 +6,14 @@ RUN yum install -y cmake3 openssl-devel
 # download and extract monetdb
 RUN mkdir /build && \
     cd /build && \
-    curl -O https://dev.monetdb.org/hg/MonetDB/archive/default.tar.bz2 && \
-    tar jxvf default.tar.bz2 && \
-    mkdir /build/MonetDB-default/build && \
-    cd /build/MonetDB-default/build && \
-    cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python && \
+    curl -O https://dev.monetdb.org/hg/MonetDB/archive/oscar.tar.bz2 && \
+    tar jxvf oscar.tar.bz2 && \
+    mkdir /build/MonetDB-oscar/build && \
+    cd /build/MonetDB-oscar/build && \
+    cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python -DWITH_CRYPTO=OFF -DINT128=ON -DPY3INTEGRATION=OFF && \
     make -j 4 && \
     make install && \
-    cp /build/MonetDB-default/clients/mapilib/mapi_querytype.h /usr/local/include/monetdb/ && \
+    cp /build/MonetDB-oscar/clients/mapilib/mapi_querytype.h /usr/local/include/monetdb/ && \
     cd / && \
     rm -rf /build
 

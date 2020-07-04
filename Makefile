@@ -28,7 +28,7 @@ docker-force-build:
 	docker build --no-cache -t $(DOCKER_IMAGE):test38 -f docker/test38.docker .
 
 
-docker-wheels: docker venv/
+docker-wheels: docker-build venv/
 	venv/bin/python setup.py sdist
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); .inside/make_wheel.sh 3.6"
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); .inside/make_wheel.sh 3.7"

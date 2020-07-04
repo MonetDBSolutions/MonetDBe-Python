@@ -13,7 +13,7 @@ extras_require = {
 
 setuptools.setup(
     name="monetdbe",
-    version="0.8.1",
+    version="0.8.2",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",
