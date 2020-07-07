@@ -42,24 +42,27 @@ The following functionality is not supported by MonetDB/e or contains syntax/sem
 Porting DuckDB programs
 -----------------------
 
-[DuckDB](https://www.duckdb.org) is an embedded analytical data management system.
+[DuckDB](https://www.duckdb.org) is an embedded analytical data management system researched
+at the [Database Architectures group of CWI](https://www.cwi.nl/research/groups/database-architectures).
 Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
 The following functionality is not supported by MonetDB/e or contains syntax/semantic differences.
 
 - `COPY into statement <https://duckdb.org/docs/data/csv>`_ uses a different delimiter structure.
-- `Appender function <https://duckdb.org/docs/data/appender>`_ currently in C-version.
+- `Appender function <https://duckdb.org/docs/data/appender>`_ currently only in C-version.
 - `Loading parquet files <https://duckdb.org/docs/data/parquet>`_.
 - `R connector <https://duckdb.org/docs/api/r>`_.
 - `JDBC connector <https://duckdb.org/docs/api/java>`_.
-- `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_.
+- `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_ no optimizer hooks needed.
 - `Pandas registration as SQL view <https://duckdb.org/docs/api/python>`_.
 
 Reporting issues
 ----------------
 
-We highly appreciate user feed back for migrations undertaken in the MonetDB issue tracker on GitHub
-or stackoverflow.
-Both as a warning and best practices for those who follow, but also to assess the need for
+We highly appreciate user feed back for migrations undertaken in the MonetDB/e issue tracker on GitHub
+or stackoverflow. Both as a warning and best practices for those who follow, but also to assess the need for
 features hitherto not available in MonetDB/e
+
+We welcome migration advice for other (embedded) database systems. Features needed can be left behind
+in the issue tracker.
 

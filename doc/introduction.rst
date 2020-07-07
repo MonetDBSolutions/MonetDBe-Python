@@ -39,6 +39,28 @@ A minimal example to see if everything works as expected::
 
 A small collection of example programs can be found in the `monetdbe-examples <https://github.com/MonetDBSolutions/monetdbe-examples>`_ repository.
 
+What are the perks
+==================
+
+Capitalizing the MonetDB server code base makes amongst others the following features available for an embedded version
+
+- No client-server communication overhead.
+- No result-set serialiszation, but binary column-ary access.
+- Full use of the multi-core parallel query execution.
+- Hassle free data auto-indexing.
+- Dictionary compressed string handling.
+- Seamless integration with the programming language, e,g, dataframes/numpy.
+- Single user control over the resources.
+- Working with :memory: databases with controlled RAM footprint.
+- Hybrid set up with concurrent :memory: and server-based storage.
+- Boosting your data analytics programs with stateful User Defined Functions.
+- Extended base types, DECIMAL, JSON, blob, uuid, boolean
+- Statistics, windowing functions, grouped sets, cube, and rollup.
+- Persistent stored modules of SQL procedures/functions
+- SQL-standard compliance and many Postgresql extensions.
+- Streaming input/output handling of compressed files.
+- Hot snapshots for backup/recovery.
+
 Storage options
 ===============
 One of the key factors in an embedded database system is the location of the persistent data, if it needs to persist at all.  In
@@ -59,6 +81,10 @@ For debugging you can rely on the logging scheme available in every MonetDB/e in
 Alternatively, the Python debugger gives information up to the point the code switches to the underlying C function.
 Consider this a natural barrier not to cross, because the database kernel code is highly complex.
 
+For stability we deploy [SQLsmith](https://github.com/anse1/sqlsmith) and [SQLancer](https://github.com/sqlancer/sqlancer) on a daily basis to isolate corner cases that might
+havoc the system. As an aside, a Continuous Integration framework based on buildbot for
+the stability and regression testing on two dozen platforms.
+
 What are the caveats
 ====================
 
@@ -68,4 +94,11 @@ in the results. An overview is provided in the `Application Migration`_ section.
 
 REMINDER, the Python package monetdbe is an *pre-release* made available from PyPi. You don’t need to install MonetDB itself.
 Several rough edges and features deemed urgent are being dealt with before MonetDB/e becomes an official release, 
-but users are more than welcome to try it out.
+but users are more than welcome to try it out. Issues and feature requests can be left behind in the issue tracker on GitHub.
+
+High on our lists are:
+
+- Import of (mini)parquet and arrow files
+- Remote query processing over multiple :memory: instances
+- Java drop-in jar
+
