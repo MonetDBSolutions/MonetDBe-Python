@@ -81,7 +81,7 @@ For debugging you can rely on the logging scheme available in every MonetDB/e in
 Alternatively, the Python debugger gives information up to the point the code switches to the underlying C function.
 Consider this a natural barrier not to cross, because the database kernel code is highly complex.
 
-For stability we deploy [SQLsmith](https://github.com/anse1/sqlsmith) and [SQLancer](https://github.com/sqlancer/sqlancer) on a daily basis to isolate corner cases that might
+For stability we deploy `SQLsmith] <https://github.com/anse1/sqlsmith>`_ and `SQLancer <https://github.com/sqlancer/sqlancer>`_ on a daily basis to isolate corner cases that might
 havoc the system. As an aside, a Continuous Integration framework based on buildbot for
 the stability and regression testing on two dozen platforms.
 

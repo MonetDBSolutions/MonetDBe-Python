@@ -42,8 +42,8 @@ The following functionality is not supported by MonetDB/e or contains syntax/sem
 Porting DuckDB programs
 -----------------------
 
-[DuckDB](https://www.duckdb.org) is an embedded analytical data management system researched
-at the [Database Architectures group of CWI](https://www.cwi.nl/research/groups/database-architectures).
+`DuckDB <https://www.duckdb.org>`_ is an embedded analytical data management system researched
+at the `Database Architectures group of CWI <https://www.cwi.nl/research/groups/database-architectures>`_.
 Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
 The following functionality is not supported by MonetDB/e or contains syntax/semantic differences.
