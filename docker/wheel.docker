@@ -10,7 +10,7 @@ RUN mkdir /build && \
     tar jxvf oscar.tar.bz2 && \
     mkdir /build/MonetDB-oscar/build && \
     cd /build/MonetDB-oscar/build && \
-    cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python -DWITH_CRYPTO=OFF -DINT128=ON -DPY3INTEGRATION=OFF && \
+    cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python -DWITH_CRYPTO=OFF -DINT128=ON -DPY3INTEGRATION=OFF  -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF && \
     make -j 4 && \
     make install && \
     cp /build/MonetDB-oscar/clients/mapilib/mapi_querytype.h /usr/local/include/monetdb/ && \

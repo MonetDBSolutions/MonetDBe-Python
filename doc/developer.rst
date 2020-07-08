@@ -52,8 +52,9 @@ Then run
 
 .. code-block::
 
-    $ make wheels
-    $ twine upload dist/*.whl dist/*.tar.gz
+    $ make docker-wheels
+    $ venv/bin/pip install twine
+    $ venv/bin/twine upload dist/*.whl dist/*.tar.gz
 
 
 
@@ -70,25 +71,29 @@ Making binary wheel for OSX
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
 3. install requirements
+
 .. code-block::
 
     brew install python3 bison cmake mercurial pyenv openssl
 
 4.  get monetdb
+
 .. code-block::
 
     hg clone hg://dev.monetdb.org/hg/MonetDB
 
 5.  build monetdb
+
 .. code-block::
 
     cd MonetDB
     mkdir build
     cd build
-    cmake .. -DPY3INTEGRATION=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DCMAKE_INSTALL_PREFIX=~/opt -DWITH_CRYPTO=OFF -DINT128=ON
+    cmake .. -DPY3INTEGRATION=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DCMAKE_INSTALL_PREFIX=~/opt -DWITH_CRYPTO=OFF -DINT128=ON  -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
     make -j10 install
 
 6.  install the pythons
+
 .. code-block::
 
     pyenv install 3.6.10
@@ -96,12 +101,14 @@ Making binary wheel for OSX
     pyenv install 3.8.2
 
 7.  set some flags to find the monetdb libs
+
 .. code-block::
 
     export CFLAGS="-I/Users/gijs/opt/include -L/Users/gijs/opt/lib"
     export DYLD_LIBRARY_PATH=/Users/gijs/opt/lib
 
 8. make the binary wheels
+
 .. code-block::
 
     ~/.pyenv/versions/3.6.10/bin/python setup.py bdist_wheel
@@ -109,12 +116,14 @@ Making binary wheel for OSX
     ~/.pyenv/versions/3.8.2/bin/python setup.py bdist_wheel
 
 9 fix the binary wheels
+
 .. code-block::
 
     ~/.pyenv/versions/3.8.2/bin/pip install delocate
     ~/.pyenv/versions/3.8.2/bin/delocate-wheel -v dist/*.whl
 
 10 upload the wheels
+
 .. code-block::
 
     ~/.pyenv/versions/3.8.2/bin/pip install twine
