@@ -399,8 +399,6 @@ class Cursor:
             query = f"insert into {schema}.{table} values ({qmarks})"
             return self.executemany(query, rows_zipped)
 
-
-
         # todo (gijs): use a faster embedded backend to directly insert data, which should be much faster
         # return self.connection.inter.append(schema, table, values, column_count=len(values))
 
