@@ -43,6 +43,9 @@ class Cursor:
         self.row_factory = None
 
     def _set_description(self):
+        if not self.result:
+            return
+
         self._columns = list(
             map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
 
@@ -354,6 +357,7 @@ class Cursor:
         self.execute(query)
         # insert the data into the table
         self.insert(table, values, schema=schema)
+        return self
 
     def insert(self, table: str, values: Union[pd.DataFrame, Dict[str, np.ndarray]], schema: str = 'sys'):
         """
@@ -376,16 +380,26 @@ class Cursor:
                     vals[tpl[0]] = np.array(tpl[1])
             values = vals
 
-        column_names = values.keys()
-        rows = values.values()
+        if isinstance(values, dict):
+            column_names = values.keys()
+            rows = values.values()
 
-        columns = ", ".join(column_names)
-        rows_zipped = list(zip(*rows))
+            columns = ", ".join([str(i) for i in column_names])
+            rows_zipped = list(zip(*rows))
 
-        qmarks = ", ".join(['?'] * len(column_names))
+            qmarks = ", ".join(['?'] * len(column_names))
 
-        query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
-        return self.executemany(query, rows_zipped)
+            query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
+            return self.executemany(query, rows_zipped)
+        elif isinstance(values, list):
+            rows_zipped = list(zip(*values))
+
+            qmarks = ", ".join(['?'] * len(values))
+
+            query = f"insert into {schema}.{table} values ({qmarks})"
+            return self.executemany(query, rows_zipped)
+
+
 
         # todo (gijs): use a faster embedded backend to directly insert data, which should be much faster
         # return self.connection.inter.append(schema, table, values, column_count=len(values))
