@@ -77,3 +77,15 @@ venv/bin/jupyter-notebook: venv/
 
 notebook: venv/bin/jupyter-notebook
 	venv/bin/jupyter-notebook
+
+venv/bin/delocate-wheel: venv/
+	venv/bin/pip install delocate
+
+delocate: venv/bin/delocate-wheel
+	venv/bin/delocate-wheel dist/*.whl
+
+venv/bin/twine: venv/
+	venv/bin/pip install twine
+
+twine: venv/bin/twine
+	venv/bin/twine upload dist/*.whl
