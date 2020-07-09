@@ -82,7 +82,7 @@ venv/bin/delocate-wheel: venv/
 	venv/bin/pip install delocate
 
 delocate: venv/bin/delocate-wheel
-	venv/bin/delocate-wheel dist/*.whl
+	venv/bin/delocate-wheel -v dist/*.whl
 
 venv/bin/twine: venv/
 	venv/bin/pip install twine
