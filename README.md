@@ -20,7 +20,8 @@ For non-binary wheel installation (Windows) you also need to have MonetDB instal
 
 you can install monetdbe from pypi using:
 ```
-# pip install monetdbe
+$ pip install --upgrade pip
+$ pip install monetdbe
 ```
 
 On supported platforms, this will download and install the Binary wheel, otherwise a source compile is started.
