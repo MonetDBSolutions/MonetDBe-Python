@@ -24,7 +24,7 @@ $ pip install --upgrade pip
 $ pip install monetdbe
 ```
 
-On supported platforms, this will download and install the Binary wheel, otherwise a source compile is started.
+On supported platforms, this will download and install the Binary wheel, otherwise a source compile is started, see below.
 
 # Source installation
 
