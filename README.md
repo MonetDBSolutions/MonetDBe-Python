@@ -26,6 +26,19 @@ $ pip install monetdbe
 
 On supported platforms, this will download and install the Binary wheel, otherwise a source compile is started.
 
+
+# usage
+
+Just import and get started, no running a server required. Connecting without an argument starts an in-memory storage instance:
+```
+from monetdb import connect
+con = connect()
+```
+
+See a simple example illustrating the Pandas support in this notebook:
+
+https://github.com/MonetDBSolutions/MonetDBe-Python/blob/master/notebooks/basic_example.ipynb
+
 # Source installation
 
 see the detailed online installation documentation for instructions to build from source:
