@@ -13,7 +13,7 @@ For binary wheel installation you need:
  * pip >= 19.3
  * Python >= 3.6
 
-For non-binary wheel installation (Windows) you also need to have MonetDB installed.
+For non-binary wheel installation (Windows) you also need to have MonetDB installed, see the source installation section below.
 
 
 # install
@@ -24,7 +24,7 @@ $ pip install --upgrade pip
 $ pip install monetdbe
 ```
 
-On supported platforms, this will download and install the Binary wheel, otherwise a source compile is started, see below.
+On supported platforms, this will download and install the Binary wheel, otherwise a source compile is started.
 
 # Source installation
 
