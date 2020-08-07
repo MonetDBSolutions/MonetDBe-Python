@@ -89,7 +89,6 @@ type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
     lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
     lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
-    lib.monetdbe_int128_t: ("int128_t", None, np.dtype(np.int64), None),  # todo: add 128bit support
     lib.monetdbe_size_t: ("size_t", None, np.dtype(np.uint), None),
     lib.monetdbe_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
@@ -191,7 +190,6 @@ class MonetEmbedded:
         p_options.querytimeout = querytimeout
         p_options.sessiontimeout = sessiontimeout
         p_options.nr_threads = nr_threads
-        p_options.have_hge = have_hge
 
         result_code = lib.monetdbe_open(p_connection, url, p_options)
         connection = p_connection[0]
