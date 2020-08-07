@@ -23,9 +23,12 @@
 
 import threading
 import unittest
-from test.support import TESTFN, rmtree
+from shutil import rmtree
+from tempfile import NamedTemporaryFile
 
-import monetdbe as monetdbe
+import monetdbe
+
+TESTFN = NamedTemporaryFile().name
 
 
 class ModuleTests(unittest.TestCase):

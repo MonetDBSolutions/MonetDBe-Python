@@ -22,9 +22,13 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 import unittest
-from test.support import TESTFN, unlink
+
+from os import unlink
+from tempfile import NamedTemporaryFile
 
 import monetdbe as monetdbe
+
+TESTFN = NamedTemporaryFile().name
 
 
 @unittest.skip("todo (gijs): for now we dont support hooks")

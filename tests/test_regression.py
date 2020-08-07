@@ -25,7 +25,7 @@ import datetime
 import functools
 import unittest
 import weakref
-from test import support
+import gc
 
 import monetdbe as monetdbe
 
@@ -390,7 +390,7 @@ class RegressionTests(unittest.TestCase):
         del cur
         # The interpreter shouldn't crash when ref is collected.
         del ref
-        support.gc_collect()
+        gc.collect()
 
     def test_DelIsolation_levelSegfault(self):
         with self.assertRaises(AttributeError):
