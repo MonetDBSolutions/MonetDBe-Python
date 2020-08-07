@@ -35,7 +35,7 @@ from source. Make sure you have INT128 support enabled:
     $ cd MonetDB
     $ mkdir build
     $ cd build
-    $ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=ON -DWITH_CRYPTO=OFF -DPY3INTEGRATION=OFF
+    $ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=OFF -DWITH_CRYPTO=OFF -DPY3INTEGRATION=OFF
     $ make install
 
 

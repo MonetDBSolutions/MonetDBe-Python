@@ -89,7 +89,7 @@ Making binary wheel for OSX
     cd MonetDB
     mkdir build
     cd build
-    cmake .. -DPY3INTEGRATION=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DCMAKE_INSTALL_PREFIX=~/opt -DWITH_CRYPTO=OFF -DINT128=ON  -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
+    cmake .. -DPY3INTEGRATION=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DCMAKE_INSTALL_PREFIX=~/opt -DWITH_CRYPTO=OFF -DINT128=OFF  -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
     make -j10 install
 
 6.  install the pythons

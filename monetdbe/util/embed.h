@@ -25,12 +25,10 @@ typedef struct {
 
 typedef enum {
  monetdbe_bool, monetdbe_int8_t, monetdbe_int16_t, monetdbe_int32_t, monetdbe_int64_t,
-
- monetdbe_int128_t,
-
  monetdbe_size_t, monetdbe_float, monetdbe_double,
  monetdbe_str, monetdbe_blob,
- monetdbe_date, monetdbe_time, monetdbe_timestamp
+ monetdbe_date, monetdbe_time, monetdbe_timestamp,
+ monetdbe_type_unknown
 } monetdbe_types;
 
 typedef struct {
@@ -62,12 +60,8 @@ typedef struct {
  int querytimeout;
  int sessiontimeout;
  int nr_threads;
-
- 
-_Bool 
-     have_hge;
-
 } monetdbe_options;
+
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdbe_column_bool;
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t value); } monetdbe_column_int8_t;
 typedef struct { monetdbe_types type; int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t value); } monetdbe_column_int16_t;
