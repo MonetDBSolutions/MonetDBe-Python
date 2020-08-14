@@ -1,4 +1,5 @@
-import setuptools
+from setuptools import find_packages, setup
+from sys import platform
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -11,7 +12,15 @@ extras_require = {
 
 }
 
-setuptools.setup(
+packages = find_packages(exclude=['tests', 'tests.test_lite'])
+
+if platform == 'win32':
+    package_data = {"monetdbe": ["*.dll"]}
+else:
+    package_data = {}
+
+
+setup(
     name="monetdbe",
     version="0.8.4",
     author="Gijs Molenaar",
@@ -20,7 +29,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/monetdBSolutions/MonetDBe-Python/",
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
@@ -36,4 +45,5 @@ setuptools.setup(
     install_requires=["cffi>=1.0.0", "numpy", "pandas"],
     tests_require=tests_require,
     test_suite="tests",
+    package_data=package_data,
 )

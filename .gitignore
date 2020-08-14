@@ -138,3 +138,5 @@ tests/@test_*_tmp/
 
 
 doc/_build
+
+monetdbe/*.dll
