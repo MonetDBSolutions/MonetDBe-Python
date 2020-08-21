@@ -168,8 +168,8 @@ class MonetEmbedded:
         if result and self._connection:
             check_error(lib.monetdbe_cleanup_result(self._connection, result))
 
+    @staticmethod
     def open(
-            self,
             dbdir: Optional[Path] = None,
             memorylimit: int = 0,
             querytimeout: int = 0,
@@ -240,7 +240,6 @@ class MonetEmbedded:
             p_result = ffi.NULL
 
         affected_rows = ffi.new("monetdbe_cnt *")
-
         check_error(lib.monetdbe_query(self._connection, query.encode(), p_result, affected_rows))
 
         if make_result:
@@ -250,18 +249,18 @@ class MonetEmbedded:
 
         return result, affected_rows[0]
 
-    def result_fetch(self, result: ffi.CData, column: int):
+    @staticmethod
+    def result_fetch(result: ffi.CData, column: int):
         p_rcol = ffi.new("monetdbe_column **")
         check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
         return p_rcol[0]
 
-    def result_fetch_numpy(self, monetdbe_result: ffi.CData):
+    @staticmethod
+    def result_fetch_numpy(monetdbe_result: ffi.CData):
 
         result = {}
         for c in range(monetdbe_result.ncols):
-            p_rcol = ffi.new("monetdbe_column **")
-            check_error(lib.monetdbe_result_fetch(monetdbe_result, p_rcol, c))
-            rcol = p_rcol[0]
+            rcol = MonetEmbedded.result_fetch(monetdbe_result, c)
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
 
@@ -287,7 +286,8 @@ class MonetEmbedded:
     def set_autocommit(self, value: bool):
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
 
-    def get_autocommit(self):
+    @staticmethod
+    def get_autocommit():
         value = ffi.new("int *")
         check_error(lib.monetdbe_get_autocommit(value))
         return value[0]
