@@ -1,4 +1,9 @@
-#!/bin/bash -ve
+#!/usr/bin/env bash
+#
+# This should most likely be ran inside the manylinux2014 docker container
+#
+set -e
+set -v
 
 WORKDIR=/tmp/
 OUTPUT=dist/

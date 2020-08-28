@@ -1,17 +1,17 @@
-#!/usr/bin/env bash -ve
-#
+#!/usr/bin/env bash
 # Use this to make binary wheels for OSX
-#
 #
 # this script uses homebrew, install with:
 #
-# $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-#
+#   $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 #
 # then install some requirements:
 #
-# $ brew install cmake bison openssl pyenv readline bzip2
+#   $ brew install cmake bison openssl pyenv readline bzip2
 #
+
+set -e
+set -v
 
 # some settings and variables
 PYTHONS=(3.6.10 3.7.7 3.8.3 3.9.0b3) # pypy3.6-7.3.1
@@ -22,7 +22,7 @@ SRC=${BUILD}/MonetDB-${BRANCH}
 PREFIX=${BUILD}/monetdb
 
 # make sure the pythons are installed
-for p in ${PYTHONS[@]}; do 
+for p in "${PYTHONS[@]}"; do
     pyenv install -s ${p}
 done
 
@@ -51,7 +51,7 @@ export DYLD_LIBRARY_PATH=${PREFIX}/lib
 
 cd ${HERE}
 
-for p in ${PYTHONS[@]}; do 
+for p in "${PYTHONS[@]}"; do
     ~/.pyenv/versions/${p}/bin/pip install wheel
     ~/.pyenv/versions/${p}/bin/python setup.py bdist_wheel
 done

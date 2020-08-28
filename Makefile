@@ -30,24 +30,24 @@ docker-force-build:
 
 docker-wheels: docker-build venv/
 	venv/bin/python setup.py sdist
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); .inside/make_wheel.sh 3.6"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); .inside/make_wheel.sh 3.7"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); .inside/make_wheel.sh 3.8"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.6"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.7"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):wheel sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.8"
 	
 docker-shell:
 	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); bash"
 
 docker-test: docker-build
-	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/test.sh"
+	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); scripts/test.sh"
 
 docker-mypy: docker-build
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/mypy.sh"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); scripts/mypy.sh"
 
 docker-pycodestyle: docker-build
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/pycodestyle.sh"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); scripts/pycodestyle.sh"
 
 docker-info: docker-build
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); .inside/info.sh"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) $(DOCKER_IMAGE):test38 sh -c "cd $(GITHUB_WORKSPACE); scripts/info.sh"
 
 docker-doc:
 	docker build -t $(DOCKER_IMAGE):doc -f docker/doc.docker .

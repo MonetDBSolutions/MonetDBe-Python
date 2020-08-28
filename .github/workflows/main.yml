@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
+  test_linux:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:test38
     strategy:
@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: run test action
-        run: .inside/test.sh
+      - name: run tests on Linux
+        run: scripts/test.sh
 
-  wheel:
+  wheel_linux:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:wheel
     strategy:
@@ -28,37 +28,36 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: make wheels
-        run: .inside/make_wheel.sh ${{ matrix.python-version }}
+      - name: make linux binary wheels
+        run: scripts/make_wheel.sh ${{ matrix.python-version }}
 
-  quality:
+  quality_linux:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:test38
     steps:
       - uses: actions/checkout@v2
-      - name: run test action
-        run: .inside/mypy.sh
+      - name: Run mypy static code checks
+        run: scripts/mypy.sh
 
-  pycodestyle:
+  pycodestyle_linux:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:test38
     steps:
       - uses: actions/checkout@v2
-      - name: run test action
-        run: .inside/pycodestyle.sh
+      - name: Check the python coding style
+        run: scripts/pycodestyle.sh
 
-#  windows:
-#    runs-on: windows-2019
-#    continue-on-error: true
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: build
-#        run: python3 setup.py build
-#
-#  osx:
-#    runs-on: macos-10.15
-#    continue-on-error: true
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: build
-#        run: python3 setup.py build
+  windows_wheel:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+      - name: Windows binary wheel
+        run: scripts/win_wheel.sh
+
+  osx_wheel:
+    runs-on: macos-10.15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2
+      - name: OS X binary wheel
+        run: scripts/osx_wheel.sh
