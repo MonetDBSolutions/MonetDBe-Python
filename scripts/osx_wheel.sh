@@ -37,7 +37,15 @@ fi
 # compile the cargo
 mkdir -p ${SRC}/build
 cd ${SRC}/build
-cmake .. -DPY3INTEGRATION=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DCMAKE_INSTALL_PREFIX=${PREFIX} -DINT128=OFF -DWITH_CRYPTO=OFF -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
+cmake .. \
+  -DPY3INTEGRATION=OFF \
+  -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+  -DINT128=OFF \
+  -DWITH_CRYPTO=OFF \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DASSERT=OFF \
+  -DRINTEGRATION=OFF
 rm -rf ${PREFIX}
 make -j5 install
 

@@ -1,9 +1,9 @@
 # install choco deps
 choco install winflexbison git
-choco install python --version 3.6 --force
-choco install python --version 3.7 --force
+#choco install python --version 3.6 --force
+#choco install python --version 3.7 --force
 choco install python --version 3.8 --force
-choco install python --version 3.9 --force
+#choco install python --version 3.9 --force
 
 # install deps
 cd C:\vcpkg
@@ -30,7 +30,7 @@ cmake -G "Visual Studio 16 2019" `
 
 
 # install monetdb
-cmake --build . --target ALL_BUILD --parallel 16
+cmake --build . --target ALL_BUILD --parallel 4
 cmake --build . --target INSTALL
 
 cd $GITHUB_WORKSPACE

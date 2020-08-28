@@ -1,5 +1,6 @@
 FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND noninteractve
+ENV BRANCH Oct2020
 
 # install monetdb build dependencies
 RUN apt-get update && \
@@ -7,10 +8,10 @@ RUN apt-get update && \
 
 # download and extract monetdb
 WORKDIR /tmp 
-RUN curl -O https://dev.monetdb.org/hg/MonetDB/archive/oscar.tar.bz2 
-RUN tar jxvf oscar.tar.bz2 
-RUN mkdir /tmp/MonetDB-oscar/build
-WORKDIR /tmp/MonetDB-oscar/build 
+RUN curl -O https://dev.monetdb.org/hg/MonetDB/archive/${BRANCH}.tar.bz2 
+RUN tar jxvf ${BRANCH}.tar.bz2 
+RUN mkdir /tmp/MonetDB-${BRANCH}/build
+WORKDIR /tmp/MonetDB-${BRANCH}/build 
 RUN cmake .. -DWITH_CRYPTO=OFF -DINT128=OFF -DPY3INTEGRATION=OFF -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
 RUN make -j 4 
 RUN make install 
