@@ -3,14 +3,12 @@
 set -e
 set -v
 
-
-# this script uses homebrew, install with:
-#
-#   $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-#
-# then install some requirements:
-#
+# install some requirements
 brew install cmake bison openssl pyenv readline bzip2
+
+brew upgrade pyenv
+
+pyenv install --list
 
 
 # some settings and variables

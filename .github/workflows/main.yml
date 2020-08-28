@@ -53,11 +53,6 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
-      -
-        name: Choco help
-        uses: crazy-max/ghaction-chocolatey@v1
-        with:
-          args: install winflexbison git python
       - name: Windows binary wheel
         run: scripts/win_wheel.ps1
 
