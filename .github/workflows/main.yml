@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  test_linux:
+  linux_test:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:test38
     strategy:
@@ -19,7 +19,23 @@ jobs:
       - name: run tests on Linux
         run: scripts/test.sh
 
-  wheel_linux:
+  linux_mypy:
+    runs-on: ubuntu-18.04
+    container: gijzelaerr/monetdb:test38
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run mypy static code checks
+        run: scripts/mypy.sh
+
+  linux_pycodestyle:
+    runs-on: ubuntu-18.04
+    container: gijzelaerr/monetdb:test38
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check the python coding style
+        run: scripts/pycodestyle.sh
+
+  linux_wheel:
     runs-on: ubuntu-18.04
     container: gijzelaerr/monetdb:wheel
     strategy:
@@ -30,22 +46,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: make linux binary wheels
         run: scripts/make_wheel.sh ${{ matrix.python-version }}
-
-  quality_linux:
-    runs-on: ubuntu-18.04
-    container: gijzelaerr/monetdb:test38
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run mypy static code checks
-        run: scripts/mypy.sh
-
-  pycodestyle_linux:
-    runs-on: ubuntu-18.04
-    container: gijzelaerr/monetdb:test38
-    steps:
-      - uses: actions/checkout@v2
-      - name: Check the python coding style
-        run: scripts/pycodestyle.sh
+      - uses: actions/upload-artifact@v2
+        name: Publish Linux binary wheels
+        with:
+          path: dist/*.whl
 
   windows_wheel:
     runs-on: windows-2019
@@ -55,6 +59,10 @@ jobs:
         uses: actions/checkout@v2
       - name: Windows binary wheel
         run: scripts/win_wheel.ps1
+      - uses: actions/upload-artifact@v2
+        name: Publish Windows binary wheels
+        with:
+          path: dist/*.whl
 
   osx_wheel:
     runs-on: macos-10.15
@@ -63,3 +71,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: OS X binary wheel
         run: scripts/osx_wheel.sh
+      - uses: actions/upload-artifact@v2
+        name: Publish OS X binary wheels
+        with:
+          path: dist/*.whl
