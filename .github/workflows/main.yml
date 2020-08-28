@@ -52,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Windows binary wheel
-        run: scripts/win_wheel.sh
+        run: scripts/win_wheel.bat
 
   osx_wheel:
     runs-on: macos-10.15
