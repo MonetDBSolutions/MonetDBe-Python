@@ -33,15 +33,15 @@ cmake -G "Visual Studio 16 2019" `
 cmake --build . --target ALL_BUILD --parallel 16
 cmake --build . --target INSTALL
 
-cd c\build\Monetdbe-python
-cp c:\build\vcpkg\installed\x64-windows\bin\*.dll monetdbe\.
-cp C:\build\monetdb-installed\bin\*.dll monetdbe\.
+cd $GITHUB_WORKSPACE
+cp c:\vcpkg\installed\x64-windows\bin\*.dll monetdbe\.
+cp C:\monetdb\bin\*.dll monetdbe\.
 
 
 # build binary python stuff
 C:\Python36\python setup.py build_ext `
-  --include-dirs=C:\build\monetdb-installed\include `
-  --library-dirs=C:\build\monetdb-installed\lib
+  --include-dirs=C:\monetdb\include `
+  --library-dirs=C:\monetdb\lib
 
 
 # make wheel

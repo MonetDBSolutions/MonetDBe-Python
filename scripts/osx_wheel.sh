@@ -6,13 +6,8 @@ set -v
 # install some requirements
 brew install cmake bison openssl pyenv readline bzip2
 
-brew upgrade pyenv
-
-pyenv install --list
-
-
 # some settings and variables
-PYTHONS=(3.6.12 3.7.9 3.8.5)
+PYTHONS=(3.6.11 3.7.8 3.8.5)
 BRANCH=oscar
 
 # no lets set some derivative variables
@@ -51,10 +46,10 @@ export CFLAGS="-I${PREFIX}/include -L${PREFIX}/lib"
 export DYLD_LIBRARY_PATH=${PREFIX}/lib
 
 # back to the origin
-cd ${HERE}
+cd $HERE
 
 # make the wheels
-for p in ${PYTHONS[@]}; do
+for p in "${PYTHONS[@]}"; do
     ~/.pyenv/versions/${p}/bin/pip install wheel
     ~/.pyenv/versions/${p}/bin/python setup.py bdist_wheel
 done
