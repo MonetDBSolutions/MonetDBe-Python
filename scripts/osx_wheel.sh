@@ -7,12 +7,13 @@ set -v
 brew install cmake bison openssl pyenv readline bzip2
 
 # some settings and variables
-PYTHONS=(3.6.11 3.7.8 3.8.5)
+#PYTHONS=(3.6.11 3.7.8 3.8.5)
+PYTHONS=(3.8.5)
 BRANCH=oscar
 
 # no lets set some derivative variables
 HERE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-BUILD=${HERE}/build
+BUILD=${HERE}/../build
 SRC=${BUILD}/MonetDB-${BRANCH}
 PREFIX=${BUILD}/monetdb
 
@@ -54,7 +55,7 @@ export CFLAGS="-I${PREFIX}/include -L${PREFIX}/lib"
 export DYLD_LIBRARY_PATH=${PREFIX}/lib
 
 # back to the origin
-cd $HERE
+cd ${HERE}/..
 
 # make the wheels
 for p in "${PYTHONS[@]}"; do
