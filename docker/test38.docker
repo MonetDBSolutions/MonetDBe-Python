@@ -13,7 +13,7 @@ RUN tar jxvf ${BRANCH}.tar.bz2
 RUN mkdir /tmp/MonetDB-${BRANCH}/build
 WORKDIR /tmp/MonetDB-${BRANCH}/build 
 RUN cmake .. -DWITH_CRYPTO=OFF -DINT128=OFF -DPY3INTEGRATION=OFF -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
-RUN make -j 4 
+RUN make -j 4 -k
 RUN make install 
 
 # preinstall dependencies

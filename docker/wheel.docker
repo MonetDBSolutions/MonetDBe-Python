@@ -13,7 +13,7 @@ RUN mkdir /build && \
     mkdir /build/MonetDB-${BRANCH}/build && \
     cd /build/MonetDB-${BRANCH}/build && \
     cmake3 .. -DPython3_EXECUTABLE=/opt/python/cp38-cp38/bin/python -DWITH_CRYPTO=OFF -DINT128=OFF -DPY3INTEGRATION=OFF  -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF && \
-    make -j 4 && \
+    make -j 4 -k && \
     make install && \
     cp /build/MonetDB-${BRANCH}/clients/mapilib/mapi_querytype.h /usr/local/include/monetdb/ && \
     cd / && \
