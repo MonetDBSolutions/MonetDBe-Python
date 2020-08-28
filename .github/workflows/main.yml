@@ -50,9 +50,16 @@ jobs:
   windows_wheel:
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Choco help
+        uses: crazy-max/ghaction-chocolatey@v1
+        with:
+          args: install winflexbison git python
       - name: Windows binary wheel
-        run: scripts/win_wheel.bat
+        run: scripts/win_wheel.ps1
 
   osx_wheel:
     runs-on: macos-10.15

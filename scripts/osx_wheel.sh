@@ -14,7 +14,7 @@ brew install cmake bison openssl pyenv readline bzip2
 
 
 # some settings and variables
-PYTHONS=(3.6.10 3.7.7 3.8.3 3.9.0b3) # pypy3.6-7.3.1
+PYTHONS=(3.6.12 3.7.9 3.8.5)
 BRANCH=oscar
 
 # no lets set some derivative variables
@@ -24,7 +24,7 @@ SRC=${BUILD}/MonetDB-${BRANCH}
 PREFIX=${BUILD}/monetdb
 
 # make sure the pythons are installed
-for p in ${PYTHONS[@]}; do
+for p in "${PYTHONS[@]}"; do
     pyenv install -s ${p}
 done
 

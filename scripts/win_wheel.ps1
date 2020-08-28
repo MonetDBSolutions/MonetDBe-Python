@@ -1,21 +1,21 @@
 
-:: in adminitrator powershell run
+# in adminitrator powershell run
 
-:: install chocolatey
-@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" `
- -NoProfile -InputFormat None -ExecutionPolicy Bypass `
- -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" `
-  && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
-choco feature enable -n allowGlobalConfirmation
+# install chocolatey
+#@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" `
+# -NoProfile -InputFormat None -ExecutionPolicy Bypass `
+# -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" `
+#  && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+#choco feature enable -n allowGlobalConfirmation
 
-:: install deps
-choco install winflexbison git
+# install deps
+#choco install winflexbison git
 choco install python --version 3.6 --force
 choco install python --version 3.7 --force
 choco install python --version 3.8 --force
 choco install python --version 3.9 --force
 
-:: install visual studio 2017
+# install visual studio 2017
 cinst VisualStudio2017community --package-parameters `
   "--add Microsoft.VisualStudio.Workload.NativeDesktop --add microsoft.visualstudio.component.vc.cmake.project --add microsoft.visualstudio.component.vc.ATLMFC"
 refreshenv
