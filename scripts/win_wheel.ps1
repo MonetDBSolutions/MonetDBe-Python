@@ -15,8 +15,9 @@ $BRANCH = 'oscar'
 
 # get monetdb
 cd c:\
-curl -O -C - https://dev.monetdb.org/hg/MonetDB/archive/$BRANCH.tar.bz2
-tar jxvf $BRANCH.tar.bz2
+curl -O - https://dev.monetdb.org/hg/MonetDB/archive/$BRANCH.tar.bz2
+bzip2 -d $BRANCH.tar.bz2
+tar -xvf $BRANCH.tar
 
 
 # compile monetdb
