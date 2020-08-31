@@ -58,9 +58,6 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        name: Windows binary wheel
-        run: scripts/win_wheel.ps1
-      -
         name: Choco install packages
         uses: crazy-max/ghaction-chocolatey@v1
         with:
@@ -70,6 +67,9 @@ jobs:
         with:
           vcpkgArguments: libiconv openssl bzip2 geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: 64-windows
+      -
+        name: Windows binary wheel
+        run: scripts/win_wheel.ps1
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
