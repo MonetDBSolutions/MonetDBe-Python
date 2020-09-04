@@ -24,7 +24,7 @@ jobs:
           python3 -m pip install pytest numpy pandas
       -
         name: Install MonetDBe in developer mode
-          python3 -m pip install -e .
+        run: python3 -m pip install -e .
       -
         name: run tests
         run: py.test -vv
@@ -44,7 +44,7 @@ jobs:
           python3 -m pip install mypy numpy pandas
       -
         name: Install MonetDBe in developer mode
-          python3 -m pip install -e .
+        run: python3 -m pip install -e .
       -
         name: Run mypy static code checks
         run: mypy monetdbe tests
@@ -64,7 +64,7 @@ jobs:
           python3 -m pip install pycodestyle numpy pandas
       -
         name: Install MonetDBe in developer mode
-          python3 -m pip install -e .
+        run: python3 -m pip install -e .
       -
         name: Check the python coding style
         run: pycodestyle monetdbe tests
