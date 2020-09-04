@@ -10,9 +10,6 @@ jobs:
   linux_test:
     runs-on: ubuntu-18.04
     container: monetdb/dev-builds:Oct2020
-    strategy:
-      matrix:
-        python-version: [3.8]
     steps:
       -
         name: Checkout
