@@ -52,7 +52,7 @@ jobs:
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
           cmake -G "Visual Studio 16 2019" `
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_TOOLCHAIN_FILE=${{ VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=C:\monetdb -A x64 `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
