@@ -1,9 +1,14 @@
-$BRANCH = 'oscar'
+$BRANCH = 'Oct2020'
 
+Set-PSDebug -Trace 1
 
 # get monetdb
 Set-Location c:\
 curl.exe -O https://dev.monetdb.org/hg/MonetDB/archive/$BRANCH.tar.bz2
+
+ls
+
+bzip2 -tvv $BRANCH.tar.bz2
 bzip2 -d $BRANCH.tar.bz2
 tar -xf $BRANCH.tar
 

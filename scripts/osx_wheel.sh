@@ -8,7 +8,7 @@ brew install cmake bison openssl pyenv readline bzip2
 
 # some settings and variables
 PYTHONS=(3.6.11 3.7.8 3.8.5)
-BRANCH=oscar
+BRANCH=Oct2020
 
 # no lets set some derivative variables
 HERE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
