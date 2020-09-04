@@ -47,7 +47,7 @@ jobs:
           python3 -m pip install -e .
       -
         name: Run mypy static code checks
-        run:mypy monetdbe tests
+        run: mypy monetdbe tests
 
 
   linux_pycodestyle:
