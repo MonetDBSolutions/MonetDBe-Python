@@ -10,7 +10,7 @@ jobs:
   windows_wheel:
     runs-on: windows-2019
     env:
-      branch: Oct2020
+      BRANCH: Oct2020
     steps:
       -
         name: Checkout
@@ -43,13 +43,13 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          wget.exe -O https://dev.monetdb.org/hg/MonetDB/archive/{{ env.branch }}.zip
-          unzip.exe {{ env.branch }}.zip
+          wget.exe https://dev.monetdb.org/hg/MonetDB/archive/$BRANCH.zip
+          unzip.exe $BRANCH.zip
 
       -
         name: Compile monetdb
         run: |
-          Set-Location c:\MonetDB-{{ env.branch }}
+          Set-Location c:\MonetDB-$BRANCH
           cmake -G "Visual Studio 16 2019" `
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=C:\monetdb -A x64 `
