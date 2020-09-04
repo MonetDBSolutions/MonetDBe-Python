@@ -42,6 +42,8 @@ C:\Python38\python.exe -m pip install --upgrade pip
 C:\Python38\python.exe -m pip install pytest
 C:\Python38\python.exe -m pip install -e .
 
+# C:\Python38\Scripts\pytest.exe
+
 # make wheel
 C:\Python38\python.exe setup.py bdist_wheel
 
