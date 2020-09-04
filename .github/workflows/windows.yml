@@ -21,6 +21,11 @@ jobs:
         with:
           args: install winflexbison git wget unzip
       -
+        name: Install Python 3.8
+        uses: crazy-max/ghaction-chocolatey@v1
+        with:
+          args: install python
+      -
         name: Install Python 3.6
         uses: crazy-max/ghaction-chocolatey@v1
         with:
@@ -30,11 +35,7 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v1
         with:
           args: install python --version 3.7 --force
-      -
-        name: Install Python 3.8
-        uses: crazy-max/ghaction-chocolatey@v1
-        with:
-          args: install python --version 3.8 --force
+
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3
