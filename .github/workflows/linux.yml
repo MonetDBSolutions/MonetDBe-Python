@@ -1,4 +1,4 @@
-name: Run test suite and build wheels
+name: Tests and wheels for Linux
 
 on:
   push:
@@ -86,46 +86,5 @@ jobs:
       -
         uses: actions/upload-artifact@v2
         name: Publish Linux binary wheels
-        with:
-          path: dist/*.whl
-
-
-  windows_wheel:
-    runs-on: windows-2019
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Choco install packages
-        uses: crazy-max/ghaction-chocolatey@v1
-        with:
-          args: install winflexbison git python curl bzip2
-      -
-        name: Restore artifacts, or run vcpkg, build and cache artifacts
-        uses: lukka/run-vcpkg@v3
-        with:
-          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
-          vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: f3f329a048eaff759c1992c458f2e12351486bc7
-      -
-        name: Windows binary wheel
-        run: scripts/win_wheel.ps1
-      -
-        uses: actions/upload-artifact@v2
-        name: Publish Windows binary wheels
-        with:
-          path: dist/*.whl
-
-
-  osx_wheel:
-    runs-on: macos-10.15
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v2
-      - name: OS X binary wheel
-        run: scripts/osx_wheel.sh
-      - uses: actions/upload-artifact@v2
-        name: Publish OS X binary wheels
         with:
           path: dist/*.whl
