@@ -1,4 +1,4 @@
-name: Tests and wheels for Windows
+name: Windows Test & Wheels
 
 on:
   push:

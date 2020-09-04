@@ -1,4 +1,4 @@
-name: Tests and wheels for Linux
+name: Linux Test & Wheels
 
 on:
   push:
