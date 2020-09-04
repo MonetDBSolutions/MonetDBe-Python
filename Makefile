@@ -1,6 +1,6 @@
 
 GITHUB_WORKSPACE=/build
-DOCKER_IMAGE=gijzelaerr/monetdb
+DOCKER_IMAGE= monetdb/dev-builds:Oct2020
 
 
 all: test
