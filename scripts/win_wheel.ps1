@@ -11,6 +11,7 @@ unzip.exe $BRANCH.tar.bz2
 
 
 # compile monetdb
+mkdir c:\MonetDB-$BRANCH\build
 Set-Location c:\MonetDB-$BRANCH
 cmake -G "Visual Studio 16 2019" `
   -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
