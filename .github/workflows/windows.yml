@@ -19,7 +19,22 @@ jobs:
         name: Install choco packages
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install winflexbison git python wget unzip
+          args: install winflexbison git wget unzip
+      -
+        name: Install Python 3.6
+        uses: crazy-max/ghaction-chocolatey@v1
+        with:
+          args: install python --version 3.6 --force
+      -
+        name: Install Python 3.7
+        uses: crazy-max/ghaction-chocolatey@v1
+        with:
+          args: install python --version 3.7 --force
+      -
+        name: Install Python 3.8
+        uses: crazy-max/ghaction-chocolatey@v1
+        with:
+          args: install python --version 3.8 --force
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3
@@ -27,6 +42,7 @@ jobs:
           vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: x64-windows
           vcpkgGitCommitId: f3f329a048eaff759c1992c458f2e12351486bc7
+          appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
         run: |
