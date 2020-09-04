@@ -12,29 +12,30 @@ jobs:
     env:
       branch: Oct2020
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v2
-      - name: Choco install packages
+      -
+        name: Install choco packages
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install winflexbison git python curl unzip
-      - name: Restore artifacts, or run vcpkg, build and cache artifacts
+          args: install winflexbison git python wget unzip
+      -
+        name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3
         with:
           vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: x64-windows
           vcpkgGitCommitId: f3f329a048eaff759c1992c458f2e12351486bc7
-      #-
-      #  name: Windows binary wheel
-      #  run: scripts/win_wheel.ps1
-
-      - name: Get monetdb
+      -
+        name: Get monetdb
         run: |
           Set-Location c:\
-          curl.exe -O https://dev.monetdb.org/hg/MonetDB/archive/{{ env.branch }}.tar.bz2
-          unzip.exe {{ env.branch }}.tar.bz2
+          wget.exe -O https://dev.monetdb.org/hg/MonetDB/archive/{{ env.branch }}.zip
+          unzip.exe {{ env.branch }}.zip
 
-      - name: Compile monetdb
+      -
+        name: Compile monetdb
         run: |
           Set-Location c:\MonetDB-{{ env.branch }}
           cmake -G "Visual Studio 16 2019" `
@@ -45,33 +46,36 @@ jobs:
             -DASSERT=OFF `
             -DPY3INTEGRATION=OFF `
             -DINT128=OFF  ..
-      - name: Install monetdb
+      -
+        name: Install monetdb
         run: |
           cmake --build . --target ALL_BUILD --parallel 4
           cmake --build . --target INSTALL
-      - name: Collect vsckg dlls
+      -
+        name: Collect vsckg dlls
         run: |
           Set-Location $GITHUB_WORKSPACE
           Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\*.dll monetdbe\.
           Copy-Item C:\monetdb\bin\*.dll monetdbe\.
-
-      - name: Build binary python stuff
+      -
+        name: Build binary python stuff
         run: |
           C:\Python38\python.exe setup.py build_ext `
             --include-dirs=C:\monetdb\include `
             --library-dirs=C:\monetdb\lib
-      - name: Install python libraries
+      -
+        name: Install python libraries
         run: |
           C:\Python38\python.exe -m pip install --upgrade pip
           C:\Python38\python.exe -m pip install pytest
           C:\Python38\python.exe -m pip install -e .
           # C:\Python38\Scripts\pytest.exe
-
-      - name: Make wheel
+      -
+        name: Make wheel
         run: |
           C:\Python38\python.exe setup.py bdist_wheel
-
-      - uses: actions/upload-artifact@v2
+      -
+        uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
         with:
           path: dist/*.whl
