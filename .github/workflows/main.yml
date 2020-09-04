@@ -61,11 +61,11 @@ jobs:
         name: Choco install packages
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install winflexbison git python
+          args: install winflexbison git python curl bzip2
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v3
         with:
-          vcpkgArguments: libiconv openssl bzip2 geos libxml2 pcre pcre2 zlib getopt
+          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: x64-windows
           vcpkgGitCommitId: f3f329a048eaff759c1992c458f2e12351486bc7
       -
