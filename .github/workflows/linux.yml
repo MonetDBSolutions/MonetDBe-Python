@@ -1,87 +1,88 @@
-name: Linux Test & Wheels
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  linux_test:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install pytest numpy pandas
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .
-      -
-        name: run tests
-        run: py.test -vv
-
-
-  linux_mypy:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install mypy numpy pandas
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .
-      -
-        name: Run mypy static code checks
-        run: mypy monetdbe tests
-
-
-  linux_pycodestyle:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install pycodestyle numpy pandas
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .
-      -
-        name: Check the python coding style
-        run: pycodestyle monetdbe tests
-
-
-  linux_wheel:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020_manylinux
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8]
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: make linux binary wheels
-        run: scripts/make_wheel.sh ${{ matrix.python-version }}
-      -
-        uses: actions/upload-artifact@v2
-        name: Publish Linux binary wheels
-        with:
-          path: dist/*.whl
+#name: Linux Test & Wheels
+#
+#on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+#
+#jobs:
+#  linux_test:
+#    runs-on: ubuntu-18.04
+#    container: monetdb/dev-builds:Oct2020
+#    steps:
+#      -
+#        name: Checkout
+#        uses: actions/checkout@v2
+#      -
+#        name: Install dependencies
+#        run: |
+#          python3 -m pip install --upgrade pip
+#          python3 -m pip install pytest numpy pandas
+#      -
+#        name: Install MonetDBe in developer mode
+#        run: python3 -m pip install -e .
+#      -
+#        name: run tests
+#        run: py.test -vv
+#
+#
+#  linux_mypy:
+#    runs-on: ubuntu-18.04
+#    container: monetdb/dev-builds:Oct2020
+#    steps:
+#      -
+#        name: Checkout
+#        uses: actions/checkout@v2
+#      -
+#        name: Install dependencies
+#        run: |
+#          python3 -m pip install --upgrade pip
+#          python3 -m pip install mypy numpy pandas
+#      -
+#        name: Install MonetDBe in developer mode
+#        run: python3 -m pip install -e .
+#      -
+#        name: Run mypy static code checks
+#        run: mypy monetdbe tests
+#
+#
+#  linux_pycodestyle:
+#    runs-on: ubuntu-18.04
+#    container: monetdb/dev-builds:Oct2020
+#    steps:
+#      -
+#        name: Checkout
+#        uses: actions/checkout@v2
+#      -
+#        name: Install dependencies
+#        run: |
+#          python3 -m pip install --upgrade pip
+#          python3 -m pip install pycodestyle numpy pandas
+#      -
+#        name: Install MonetDBe in developer mode
+#        run: python3 -m pip install -e .
+#      -
+#        name: Check the python coding style
+#        run: pycodestyle monetdbe tests
+#
+#
+#  linux_wheel:
+#    runs-on: ubuntu-18.04
+#    container: monetdb/dev-builds:Oct2020_manylinux
+#    strategy:
+#      matrix:
+#        python-version: [3.6, 3.7, 3.8]
+#    steps:
+#      -
+#        name: Checkout
+#        uses: actions/checkout@v2
+#      -
+#        name: make linux binary wheels
+#        run: scripts/make_wheel.sh ${{ matrix.python-version }}
+#      -
+#        uses: actions/upload-artifact@v2
+#        name: Publish Linux binary wheels
+#        with:
+#          path: dist/*.whl
+#
