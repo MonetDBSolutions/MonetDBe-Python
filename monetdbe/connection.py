@@ -15,17 +15,23 @@ class Connection:
     def __init__(self,
                  database: Optional[Union[str, Path]] = None,
                  uri: bool = False,
-                 timeout: float = 5.0,
+                 timeout: int = 0,
                  detect_types: int = 0,
                  check_same_thread: bool = True,
                  autocommit: bool = False,
+                 nr_threads: int = 0,
+                 memorylimit: int = 0,
+                 querytimeout: int = 0,
+                 logging: Optional[Path] = None,
+                 username: Optional[str] = None,
+                 password: Optional[str] = None,
+                 port: Optional[int] = None,
                  ):
         """
         Args:
             database: The path to you database. Leave empty or use the `:memory:` string to start an in-memory database.
             uri: if true, database is interpreted as a URI. This allows you to specify options.
-            timeout: The connection timeout, which is unused and meaningless in the case of MonetDBe and exists for
-                     compatibility reasons.
+            timeout: The session / connection timeout in seconds, 0 = no limit (default)
             detect_types:  defaults to 0 (i. e. off, no type detection), you can set it to any combination of
                            PARSE_DECLTYPES and PARSE_COLNAMES to turn type detection on.
             check_same_thread: By default, check_same_thread is True and only the creating thread may use the
@@ -33,8 +39,16 @@ class Connection:
                                When using multiple threads with the same connection writing operations should be
                                serialized by the user to avoid data corruption.
             autocommit: Enable autocommit mode
+            nr_threads: to control the level of parallelism, 0 = all cores (default)
+            memorylimit: to control the memory footprint allowed in :memory: mode in MB, 0 = no limit (default)
+            querytimeout: The query timeout in seconds, 0 = no limit (default)
+            logging: the file location for the tracer files (not used yet)
+            username: used to connect to a remote server (not used yet)
+            password: credentials to reach the remote server (not used yet)
+            port: TCP/IP port to listen for connections (not used yet)
+
         """
-        if uri:
+        if uri or port or username or password or logging:
             raise NotImplemented  # todo
 
         if not check_same_thread:
@@ -55,7 +69,13 @@ class Connection:
             raise TypeError
 
         from monetdbe._cffi import MonetEmbedded
-        self.lowlevel: Optional[MonetEmbedded] = MonetEmbedded(dbdir=database)
+        self.lowlevel: Optional[MonetEmbedded] = MonetEmbedded(
+            dbdir=database,
+            memorylimit=memorylimit,
+            nr_threads=nr_threads,
+            querytimeout=querytimeout,
+            sessiontimeout=timeout
+        )
 
         self.result = None
         self.row_factory: Optional[Type[Row]] = None
@@ -210,7 +230,7 @@ class Connection:
             value: a boolean value
         """
         self._check()
-        return self.lowlevel.set_autocommit(value)   # type: ignore
+        return self.lowlevel.set_autocommit(value)  # type: ignore
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

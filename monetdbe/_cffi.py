@@ -126,8 +126,21 @@ class MonetEmbedded:
     in_memory_active: bool = False
     _connection: Optional[ffi.CData] = None
 
-    def __init__(self, dbdir: Optional[Path] = None):
+    def __init__(
+            self,
+            dbdir: Optional[Path] = None,
+            memorylimit: int = 0,
+            querytimeout: int = 0,
+            sessiontimeout: int = 0,
+            nr_threads: int = 0,
+            have_hge: bool = False
+    ):
         self.dbdir = dbdir
+        self.memorylimit = memorylimit
+        self.querytimeout = querytimeout
+        self.sessiontimeout = sessiontimeout
+        self.nr_threads = nr_threads
+        self.have_hge = have_hge
         self._switch()
 
     @classmethod
@@ -157,7 +170,7 @@ class MonetEmbedded:
             return
 
         self.close()
-        self.set_connection(self.open(self.dbdir))
+        self.set_connection(self.open())
         self.set_active_context(self)
 
         if not self.dbdir:
@@ -168,28 +181,20 @@ class MonetEmbedded:
         if result and self._connection:
             check_error(lib.monetdbe_cleanup_result(self._connection, result))
 
-    @staticmethod
-    def open(
-            dbdir: Optional[Path] = None,
-            memorylimit: int = 0,
-            querytimeout: int = 0,
-            sessiontimeout: int = 0,
-            nr_threads: int = 0,
-            have_hge: bool = False
-    ):
+    def open(self):
 
-        if not dbdir:
+        if not self.dbdir:
             url = ffi.NULL
         else:
-            url = str(dbdir).encode()
+            url = str(self.dbdir).encode()
 
         p_connection = ffi.new("monetdbe_database *")
 
         p_options = ffi.new("monetdbe_options *")
-        p_options.memorylimit = memorylimit
-        p_options.querytimeout = querytimeout
-        p_options.sessiontimeout = sessiontimeout
-        p_options.nr_threads = nr_threads
+        p_options.memorylimit = self.memorylimit
+        p_options.querytimeout = self.querytimeout
+        p_options.sessiontimeout = self.sessiontimeout
+        p_options.nr_threads = self.nr_threads
 
         result_code = lib.monetdbe_open(p_connection, url, p_options)
         connection = p_connection[0]
@@ -226,9 +231,10 @@ class MonetEmbedded:
         """
         Execute a query.
 
-        query: the query
-        make_results: Create and return a result object. If enabled, you need to call cleanup_result on the
-                      result afterwards
+        Args:
+            query: the query
+            make_results: Create and return a result object. If enabled, you need to call cleanup_result on the
+                          result afterwards
 
         returns:
             result, affected_rows
