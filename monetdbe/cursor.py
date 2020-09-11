@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from monetdbe.connection import Connection
-from monetdbe.exceptions import ProgrammingError, Warning, InterfaceError
+from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean
 from monetdbe.monetize import monet_identifier_escape
 
@@ -14,13 +14,8 @@ Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'i
                                          'null_ok'))
 
 
-def __convert_pandas_to_numpy_dict__(df):
-    if type(df) == pd.DataFrame:
-        res = {}
-        for tpl in df.to_dict().items():
-            res[tpl[0]] = np.array(list(tpl[1].values()))
-        return res
-    return df
+def _pandas_to_numpy_dict(df: pd.DataFrame):
+    return {k: np.array(list(v.values())) for k, v in df.to_dict().items()}
 
 
 class Cursor:
@@ -314,7 +309,7 @@ class Cursor:
         column_types = []
 
         if not isinstance(values, dict):
-            values = __convert_pandas_to_numpy_dict__(values)
+            values = _pandas_to_numpy_dict(values)
         else:
             vals = {}
             for tpl in values.items():
@@ -369,33 +364,24 @@ class Cursor:
             schema: The SQL schema to use. If no schema is specified, the "sys" schema is used.
        """
 
-        if not isinstance(values, dict):
-            values = __convert_pandas_to_numpy_dict__(values)
-        else:
-            vals = {}
-            for tpl in values.items():
-                if isinstance(tpl[1], np.ma.core.MaskedArray):
-                    vals[tpl[0]] = tpl[1]
-                else:
-                    vals[tpl[0]] = np.array(tpl[1])
-            values = vals
+        if isinstance(values, pd.DataFrame):
+            values = _pandas_to_numpy_dict(values)
 
         if isinstance(values, dict):
-            column_names = values.keys()
-            rows = values.values()
+            for key, value in values.items():
+                if not isinstance(value, np.ma.core.MaskedArray):
+                    values[key] = np.array(value)
 
+            column_names, rows = zip(*values.items())
             columns = ", ".join([str(i) for i in column_names])
             rows_zipped = list(zip(*rows))
-
             qmarks = ", ".join(['?'] * len(column_names))
-
             query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
             return self.executemany(query, rows_zipped)
+
         elif isinstance(values, list):
             rows_zipped = list(zip(*values))
-
             qmarks = ", ".join(['?'] * len(values))
-
             query = f"insert into {schema}.{table} values ({qmarks})"
             return self.executemany(query, rows_zipped)
 

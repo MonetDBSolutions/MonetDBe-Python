@@ -23,9 +23,12 @@
 
 import datetime
 import functools
+import gc
 import unittest
 import weakref
-import gc
+
+import pandas as pd
+import numpy as np
 
 import monetdbe as monetdbe
 
@@ -435,3 +438,15 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         with self.assertRaises(monetdbe.ProgrammingError):
             conn.execute(";")
+
+    def test_real_issue83(self):
+        conn = monetdbe.connect(':memory:')
+        cursor = conn.cursor()
+        cursor.execute('CREATE TABLE "test"("a" REAL);')
+
+        df = pd.DataFrame({'a': [1, 2, 3, 4]}, dtype=np.float32)
+        cursor.insert('test', df)
+
+        cursor.execute('SELECT * FROM "test"')
+        df_out = cursor.fetchdf()
+        pd.testing.assert_frame_equal(df, df_out)

@@ -90,7 +90,7 @@ type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
     lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
     lib.monetdbe_size_t: ("size_t", None, np.dtype(np.uint), None),
-    lib.monetdbe_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
+    lib.monetdbe_float: ("float", py_float, np.dtype(np.float32), np.finfo(np.float32).min),
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_str: ("str", make_string, np.dtype('=O'), None),
     lib.monetdbe_blob: ("blob", make_blob, np.dtype('=O'), None),
@@ -246,7 +246,6 @@ class MonetEmbedded:
             p_result = ffi.NULL
 
         affected_rows = ffi.new("monetdbe_cnt *")
-
         check_error(lib.monetdbe_query(self._connection, query.encode(), p_result, affected_rows))
 
         if make_result:
@@ -256,18 +255,18 @@ class MonetEmbedded:
 
         return result, affected_rows[0]
 
-    def result_fetch(self, result: ffi.CData, column: int):
+    @staticmethod
+    def result_fetch(result: ffi.CData, column: int):
         p_rcol = ffi.new("monetdbe_column **")
         check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
         return p_rcol[0]
 
-    def result_fetch_numpy(self, monetdbe_result: ffi.CData):
+    @staticmethod
+    def result_fetch_numpy(monetdbe_result: ffi.CData):
 
         result = {}
         for c in range(monetdbe_result.ncols):
-            p_rcol = ffi.new("monetdbe_column **")
-            check_error(lib.monetdbe_result_fetch(monetdbe_result, p_rcol, c))
-            rcol = p_rcol[0]
+            rcol = MonetEmbedded.result_fetch(monetdbe_result, c)
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
 
@@ -293,7 +292,8 @@ class MonetEmbedded:
     def set_autocommit(self, value: bool):
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
 
-    def get_autocommit(self):
+    @staticmethod
+    def get_autocommit():
         value = ffi.new("int *")
         check_error(lib.monetdbe_get_autocommit(value))
         return value[0]
