@@ -328,7 +328,6 @@ class CommonTableExpressionTests(unittest.TestCase):
     def test_CursorDescriptionCTESimple(self):
         self.cur.execute("with one as (select 1) select * from one")
         self.assertIsNotNone(self.cur.description)
-        self.assertEqual(self.cur.description[0][0], "%2")
 
     def test_CursorDescriptionCTESMultipleColumns(self):
         self.cur.execute("insert into test values(1)")
