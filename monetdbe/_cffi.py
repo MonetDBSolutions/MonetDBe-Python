@@ -301,9 +301,18 @@ class MonetEmbedded:
     def in_transaction(self) -> bool:
         return bool(lib.monetdbe_in_transaction(self._connection))
 
-    def append(self, schema: str, table: str, batids, column_count: int):
-        # todo (gijs): use :)
-        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), batids, column_count))
+    def append_numpy(self, schema: str, table: str, data: Dict[str, np.ndarray]):
+        n_columns = len(data)
+        monetdbe_columns = ffi.new('monetdbe_column[%d]' % n_columns)
+
+        for i, (k, v) in enumerate(data.items()):
+            num_rows = v.shape[0]
+            x = ffi.new("float[%d]" % num_rows)
+            x[0:num_rows] = v[0:num_rows]
+            monetdbe_columns = x
+
+        input_ = ffi.new('monetdbe_column**', monetdbe_columns)
+        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), input_, n_columns))
 
     def prepare(self, query):
         # todo (gijs): use :)

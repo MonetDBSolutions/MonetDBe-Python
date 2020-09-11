@@ -40,7 +40,7 @@ Time = time
 Timestamp = datetime
 
 
-def connect(*args, **kwargs):
+def connect(*args, **kwargs) -> Connection:
     if 'factory' in kwargs:  # and 'database' in kwargs:
         factory = kwargs.pop('factory')
         return factory(*args, **kwargs)
