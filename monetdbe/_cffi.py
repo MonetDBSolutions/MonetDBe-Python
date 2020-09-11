@@ -90,7 +90,7 @@ type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
     lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
     lib.monetdbe_size_t: ("size_t", None, np.dtype(np.uint), None),
-    lib.monetdbe_float: ("float", py_float, np.dtype(np.float), np.finfo(np.float).min),
+    lib.monetdbe_float: ("float", py_float, np.dtype(np.float32), np.finfo(np.float32).min),
     lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
     lib.monetdbe_str: ("str", make_string, np.dtype('=O'), None),
     lib.monetdbe_blob: ("blob", make_blob, np.dtype('=O'), None),

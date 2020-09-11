@@ -444,7 +444,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         cursor = conn.cursor()
         cursor.execute('CREATE TABLE "test"("a" REAL);')
 
-        df = pd.DataFrame({'a': [1, 2, 3, 4]}, dtype=np.float64)
+        df = pd.DataFrame({'a': [1, 2, 3, 4]}, dtype=np.float32)
         cursor.insert('test', df)
 
         cursor.execute('SELECT * FROM "test"')
