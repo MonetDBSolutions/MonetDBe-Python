@@ -27,7 +27,7 @@ Source installation
 ===================
 
 To compile MonetDBe-Python from source, you need to have MonetDB installed. Download the latest MonetDB, or compile
-from source. Make sure you have INT128 support enabled:
+from source. Make sure you compile with the rights flags, for example have INT128 support disable:
 
 .. code-block::
 
@@ -56,3 +56,9 @@ variables to have pip find MonetDB:
 .. code-block::
 
     $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib/monetdb" pip install .
+
+If you set the library CFLAGS at compile time you probably also need to set the `LD_LIBRARY_PATH` runtime:
+
+.. code-block::
+
+    $ LD_LIBRARY_PATH=-L<monetdb_prefix>/lib/monetdb
