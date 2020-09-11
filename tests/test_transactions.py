@@ -37,10 +37,10 @@ class TransactionTests(unittest.TestCase):
         except OSError:
             pass
 
-        self.con1 = monetdbe.connect(self.db_path, timeout=0.1)
+        self.con1 = monetdbe.connect(self.db_path, timeout=1)
         self.cur1 = self.con1.cursor()
 
-        self.con2 = monetdbe.connect(self.db_path, timeout=0.1)
+        self.con2 = monetdbe.connect(self.db_path, timeout=1)
         self.cur2 = self.con2.cursor()
 
     def tearDown(self):
