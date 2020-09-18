@@ -83,7 +83,7 @@ def check_error(msg: ffi.CData) -> None:
 
 
 # format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
+type_map: Dict[int, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
     lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
     lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
@@ -97,6 +97,10 @@ type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
     lib.monetdbe_date: ("date", py_date, np.dtype('=O'), None),  # np.dtype('datetime64[D]')
     lib.monetdbe_time: ("time", py_time, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
     lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
+}
+
+reverse_type_map: Dict[np.dtype, Tuple[str, int]] = {
+    np.bool: ("bool", lib.monetdbe_bool),
 }
 
 
@@ -301,18 +305,22 @@ class MonetEmbedded:
     def in_transaction(self) -> bool:
         return bool(lib.monetdbe_in_transaction(self._connection))
 
-    def append_numpy(self, schema: str, table: str, data: Dict[str, np.ndarray]):
+    def append(self, schema: str, table: str, data: Dict[str, np.ndarray]):
+        """
+        Directly apply an array structure
+        """
         n_columns = len(data)
-        monetdbe_columns = ffi.new('monetdbe_column[%d]' % n_columns)
+        monetdbe_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
 
-        for i, (k, v) in enumerate(data.items()):
-            num_rows = v.shape[0]
-            x = ffi.new("float[%d]" % num_rows)
-            x[0:num_rows] = v[0:num_rows]
-            monetdbe_columns = x
+        for column_num, (column_name, column_values) in enumerate(data.items()):
+            monetdbe_column = ffi.new('monetdbe_column *')
+            monetdbe_column.type = lib.monetdbe_float
+            monetdbe_column.count = column_values.shape[0]
+            monetdbe_column.name = ffi.new('char[]', column_name.encode())
+            monetdbe_column.data = ffi.cast("float *", ffi.from_buffer(column_values))
+            monetdbe_columns[column_num] = monetdbe_column
 
-        input_ = ffi.new('monetdbe_column**', monetdbe_columns)
-        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), input_, n_columns))
+        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), monetdbe_columns, n_columns))
 
     def prepare(self, query):
         # todo (gijs): use :)

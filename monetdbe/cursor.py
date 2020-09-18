@@ -196,7 +196,7 @@ class Cursor:
         """
         self.connection = None
 
-    def fetchall(self) -> List[Tuple]:
+    def fetchall(self) -> Iterable[Tuple[Any, Any]]:
         """
         Fetch all (remaining) rows of a query result, returning them as a list of tuples).
 

@@ -14,7 +14,7 @@ class TestCffi(unittest.TestCase):
         con.execute("CREATE TABLE test (x integer, y string, ts timestamp, dt date, t time, b blob)")
         con.execute(
             """
-            INSERT INTO test VALUES (42, 'Hello', '2020-01-02 10:20:30', '2020-01-02', '10:20:30', '01020308'), 
+            INSERT INTO test VALUES (42, 'Hello', '2020-01-02 10:20:30', '2020-01-02', '10:20:30', '01020308'),
                         (NULL, 'World', NULL, NULL, NULL, NULL),
                         (NULL, 'Foo', NULL, NULL, NULL, NULL),
                         (43, 'Bar', '2021-02-03 11:21:31', '2021-02-03', '11:21:31', '01020306')
@@ -22,4 +22,4 @@ class TestCffi(unittest.TestCase):
         )
 
         data = con.execute("select * from test").fetchnumpy()
-        con.lowlevel.append_numpy(schema='sys', table='test', data=data)
+        con.lowlevel.append(schema='sys', table='test', data=data)
