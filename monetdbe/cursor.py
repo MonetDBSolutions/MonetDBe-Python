@@ -14,8 +14,8 @@ Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'i
                                          'null_ok'))
 
 
-def _pandas_to_numpy_dict(df: pd.DataFrame):
-    return {k: np.array(list(v.values())) for k, v in df.to_dict().items()}
+def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
+    return {label: np.array(column) for label, column in df.iteritems()}
 
 
 class Cursor:
@@ -49,8 +49,8 @@ class Cursor:
 
         name = (make_string(rcol.name) for rcol in self._columns)
 
-        from monetdbe._cffi import type_map  # import here otherwise import cursor fails if module not compiled
-        type_code = (type_map[rcol.type][2] for rcol in self._columns)
+        from monetdbe._cffi import monet_numpy_map  # import here otherwise import cursor fails if module not compiled
+        type_code = (monet_numpy_map[rcol.type][2] for rcol in self._columns)
 
         display_size = repeat(None)
         internal_size = repeat(None)

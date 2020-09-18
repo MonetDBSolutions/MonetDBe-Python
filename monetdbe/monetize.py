@@ -72,6 +72,7 @@ mapping: List[Tuple[Type, Callable]] = [
     (bool, monet_bool),
     (type(None), monet_none),
     (numpy.int64, int),
+    (numpy.float32, monet_float),
     (numpy.ma.core.MaskedConstant, monet_none),
 ]
 
