@@ -100,6 +100,27 @@ REMINDER, the Python package monetdbe is an *pre-release* made available from Py
 Several rough edges and features deemed urgent are being dealt with before MonetDB/e becomes an official release, 
 but users are more than welcome to try it out. Issues and feature requests can be left behind in the issue tracker on GitHub.
 
+When to use an embedded database
+================================
+
+In addition to the list above, use an embedded system if you want a quick starter on using a SQL-based system.
+In particular if you are working with large tables calling for a pre-filterings, aggregation, and transformation of
+a relational table before you hand it over to e.g. a machine learning model.
+
+However, a database system that shares the memory space with the application code may cause unexpected interference.
+For example, it is relatively easy to overwrite its internal structures and thereby leaving a corrupted database behind.
+Or, there may be resource wars between application logic and the database kernel as it fights over RAM and CPU cores.
+
+MonetDB/e comes with shared responsibility. It works best if you need a database for analytics where you can
+either easily reload the database from an archive or use the snapshot/backup methods. It is also a great tool
+to embark on application development without the need for a shared server in the background.
+
+Some people also translate ease of use into providing a single file as the storage container for the database
+to simplify sharing a database.
+Even SQLite relieved this requirement by packaging databases into a single archive file.
+MonetDB/e works with a local/remote directory. There are many tools to package and transfer them to enable
+sharing the database with your peers. 
+
 MonetDB/e roadmap
 =================
 
