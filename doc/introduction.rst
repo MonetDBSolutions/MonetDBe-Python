@@ -2,28 +2,31 @@
 Introduction
 ============
 
-Harnessing the power of a database server for data analytics into an embeddable library is the first step on the road to
-benefit from its performance features. MonetDB/e is the core of MonetDB, which is itself written in C. We started out with
-a small C-API to build our first embedded applications.
+Harnessing the power of a database server for data analytics into a single shared library is the first step on the road to
+benefit from the servers' performance features. MonetDB/e is such a core library of MonetDB.
+We started out with a small C-API a few years back to build our first embedded applications using it.
 
 However, the MonetDB eco system also provides APIs to Python, Java, Ruby, R, PhP… They all rely on the JDBC/ODBC layer
-for interaction with the server. Such a bridge towards the embedded kernel is evidently not the way to go.
+for interaction with the server. A library that simply launches a database server in the background and
+then connect to it using the JDBC/ODBC layer is evidently not the way to go. It would create too much interprocess
+communication and potentially a lot of data shipping. A truly embedded database system dares to live in the same
+address space as the application. Of course, this comes with shared responsibilities.
 
 Therefore, our next target was to make the MonetDB functionality available as a simple drop-in library in Python, called monetdbe.
-Python has a clearly defined database interface, called DB-API 2.0. Furthermore, with a claimed installed base of SQLite
-of more than one billion there is a lot of code out there and users are used to its programmatic interface. The goal was
-set to follow the Python/SQLite3 interface as much as possible.
+Python has a clearly defined database interface, called DB-API 2.0, and an interface aligned with SQLite.
+Furthermore, with a claimed installed base of SQLite of more than one billion there is a lot of code out there 
+and users comfortably with its programmatic interface. The goal for MonetDB/e was set to follow the Python/SQLite3 interface as much as possible.
 
 We followed a test-driven approach by starting with the test suite for Python/SQLite 3 and working our way through all
 the unit tests covered. The complete list is included in the .../tests directory. Several tests where skipped, because
-they are too tightly coupled with the SQLite approach to database management. We keep a list 
+they are too tightly coupled with the SQLite semantics, or  approach to database management. We keep a list 
 of `open issues <https://github.com/MonetDBSolutions/MonetDB/e-Python/issues>`_  and the planning for the next milestones.
 
 For example, the row factory functions are not supported. They coped with the limited set of data types
 supported by SQLite, which triggers an (expensive) call back method when accessing the elements in 
 a result set. MonetDB/e has a much richer basic type system that includes e.g. the temporals, UUIDS, JSON ond DECIMAL out of the box.
 Likewise, transaction management in MonetDB/e is based on `MVCC <https://www.monetdb.org/blog/optimistic-concurrency-control>`_
-without explicit levels of isolations.  A remnant of the past when systems were based on explicit locking.
+without explicit levels of isolations.  The latter a remnant of the past when systems were based on explicit locking.
 
 How does it work
 ================
@@ -37,12 +40,13 @@ A minimal example to see if everything works as expected::
     c.execute('SELECT count(*) FROM tables')
     print(c.fetchone())
 
-A small collection of example programs can be found in the `monetdbe-examples <https://github.com/MonetDBSolutions/monetdbe-examples>`_ repository.
+A collection of example programs written in C and Python
+ can be found in the `monetdbe-examples <https://github.com/MonetDBSolutions/monetdbe-examples>`_ repository.
 
 What are the perks
 ==================
 
-Capitalizing the MonetDB server code base makes amongst others the following features available for an embedded version
+Capitalizing the MonetDB server code base makes amongst others the following features available for an embedded version:
 
 - No client-server communication overhead.
 - No result-set serialiszation, but binary column-ary access.
@@ -52,7 +56,7 @@ Capitalizing the MonetDB server code base makes amongst others the following fea
 - Seamless integration with the programming language, e,g, dataframes/numpy.
 - Single user control over the resources.
 - Working with :memory: databases with controlled RAM footprint.
-- Hybrid set up with concurrent :memory: and server-based storage.
+- Hybrid set up with concurrent :memory:, local storage  and server-based storage.
 - Boosting your data analytics programs with stateful User Defined Functions.
 - Extended base types, DECIMAL, JSON, blob, uuid, boolean
 - Statistics, windowing functions, grouped sets, cube, and rollup.
@@ -81,9 +85,9 @@ For debugging you can rely on the logging scheme available in every MonetDB/e in
 Alternatively, the Python debugger gives information up to the point the code switches to the underlying C function.
 Consider this a natural barrier not to cross, because the database kernel code is highly complex.
 
-For stability we deploy `SQLsmith] <https://github.com/anse1/sqlsmith>`_ and `SQLancer <https://github.com/sqlancer/sqlancer>`_ on a daily basis to isolate corner cases that might
-havoc the system. As an aside, a Continuous Integration framework based on buildbot for
-the stability and regression testing on two dozen platforms.
+For stability we deploy `SQLsmith <https://github.com/anse1/sqlsmith>`_ and `SQLancer <https://github.com/sqlancer/sqlancer>`_ on a daily basis to isolate corner cases that might
+havoc the system. 
+As an aside, we use a Continuous Integration framework based on buildbot for the stability and regression testing on two dozen platforms.
 
 What are the caveats
 ====================
@@ -96,9 +100,13 @@ REMINDER, the Python package monetdbe is an *pre-release* made available from Py
 Several rough edges and features deemed urgent are being dealt with before MonetDB/e becomes an official release, 
 but users are more than welcome to try it out. Issues and feature requests can be left behind in the issue tracker on GitHub.
 
-High on our lists are:
+MonetDB/e roadmap
+=================
 
-- Import of (mini)parquet and arrow files
+- MonetDB/e as proxy to a server
+- Java jar drop=in
+- Embedded version for R
+- Import of (mini)parquet and Arrow files
 - Remote query processing over multiple :memory: instances
-- Java drop-in jar
+- Using MonetDB/e as a JDBC/ODBC endpoint
 
