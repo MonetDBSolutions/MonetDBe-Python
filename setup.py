@@ -4,7 +4,7 @@ from sys import platform
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-tests_require = ['pytest', 'mypy', 'pycodestyle']
+tests_require = ['pytest', 'mypy', 'pycodestyle', 'data-science-types']
 
 extras_require = {
     'test': tests_require,

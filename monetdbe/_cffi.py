@@ -7,7 +7,7 @@ from pathlib import Path
 from re import compile, DOTALL
 from typing import Optional, Any, Dict, Tuple, Callable, List, Union
 from warnings import warn
-
+import numpy as np
 from monetdbe import exceptions
 from monetdbe.converters import converters
 from monetdbe.pythonize import py_date, py_time, py_timestamp
@@ -81,18 +81,16 @@ def check_error(msg: ffi.CData) -> None:
         raise exception(msg)
 
 
-import numpy as np
-
-#   monetdb C type,          SQL type,    numpy type,           Cstringtype, pyconverter, null value,     comment
+#  monetdb C type, SQL type, numpy type, Cstringtype, pyconverter, null value, comment
 mappings: List[Tuple[int, Optional[str], np.dtype, str, Optional[Callable], Optional[Union[int, float]]]] = [
-    (lib.monetdbe_bool, "boolean", np.dtype(np.bool), "bool", None, None),
-    (lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),
-    (lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),
-    (lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),
-    (lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None, np.iinfo(np.int64).min),
-    (lib.monetdbe_size_t, None, np.dtype(np.uint), "size_t", None, None),  # used by monetdb internally
+    (lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
+    (lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
+    (lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
+    (lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
+    (lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None, np.iinfo(np.int64).min),  # type: ignore
+    (lib.monetdbe_size_t, None, np.dtype(np.uint64), "size_t", None, None),  # used by monetdb internally
     (lib.monetdbe_float, "real", np.dtype(np.float32), "float", py_float, np.finfo(np.float32).min),
-    (lib.monetdbe_double, "float", np.dtype(np.float), "double", py_float, np.finfo(np.float).min),  # 64 bit float
+    (lib.monetdbe_double, "float", np.dtype(np.float64), "double", py_float, np.finfo(np.float64).min),
     (lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string, None),
     (lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob, None),
     (lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date, None),
@@ -106,12 +104,12 @@ monet_numpy_map = {monet_type: (c_string, converter, numpy_type, null_value) for
 
 
 def numpy_monetdb_map(numpy_type: np.dtype):
-    if numpy_type.kind in ('i', 'f'):
+    if numpy_type.kind in ('i', 'f'):  # type: ignore
         return numpy2monet_map[numpy_type]
     raise exceptions.ProgrammingError("append() only support int and float family types")
 
 
-def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
+def extract(rcol: ffi.CData, r: int, text_factory: Optional[Callable[[str], Any]] = None):
     """
     Extracts values from a monetdbe_column.
 
@@ -119,7 +117,7 @@ def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
     """
     cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
     col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
-    if col.is_null(col.data[r]):
+    if cast_string != "timestamp" and col.is_null(col.data[r]):
         return None
     else:
         if cast_function:
@@ -287,24 +285,22 @@ class MonetEmbedded:
                 if rcol.type == lib.monetdbe_str:
                     np_col = np_col.astype(str)
                 elif rcol.type == lib.monetdbe_date:
-                    np_col = np_col.astype('datetime64[D]')
+                    np_col = np_col.astype('datetime64[D]')  # type: ignore
                 elif rcol.type == lib.monetdbe_time:
                     warn("Not converting column with type column since no proper numpy equivalent")
                 elif rcol.type == lib.monetdbe_timestamp:
-                    np_col = np_col.astype('datetime64[ns]')
+                    np_col = np_col.astype('datetime64[ns]')  # type: ignore
             else:
-                buffer_size = monetdbe_result.nrows * numpy_type.itemsize
+                buffer_size = monetdbe_result.nrows * numpy_type.itemsize  # type: ignore
                 c_buffer = ffi.buffer(rcol.data, buffer_size)
-                np_col = np.frombuffer(c_buffer, dtype=numpy_type)
+                np_col = np.frombuffer(c_buffer, dtype=numpy_type)  # type: ignore
 
             if monetdbe_null:
                 mask = np_col == monetdbe_null
-                if mask.any():
-                    masked = np.ma.masked_array(np_col, mask=mask)
-                else:
-                    masked = np_col
             else:
-                masked = np_col
+                mask = np.ma.nomask  # type: ignore
+
+            masked = np.ma.masked_array(np_col, mask=mask)
 
             result[name] = masked
         return result

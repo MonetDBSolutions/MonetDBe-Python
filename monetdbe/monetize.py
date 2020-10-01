@@ -73,7 +73,7 @@ mapping: List[Tuple[Type, Callable]] = [
     (type(None), monet_none),
     (numpy.int64, int),
     (numpy.float32, monet_float),
-    (numpy.ma.core.MaskedConstant, monet_none),
+    (numpy.ma.core.MaskedConstant, monet_none),  # type: ignore
 ]
 
 mapping_dict: Dict[Type, Callable] = dict(mapping)

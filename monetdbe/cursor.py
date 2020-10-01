@@ -15,7 +15,7 @@ Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'i
 
 
 def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
-    return {label: np.array(column) for label, column in df.iteritems()}
+    return {label: np.array(column) for label, column in df.iteritems()}  # type: ignore
 
 
 class Cursor:
@@ -369,7 +369,7 @@ class Cursor:
 
         if isinstance(values, dict):
             for key, value in values.items():
-                if not isinstance(value, np.ma.core.MaskedArray):
+                if not isinstance(value, np.ma.core.MaskedArray):  # type: ignore
                     values[key] = np.array(value)
 
             column_names, rows = zip(*values.items())

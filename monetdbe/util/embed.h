@@ -3,7 +3,7 @@ typedef int64_t monetdbe_cnt;
 typedef struct {
  unsigned char day;
  unsigned char month;
- int year;
+ short year;
 } monetdbe_data_date;
 
 typedef struct {
