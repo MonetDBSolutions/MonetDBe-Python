@@ -53,8 +53,9 @@ jobs:
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
           cmake -G "Visual Studio 16 2019" `
-            -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake `
-            -DCMAKE_INSTALL_PREFIX=C:\monetdb -A x64 `
+            -A x64 `
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_INSTALL_PREFIX=C:\monetdb `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
             -DASSERT=OFF `
@@ -80,9 +81,7 @@ jobs:
       -
         name: Install python libraries
         run: |
-          C:\Python38\python.exe -m pip install --upgrade pip
-          C:\Python38\python.exe -m pip install pytest
-          C:\Python38\python.exe -m pip install -e .
+          C:\Python38\python.exe -m pip install -e .[test]
           # C:\Python38\Scripts\pytest.exe
       -
         name: Make wheel
