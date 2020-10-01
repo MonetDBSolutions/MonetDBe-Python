@@ -20,7 +20,7 @@ jobs:
         name: Install choco packages
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install winflexbison git wget unzip python
+          args: install winflexbison git wget unzip python curl
       #-
       #  name: Install Python 3.6
       #  uses: crazy-max/ghaction-chocolatey@v1
@@ -44,7 +44,7 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          wget.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip
+          curl.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip -O
           unzip.exe ${{ env.branch }}.zip
 
       -

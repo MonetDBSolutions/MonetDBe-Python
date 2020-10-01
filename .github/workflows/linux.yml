@@ -15,13 +15,8 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install pytest numpy pandas
-      -
         name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .
+        run: python3 -m pip install -e .[test]
       -
         name: run tests
         run: py.test -vv
@@ -35,13 +30,8 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install mypy numpy pandas
-      -
         name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .
+        run: python3 -m pip install -e .[test]
       -
         name: Run mypy static code checks
         run: mypy monetdbe tests
@@ -55,13 +45,8 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install pycodestyle numpy pandas
-      -
         name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .
+        run: python3 -m pip install -e .[test]
       -
         name: Check the python coding style
         run: pycodestyle monetdbe tests
