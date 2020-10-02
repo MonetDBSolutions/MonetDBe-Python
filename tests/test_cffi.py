@@ -88,4 +88,4 @@ class TestCffi(unittest.TestCase):
         con.execute("CREATE TABLE test (i int)")
         con.execute("INSERT INTO test VALUES (1)")
         result = list(con.lowlevel.get_columns(table='test'))
-        self.assertEqual(result, [('i', 5)])
+        self.assertEqual(result, [('i', 3)])

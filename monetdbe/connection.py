@@ -68,8 +68,8 @@ class Connection:
         else:
             raise TypeError
 
-        from monetdbe._cffi import MonetEmbedded
-        self.lowlevel: Optional[MonetEmbedded] = MonetEmbedded(
+        from monetdbe._cffi.frontend import Frontend
+        self.lowlevel: Optional[Frontend] = Frontend(
             dbdir=database,
             memorylimit=memorylimit,
             nr_threads=nr_threads,

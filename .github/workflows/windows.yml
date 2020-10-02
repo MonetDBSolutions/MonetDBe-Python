@@ -20,9 +20,9 @@ jobs:
         name: Install choco packages
         run: |
           choco install winflexbison git unzip curl
-          choco install install python
-#           choco install install python --version 3.7 --force
-#           choco install install python --version 3.6 --force
+          choco install python --version 3.8.5 --force
+          choco install python --version 3.7.9 --force
+          choco install python --version 3.6.8 --force
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3

@@ -45,11 +45,9 @@ class Cursor:
             map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
 
         # we import this late, otherwise the whole monetdbe project is unimportable if we don't have access to monetdbe.so
-        from monetdbe._cffi import make_string
+        from monetdbe._cffi.convert import make_string, monet_numpy_map
 
         name = (make_string(rcol.name) for rcol in self._columns)
-
-        from monetdbe._cffi import monet_numpy_map  # import here otherwise import cursor fails if module not compiled
         type_code = (monet_numpy_map[rcol.type][2] for rcol in self._columns)
 
         display_size = repeat(None)
@@ -63,7 +61,7 @@ class Cursor:
 
     def __iter__(self):
         # we import this late, otherwise the whole monetdbe project is unimportable if we don't have access to monetdbe.so
-        from monetdbe._cffi import extract
+        from monetdbe._cffi.convert import extract
 
         columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):

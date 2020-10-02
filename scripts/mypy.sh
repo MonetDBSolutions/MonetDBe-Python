@@ -2,6 +2,5 @@
 set -e
 set -v
 
-pip3 install mypy
-pip3 install .
+pip3 install .[test]
 mypy monetdbe tests

@@ -1,139 +1,20 @@
-"""
-This module contains the CFFI code. It is a wrapper around the monetdbe shared library, converting
-python calls and data into C and back.
-"""
 import logging
+from _warnings import warn
 from pathlib import Path
-from re import compile, DOTALL
-from typing import Optional, Any, Dict, Tuple, Callable, List, Union, Iterator
-from warnings import warn
+from typing import Optional, Tuple, Any, Mapping, Iterator
 
 import numpy as np
+from monetdbe._lowlevel import ffi, lib
 
 from monetdbe import exceptions
-from monetdbe.converters import converters
-from monetdbe.pythonize import py_date, py_time, py_timestamp
+from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
+from monetdbe._cffi.errors import check_error
 
 _logger = logging.getLogger(__name__)
 
-try:
-    from monetdbe._lowlevel import lib, ffi
-except ImportError as e:
-    _logger.error(e)
-    _logger.error("try setting LD_LIBRARY_PATH to point to the location of libmonetdbe.so")
-    raise
 
-
-def make_string(blob: ffi.CData) -> str:
-    if blob:
-        return ffi.string(blob).decode()
-    else:
-        return ""
-
-
-def make_blob(blob: ffi.CData) -> str:
-    if blob:
-        return ffi.string(blob.data[0:blob.size])
-    else:
-        return ""
-
-
-def py_float(data: ffi.CData) -> float:
-    if 'FLOAT' in converters:
-        return converters['FLOAT'](data)
-    elif 'DOUBLE' in converters:
-        return converters['DOUBLE'](data)
-    else:
-        return data
-
-
-# MonetDB error codes
-errors = {
-    '2D000': exceptions.IntegrityError,  # COMMIT: failed
-    '40000': exceptions.IntegrityError,  # DROP TABLE: FOREIGN KEY constraint violated
-    '40002': exceptions.IntegrityError,  # INSERT INTO: UNIQUE constraint violated
-    '42000': exceptions.OperationalError,  # SELECT: identifier 'asdf' unknown
-    '42S02': exceptions.OperationalError,  # no such table
-    'M0M29': exceptions.IntegrityError,  # The code monetdb emmitted before Jun2020
-    '25001': exceptions.OperationalError,  # START TRANSACTION: cannot start a transaction within a transaction
-}
-
-error_match = compile(pattern=r"^(?P<exception_type>.*):(?P<namespace>.*):(?P<code>.*)!(?P<msg>.*)$", flags=DOTALL)
-
-
-def check_error(msg: ffi.CData) -> None:
-    """
-    Raises:
-         exceptions.Error: or subclass in case of error, which exception depends on the error type.
-    """
-    if msg:
-        decoded = ffi.string(msg).decode()
-        _logger.error(decoded)
-        match = error_match.match(decoded)
-
-        if not match:
-            raise exceptions.OperationalError(decoded)
-
-        _, _, error, msg = match.groups()
-
-        if error not in errors:
-            ...
-
-        exception = errors.get(error, exceptions.DatabaseError)
-        raise exception(msg)
-
-
-#  monetdb C type, SQL type, numpy type, Cstringtype, pyconverter, null value, comment
-mappings: List[Tuple[int, Optional[str], np.dtype, str, Optional[Callable], Optional[Union[int, float]]]] = [
-    (lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
-    (lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
-    (lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
-    (lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
-    (lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None, np.iinfo(np.int64).min),  # type: ignore
-    (lib.monetdbe_size_t, None, np.dtype(np.uint64), "size_t", None, None),  # used by monetdb internally
-    (lib.monetdbe_float, "real", np.dtype(np.float32), "float", py_float, np.finfo(np.float32).min),
-    (lib.monetdbe_double, "float", np.dtype(np.float64), "double", py_float, np.finfo(np.float64).min),
-    (lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string, None),
-    (lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob, None),
-    (lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date, None),
-    (lib.monetdbe_time, "time", np.dtype('=O'), "time", py_time, None),
-    (lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
-]
-
-numpy2monet_map = {numpy_type: (c_string, monet_type) for monet_type, _, numpy_type, c_string, _, _ in mappings}
-monet_numpy_map = {monet_type: (c_string, converter, numpy_type, null_value) for
-                   monet_type, _, numpy_type, c_string, converter, null_value in mappings}
-
-
-def numpy_monetdb_map(numpy_type: np.dtype):
-    if numpy_type.kind in ('i', 'f'):  # type: ignore
-        return numpy2monet_map[numpy_type]
-    raise exceptions.ProgrammingError("append() only support int and float family types")
-
-
-def extract(rcol: ffi.CData, r: int, text_factory: Optional[Callable[[str], Any]] = None):
-    """
-    Extracts values from a monetdbe_column.
-
-    The text_factory is optional, and wraps the value with a custom user supplied text function.
-    """
-    cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
-    col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
-    if col.is_null(col.data + r):
-        return None
-    else:
-        if cast_function:
-            result = cast_function(col.data[r])
-            if rcol.type == lib.monetdbe_str and text_factory:
-                return text_factory(result)
-            else:
-                return result
-        else:
-            return col.data[r]
-
-
-class MonetEmbedded:
-    _active_context: Optional['MonetEmbedded'] = None
+class Frontend:
+    _active_context: Optional['Frontend'] = None
     in_memory_active: bool = False
     _connection: Optional[ffi.CData] = None
 
@@ -155,7 +36,7 @@ class MonetEmbedded:
         self._switch()
 
     @classmethod
-    def set_active_context(cls, active_context: Optional['MonetEmbedded']):
+    def set_active_context(cls, active_context: Optional['Frontend']):
         cls._active_context = active_context
 
     @classmethod
@@ -244,7 +125,7 @@ class MonetEmbedded:
 
         Args:
             query: the query
-            make_results: Create and return a result object. If enabled, you need to call cleanup_result on the
+            make_result: Create and return a result object. If enabled, you need to call cleanup_result on the
                           result afterwards
 
         returns:
@@ -267,17 +148,17 @@ class MonetEmbedded:
         return result, affected_rows[0]
 
     @staticmethod
-    def result_fetch(result: ffi.CData, column: int):
+    def result_fetch(result: ffi.CData, column: int) -> ffi.CData:
         p_rcol = ffi.new("monetdbe_column **")
         check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
         return p_rcol[0]
 
     @staticmethod
-    def result_fetch_numpy(monetdbe_result: ffi.CData):
+    def result_fetch_numpy(monetdbe_result: ffi.CData) -> Mapping[str, np.ma.MaskedArray]:
 
         result = {}
         for c in range(monetdbe_result.ncols):
-            rcol = MonetEmbedded.result_fetch(monetdbe_result, c)
+            rcol = Frontend.result_fetch(monetdbe_result, c)
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
 
@@ -307,19 +188,19 @@ class MonetEmbedded:
             result[name] = masked
         return result
 
-    def set_autocommit(self, value: bool):
+    def set_autocommit(self, value: bool) -> None:
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
 
     @staticmethod
-    def get_autocommit():
+    def get_autocommit() -> bool:
         value = ffi.new("int *")
         check_error(lib.monetdbe_get_autocommit(value))
-        return value[0]
+        return bool(value[0])
 
     def in_transaction(self) -> bool:
         return bool(lib.monetdbe_in_transaction(self._connection))
 
-    def append(self, table: str, data: Dict[str, np.ndarray], schema: str = 'sys'):
+    def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
         """
         Directly apply an array structure
         """
