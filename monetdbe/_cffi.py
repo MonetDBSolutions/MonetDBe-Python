@@ -5,9 +5,11 @@ python calls and data into C and back.
 import logging
 from pathlib import Path
 from re import compile, DOTALL
-from typing import Optional, Any, Dict, Tuple, Callable, List, Union
+from typing import Optional, Any, Dict, Tuple, Callable, List, Union, Iterator
 from warnings import warn
+
 import numpy as np
+
 from monetdbe import exceptions
 from monetdbe.converters import converters
 from monetdbe.pythonize import py_date, py_time, py_timestamp
@@ -117,7 +119,7 @@ def extract(rcol: ffi.CData, r: int, text_factory: Optional[Callable[[str], Any]
     """
     cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
     col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
-    if col.is_null(col.data+r):
+    if col.is_null(col.data + r):
         return None
     else:
         if cast_function:
@@ -317,25 +319,35 @@ class MonetEmbedded:
     def in_transaction(self) -> bool:
         return bool(lib.monetdbe_in_transaction(self._connection))
 
-    def append(self, schema: str, table: str, data: Dict[str, np.ndarray]):
+    def append(self, table: str, data: Dict[str, np.ndarray], schema: str = 'sys'):
         """
         Directly apply an array structure
         """
         n_columns = len(data)
-        monetdbe_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
+        existing_columns = list(self.get_columns(schema=schema, table=table))
+        existing_names, existing_types = zip(*existing_columns)
+        if not set(existing_names) == set(data.keys()):
+            error = f"Appended column names ({', '.join(data.keys())}) " \
+                    f"don't match existing column names ({', '.join(existing_names)})"
+            raise exceptions.ProgrammingError(error)
 
-        for column_num, (column_name, column_values) in enumerate(data.items()):
-            monetdbe_column = ffi.new('monetdbe_column *')
+        work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
+        for column_num, (column_name, existing_type) in enumerate(existing_columns):
+            column_values = data[column_name]
+            work_column = ffi.new('monetdbe_column *')
+            work_type_string, work_type = numpy_monetdb_map(column_values.dtype)
+            if not work_type == existing_type:
+                existing_type_string = monet_numpy_map[existing_type][0]
+                error = f"Type '{work_type_string}' for appended column '{column_name}' " \
+                        f"does not match table type '{existing_type_string}'"
+                raise exceptions.ProgrammingError(error)
+            work_column.type = work_type
+            work_column.count = column_values.shape[0]
+            work_column.name = ffi.new('char[]', column_name.encode())
+            work_column.data = ffi.cast(f"{work_type_string} *", ffi.from_buffer(column_values))
+            work_columns[column_num] = work_column
 
-            monetdb_type_string, monetdb_type = numpy_monetdb_map(column_values.dtype)
-
-            monetdbe_column.type = monetdb_type
-            monetdbe_column.count = column_values.shape[0]
-            monetdbe_column.name = ffi.new('char[]', column_name.encode())
-            monetdbe_column.data = ffi.cast(f"{monetdb_type_string} *", ffi.from_buffer(column_values))
-            monetdbe_columns[column_num] = monetdbe_column
-
-        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), monetdbe_columns, n_columns))
+        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query):
         # todo (gijs): use :)
@@ -362,6 +374,18 @@ class MonetEmbedded:
         # todo (gijs): use :)
         lib.monetdbe_dump_database(self._connection, str(backupfile).encode())
 
-    def dump_table(self, schema_name, table_name, backupfile: Path):
+    def dump_table(self, schema_name: str, table_name: str, backupfile: Path):
         # todo (gijs): use :)
         lib.monetdbe_dump_table(self._connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
+
+    def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
+        count_p = ffi.new('size_t *')
+        names_p = ffi.new('char ***')
+        types_p = ffi.new('int **')
+
+        lib.monetdbe_get_columns(self._connection, schema.encode(), table.encode(), count_p, names_p, types_p)
+
+        for i in range(count_p[0]):
+            name = ffi.string(names_p[0][i]).decode()
+            type_ = types_p[0][i]
+            yield name, type_

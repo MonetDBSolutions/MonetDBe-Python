@@ -1,12 +1,42 @@
 import unittest
-
+import numpy as np
 from monetdbe._lowlevel import lib
 from monetdbe import connect
+from monetdbe.exceptions import ProgrammingError
 
 
 class TestCffi(unittest.TestCase):
     def test_cffi(self):
-        self.assertEqual(lib.monetdbe_float, 6)
+        # if this tests fails you probably compiled monetdb with 128 bit support
+        self.assertEqual(lib.monetdbe_type_unknown, 13)
+
+    def test_append_too_many_columns(self):
+        con = connect()
+        con.execute("CREATE TABLE test (i int)")
+        data = {'i': np.array([1, 2, 3]), 'j': np.array([1, 2, 3])}
+        with self.assertRaises(ProgrammingError):
+            con.lowlevel.append(table='test', data=data)
+
+    def test_append_too_little_columns(self):
+        con = connect()
+        con.execute("CREATE TABLE test (i int, j int)")
+        data = {'i': np.array([1, 2, 3])}
+        with self.assertRaises(ProgrammingError):
+            con.lowlevel.append(table='test', data=data)
+
+    def test_append_wrong_type(self):
+        con = connect()
+        con.execute("CREATE TABLE test (i int)")
+        data = {'i': np.array([0.1, 0.2, 0.3], dtype=np.float32)}
+        with self.assertRaises(ProgrammingError):
+            con.lowlevel.append(table='test', data=data)
+
+    def test_append_wrong_size(self):
+        con = connect()
+        con.execute("CREATE TABLE test (i int)")  # SQL int is 32 bit
+        data = {'i': np.array([1, 2, 3], dtype=np.int64)}
+        with self.assertRaises(ProgrammingError):
+            con.lowlevel.append(table='test', data=data)
 
     def test_append_supported_types(self):
         con = connect()
@@ -52,3 +82,10 @@ class TestCffi(unittest.TestCase):
         with self.assertRaises(con.ProgrammingError):
             con.lowlevel.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)
+
+    def test_get_columns(self):
+        con = connect()
+        con.execute("CREATE TABLE test (i int)")
+        con.execute("INSERT INTO test VALUES (1)")
+        result = list(con.lowlevel.get_columns(table='test'))
+        self.assertEqual(result, [('i', 5)])
