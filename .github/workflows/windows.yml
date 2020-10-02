@@ -86,6 +86,7 @@ jobs:
       -
         name: Build binary python stuff
         run: |
+          C:\Python38\python.exe -m pip install --upgrade pip wheel
           C:\Python38\python.exe setup.py build_ext `
             --include-dirs=C:\monetdb\include `
             --library-dirs=C:\monetdb\lib
