@@ -52,6 +52,10 @@ jobs:
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
+          dir
+          dir $VCPKG_ROOT
+          dir $VCPKG_ROOT\scripts
+          dir $VCPKG_ROOT\buildsystems
           cmake -G "Visual Studio 16 2019" `
             -A x64 `
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
@@ -59,6 +63,7 @@ jobs:
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
             -DASSERT=OFF `
+            -DODBC=false `
             -DPY3INTEGRATION=OFF `
             -DINT128=OFF  ..
       -
@@ -67,11 +72,28 @@ jobs:
           cmake --build . --target ALL_BUILD --parallel 4
           cmake --build . --target INSTALL
       -
-        name: Collect vsckg dlls
+        name: Collect DLLs
         run: |
           Set-Location $GITHUB_WORKSPACE
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\*.dll monetdbe\.
-          Copy-Item C:\monetdb\bin\*.dll monetdbe\.
+          Copy-Item C:\monetdb\bin\bat.dll monetdbe\.
+          Copy-Item C:\monetdb\bin\mapi.dll monetdbe\.
+          Copy-Item C:\monetdb\bin\monetdb5.dll monetdbe\.
+          Copy-Item C:\monetdb\bin\monetdbe.dll monetdbe\.
+          Copy-Item C:\monetdb\bin\monetdbsql.dll monetdbe\.
+          Copy-Item C:\monetdb\bin\stream.dll monetdbe\.
+
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\lzma.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcharset.dll monetdbe\.
+
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\debug\bin\zlibd1.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\debug\bin\bz2d.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\debug\bin\libcurl-d.dll monetdbe\.
+          Copy-Item $VCPKG_ROOT\installed\x64-windows\debug\bin\lzmad.dll monetdbe\.
       -
         name: Build binary python stuff
         run: |
@@ -81,7 +103,7 @@ jobs:
       -
         name: Install python libraries
         run: |
-          C:\Python38\python.exe -m pip install -e .[test]
+          C:\Python38\python.exe -m pip install .[test]
           # C:\Python38\Scripts\pytest.exe
       -
         name: Make wheel
