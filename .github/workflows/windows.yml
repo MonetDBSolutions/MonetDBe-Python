@@ -20,7 +20,7 @@ jobs:
         name: Install choco packages
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install winflexbison git wget unzip python
+          args: install winflexbison git wget unzip python curl
       #-
       #  name: Install Python 3.6
       #  uses: crazy-max/ghaction-chocolatey@v1
@@ -44,7 +44,7 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          wget.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip
+          curl.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip -O
           unzip.exe ${{ env.branch }}.zip
 
       -
@@ -53,8 +53,9 @@ jobs:
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
           cmake -G "Visual Studio 16 2019" `
-            -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake `
-            -DCMAKE_INSTALL_PREFIX=C:\monetdb -A x64 `
+            -A x64 `
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_INSTALL_PREFIX=C:\monetdb `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
             -DASSERT=OFF `
@@ -80,9 +81,7 @@ jobs:
       -
         name: Install python libraries
         run: |
-          C:\Python38\python.exe -m pip install --upgrade pip
-          C:\Python38\python.exe -m pip install pytest
-          C:\Python38\python.exe -m pip install -e .
+          C:\Python38\python.exe -m pip install -e .[test]
           # C:\Python38\Scripts\pytest.exe
       -
         name: Make wheel

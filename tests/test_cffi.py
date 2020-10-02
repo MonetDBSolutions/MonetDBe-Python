@@ -1,8 +1,8 @@
 import unittest
 
 from monetdbe._lowlevel import lib
-
 from monetdbe import connect
+
 
 class TestCffi(unittest.TestCase):
     def test_cffi(self):
