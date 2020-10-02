@@ -117,7 +117,7 @@ def extract(rcol: ffi.CData, r: int, text_factory: Optional[Callable[[str], Any]
     """
     cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
     col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
-    if cast_string != "timestamp" and col.is_null(col.data[r]):
+    if col.is_null(col.data+r):
         return None
     else:
         if cast_function:
