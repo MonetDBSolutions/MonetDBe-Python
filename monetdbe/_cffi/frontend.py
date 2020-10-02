@@ -213,6 +213,7 @@ class Frontend:
             raise exceptions.ProgrammingError(error)
 
         work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
+        work_objs = []
         for column_num, (column_name, existing_type) in enumerate(existing_columns):
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
@@ -227,7 +228,7 @@ class Frontend:
             work_column.name = ffi.new('char[]', column_name.encode())
             work_column.data = ffi.cast(f"{work_type_string} *", ffi.from_buffer(column_values))
             work_columns[column_num] = work_column
-
+            work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query):
