@@ -38,9 +38,6 @@ typedef struct {
  char* name;
 } monetdbe_column;
 
-struct monetdbe_table_t;
-typedef struct monetdbe_table_t monetdbe_table;
-
 typedef struct {
  size_t nparam;
  monetdbe_types *type;
@@ -102,7 +99,6 @@ extern char* monetdbe_cleanup_statement(monetdbe_database dbhdl, monetdbe_statem
 extern char* monetdbe_append(monetdbe_database dbhdl, const char* schema, const char* table, monetdbe_column **input, size_t column_count);
 extern const void* monetdbe_null(monetdbe_database dbhdl, monetdbe_types t);
 
-extern char* monetdbe_get_table(monetdbe_database dbhdl, monetdbe_table** table, const char* schema_name, const char* table_name);
 extern char* monetdbe_get_columns(monetdbe_database dbhdl, const char* schema_name, const char *table_name, size_t *column_count, char ***column_names, int **column_types);
 
 extern char* monetdbe_dump_database(monetdbe_database dbhdl, const char *backupfile);
