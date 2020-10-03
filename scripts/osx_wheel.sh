@@ -16,11 +16,6 @@ BUILD=${HERE}/../build
 SRC=${BUILD}/MonetDB-${BRANCH}
 PREFIX=${BUILD}/monetdb
 
-# make sure the pythons are installed
-for p in "${PYTHONS[@]}"; do
-    pyenv install -s ${p}
-done
-
 # prepare for monetdb build
 mkdir -p ${BUILD}
 cd ${BUILD}
@@ -58,6 +53,7 @@ cd ${HERE}/..
 
 # make the wheels
 for p in "${PYTHONS[@]}"; do
+    pyenv install -s ${p}
     ~/.pyenv/versions/${p}/bin/pip install wheel
     ~/.pyenv/versions/${p}/bin/python setup.py bdist_wheel
 done

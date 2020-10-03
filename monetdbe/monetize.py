@@ -2,7 +2,7 @@ import datetime
 import decimal
 from typing import Any, Dict, Type, Callable, Tuple, List
 
-import numpy
+import numpy as np
 
 from monetdbe.exceptions import InterfaceError
 
@@ -57,6 +57,13 @@ def monet_float(data: float) -> str:
         return str(data)
 
 
+def monet_datetime(data: Any) -> str:
+    if np.isnat(data):  # type: ignore
+        return 'NULL'
+    else:
+        return f"'{data}'"
+
+
 mapping: List[Tuple[Type, Callable]] = [
     (str, monet_escape),
     (bytes, monet_bytes),
@@ -71,8 +78,18 @@ mapping: List[Tuple[Type, Callable]] = [
     (datetime.timedelta, monet_escape),
     (bool, monet_bool),
     (type(None), monet_none),
-    (numpy.int64, int),
-    (numpy.ma.core.MaskedConstant, monet_none),
+    (np.int64, int),
+    (np.int32, int),
+    (np.int16, int),
+    (np.int8, int),
+    (np.uint64, int),
+    (np.uint32, int),
+    (np.uint16, int),
+    (np.uint8, int),
+    (np.float64, monet_float),
+    (np.float32, monet_float),
+    (np.datetime64, monet_datetime),  # type: ignore
+    (np.ma.core.MaskedConstant, monet_none),  # type: ignore
 ]
 
 mapping_dict: Dict[Type, Callable] = dict(mapping)

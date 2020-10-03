@@ -1,128 +1,20 @@
-"""
-This module contains the CFFI code. It is a wrapper around the monetdbe shared library, converting
-python calls and data into C and back.
-"""
 import logging
+from _warnings import warn
 from pathlib import Path
-from re import compile, DOTALL
-from typing import Optional, Any, Dict, Tuple, Callable
+from typing import Optional, Tuple, Any, Mapping, Iterator
 
 import numpy as np
+from monetdbe._lowlevel import ffi, lib
 
 from monetdbe import exceptions
-from monetdbe.converters import converters
-from monetdbe.pythonize import py_date, py_time, py_timestamp
+from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
+from monetdbe._cffi.errors import check_error
 
 _logger = logging.getLogger(__name__)
 
-try:
-    from monetdbe._lowlevel import lib, ffi
-except ImportError as e:
-    _logger.error(e)
-    _logger.error("try setting LD_LIBRARY_PATH to point to the location of libmonetdbe.so")
-    raise
 
-
-def make_string(blob: ffi.CData) -> str:
-    if blob:
-        return ffi.string(blob).decode()
-    else:
-        return ""
-
-
-def make_blob(blob: ffi.CData) -> str:
-    if blob:
-        return ffi.string(blob.data[0:blob.size])
-    else:
-        return ""
-
-
-def py_float(data: ffi.CData) -> float:
-    if 'FLOAT' in converters:
-        return converters['FLOAT'](data)
-    elif 'DOUBLE' in converters:
-        return converters['DOUBLE'](data)
-    else:
-        return data
-
-
-# MonetDB error codes
-errors = {
-    '2D000': exceptions.IntegrityError,  # COMMIT: failed
-    '40000': exceptions.IntegrityError,  # DROP TABLE: FOREIGN KEY constraint violated
-    '40002': exceptions.IntegrityError,  # INSERT INTO: UNIQUE constraint violated
-    '42000': exceptions.OperationalError,  # SELECT: identifier 'asdf' unknown
-    '42S02': exceptions.OperationalError,  # no such table
-    'M0M29': exceptions.IntegrityError,  # The code monetdb emmitted before Jun2020
-    '25001': exceptions.OperationalError,  # START TRANSACTION: cannot start a transaction within a transaction
-}
-
-error_match = compile(pattern=r"^(?P<exception_type>.*):(?P<namespace>.*):(?P<code>.*)!(?P<msg>.*)$", flags=DOTALL)
-
-
-def check_error(msg: ffi.CData) -> None:
-    """
-    Raises:
-         exceptions.Error: or subclass in case of error, which exception depends on the error type.
-    """
-    if msg:
-        decoded = ffi.string(msg).decode()
-        _logger.error(decoded)
-        match = error_match.match(decoded)
-
-        if not match:
-            raise exceptions.OperationalError(decoded)
-
-        _, _, error, msg = match.groups()
-
-        if error not in errors:
-            ...
-
-        exception = errors.get(error, exceptions.DatabaseError)
-        raise exception(msg)
-
-
-# format: monetdb type: (cast name, converter function, numpy type, monetdb null value)
-type_map: Dict[Any, Tuple[str, Optional[Callable], np.dtype, Optional[Any]]] = {
-    lib.monetdbe_bool: ("bool", bool, np.dtype(np.bool), None),
-    lib.monetdbe_int8_t: ("int8_t", None, np.dtype(np.int8), np.iinfo(np.int8).min),
-    lib.monetdbe_int16_t: ("int16_t", None, np.dtype(np.int16), np.iinfo(np.int16).min),
-    lib.monetdbe_int32_t: ("int32_t", None, np.dtype(np.int32), np.iinfo(np.int32).min),
-    lib.monetdbe_int64_t: ("int64_t", None, np.dtype(np.int64), np.iinfo(np.int64).min),
-    lib.monetdbe_size_t: ("size_t", None, np.dtype(np.uint), None),
-    lib.monetdbe_float: ("float", py_float, np.dtype(np.float32), np.finfo(np.float32).min),
-    lib.monetdbe_double: ("double", py_float, np.dtype(np.float), np.finfo(np.float).min),
-    lib.monetdbe_str: ("str", make_string, np.dtype('=O'), None),
-    lib.monetdbe_blob: ("blob", make_blob, np.dtype('=O'), None),
-    lib.monetdbe_date: ("date", py_date, np.dtype('=O'), None),  # np.dtype('datetime64[D]')
-    lib.monetdbe_time: ("time", py_time, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
-    lib.monetdbe_timestamp: ("timestamp", py_timestamp, np.dtype('=O'), None),  # np.dtype('datetime64[ns]')
-}
-
-
-def extract(rcol, r: int, text_factory: Optional[Callable[[str], Any]] = None):
-    """
-    Extracts values from a monetdbe_column.
-
-    The text_factory is optional, and wraps the value with a custom user supplied text function.
-    """
-    cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
-    col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
-    if col.is_null(col.data[r]):
-        return None
-    else:
-        if cast_function:
-            result = cast_function(col.data[r])
-            if rcol.type == lib.monetdbe_str and text_factory:
-                return text_factory(result)
-            else:
-                return result
-        else:
-            return col.data[r]
-
-
-class MonetEmbedded:
-    _active_context: Optional['MonetEmbedded'] = None
+class Frontend:
+    _active_context: Optional['Frontend'] = None
     in_memory_active: bool = False
     _connection: Optional[ffi.CData] = None
 
@@ -144,7 +36,7 @@ class MonetEmbedded:
         self._switch()
 
     @classmethod
-    def set_active_context(cls, active_context: Optional['MonetEmbedded']):
+    def set_active_context(cls, active_context: Optional['Frontend']):
         cls._active_context = active_context
 
     @classmethod
@@ -233,7 +125,7 @@ class MonetEmbedded:
 
         Args:
             query: the query
-            make_results: Create and return a result object. If enabled, you need to call cleanup_result on the
+            make_result: Create and return a result object. If enabled, you need to call cleanup_result on the
                           result afterwards
 
         returns:
@@ -256,54 +148,88 @@ class MonetEmbedded:
         return result, affected_rows[0]
 
     @staticmethod
-    def result_fetch(result: ffi.CData, column: int):
+    def result_fetch(result: ffi.CData, column: int) -> ffi.CData:
         p_rcol = ffi.new("monetdbe_column **")
         check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
         return p_rcol[0]
 
     @staticmethod
-    def result_fetch_numpy(monetdbe_result: ffi.CData):
+    def result_fetch_numpy(monetdbe_result: ffi.CData) -> Mapping[str, np.ma.MaskedArray]:
 
         result = {}
         for c in range(monetdbe_result.ncols):
-            rcol = MonetEmbedded.result_fetch(monetdbe_result, c)
+            rcol = Frontend.result_fetch(monetdbe_result, c)
             name = make_string(rcol.name)
-            cast_string, cast_function, numpy_type, monetdbe_null = type_map[rcol.type]
+            cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
 
-            if numpy_type.char == 'O':
+            # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
+            if numpy_type.type == np.object_:
                 np_col: np.ndarray = np.array([extract(rcol, r) for r in range(monetdbe_result.nrows)])
+                if rcol.type == lib.monetdbe_str:
+                    np_col = np_col.astype(str)
+                elif rcol.type == lib.monetdbe_date:
+                    np_col = np_col.astype('datetime64[D]')  # type: ignore
+                elif rcol.type == lib.monetdbe_time:
+                    warn("Not converting column with type column since no proper numpy equivalent")
+                elif rcol.type == lib.monetdbe_timestamp:
+                    np_col = np_col.astype('datetime64[ns]')  # type: ignore
             else:
-                buffer_size = monetdbe_result.nrows * numpy_type.itemsize
+                buffer_size = monetdbe_result.nrows * numpy_type.itemsize  # type: ignore
                 c_buffer = ffi.buffer(rcol.data, buffer_size)
-                np_col = np.frombuffer(c_buffer, dtype=numpy_type)
+                np_col = np.frombuffer(c_buffer, dtype=numpy_type)  # type: ignore
 
             if monetdbe_null:
                 mask = np_col == monetdbe_null
-                if mask.any():
-                    masked = np.ma.masked_array(np_col, mask=mask)
-                else:
-                    masked = np_col
             else:
-                masked = np_col
+                mask = np.ma.nomask  # type: ignore
+
+            masked = np.ma.masked_array(np_col, mask=mask)
 
             result[name] = masked
         return result
 
-    def set_autocommit(self, value: bool):
+    def set_autocommit(self, value: bool) -> None:
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
 
     @staticmethod
-    def get_autocommit():
+    def get_autocommit() -> bool:
         value = ffi.new("int *")
         check_error(lib.monetdbe_get_autocommit(value))
-        return value[0]
+        return bool(value[0])
 
     def in_transaction(self) -> bool:
         return bool(lib.monetdbe_in_transaction(self._connection))
 
-    def append(self, schema: str, table: str, batids, column_count: int):
-        # todo (gijs): use :)
-        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), batids, column_count))
+    def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
+        """
+        Directly apply an array structure
+        """
+        n_columns = len(data)
+        existing_columns = list(self.get_columns(schema=schema, table=table))
+        existing_names, existing_types = zip(*existing_columns)
+        if not set(existing_names) == set(data.keys()):
+            error = f"Appended column names ({', '.join(data.keys())}) " \
+                    f"don't match existing column names ({', '.join(existing_names)})"
+            raise exceptions.ProgrammingError(error)
+
+        work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
+        work_objs = []
+        for column_num, (column_name, existing_type) in enumerate(existing_columns):
+            column_values = data[column_name]
+            work_column = ffi.new('monetdbe_column *')
+            work_type_string, work_type = numpy_monetdb_map(column_values.dtype)
+            if not work_type == existing_type:
+                existing_type_string = monet_numpy_map[existing_type][0]
+                error = f"Type '{work_type_string}' for appended column '{column_name}' " \
+                        f"does not match table type '{existing_type_string}'"
+                raise exceptions.ProgrammingError(error)
+            work_column.type = work_type
+            work_column.count = column_values.shape[0]
+            work_column.name = ffi.new('char[]', column_name.encode())
+            work_column.data = ffi.cast(f"{work_type_string} *", ffi.from_buffer(column_values))
+            work_columns[column_num] = work_column
+            work_objs.append(work_column)
+        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query):
         # todo (gijs): use :)
@@ -330,6 +256,18 @@ class MonetEmbedded:
         # todo (gijs): use :)
         lib.monetdbe_dump_database(self._connection, str(backupfile).encode())
 
-    def dump_table(self, schema_name, table_name, backupfile: Path):
+    def dump_table(self, schema_name: str, table_name: str, backupfile: Path):
         # todo (gijs): use :)
         lib.monetdbe_dump_table(self._connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
+
+    def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
+        count_p = ffi.new('size_t *')
+        names_p = ffi.new('char ***')
+        types_p = ffi.new('int **')
+
+        lib.monetdbe_get_columns(self._connection, schema.encode(), table.encode(), count_p, names_p, types_p)
+
+        for i in range(count_p[0]):
+            name = ffi.string(names_p[0][i]).decode()
+            type_ = types_p[0][i]
+            yield name, type_

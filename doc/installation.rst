@@ -35,7 +35,8 @@ from source. Make sure you compile with the rights flags, for example have INT12
     $ cd MonetDB
     $ mkdir build
     $ cd build
-    $ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=OFF -DWITH_CRYPTO=OFF -DPY3INTEGRATION=OFF
+    $ cmake .. -DCMAKE_INSTALL_PREFIX=<monetdb_prefix> -DINT128=OFF -DWITH_CRYPTO=OFF \
+                -DPY3INTEGRATION=OFF -DCMAKE_BUILD_TYPE=Release -DASSERT=OFF
     $ make install
 
 
