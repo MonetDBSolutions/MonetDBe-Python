@@ -9,6 +9,10 @@ WORKDIR=/tmp/
 OUTPUT=dist/
 
 case "$1" in
+    3.9)
+        VERSION=39
+        PLATFORM=""
+        ;;
     3.8)
         VERSION=38
         PLATFORM=""

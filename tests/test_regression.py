@@ -470,3 +470,16 @@ class TestMonetDBeRegressions(unittest.TestCase):
             raise
         else:
             clean()
+
+    def test_copy_into_issue84(self):
+        con = monetdbe.connect()
+        cur = con.execute("""
+        CREATE TABLE test (
+            i int,
+            s string,
+            i2 int,
+            f float)
+        """)
+
+        path = (Path(__file__).parent / "example.csv").resolve().absolute()
+        cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")
