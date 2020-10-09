@@ -99,7 +99,7 @@ class TestmonetdbeBase(TestCase):
         # missing dict key in insert
         cur = monetdbe.create('pylite09', dict(a=[], b=[], c=[]))
         with pytest.raises(monetdbe.DatabaseError):
-            cur = monetdbe.insert('pylite09', dict(a=33, b=44))
+            cur.insert('pylite09', dict(a=33, b=44))
 
     def test_bad_column_number(self):
         # too few columns in insert
