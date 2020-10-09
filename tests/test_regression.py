@@ -471,6 +471,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         else:
             clean()
 
+    @unittest.skip("issue #84")
     def test_copy_into_issue84(self):
         con = monetdbe.connect()
         cur = con.execute("""
@@ -481,5 +482,5 @@ class TestMonetDBeRegressions(unittest.TestCase):
             f float)
         """)
 
-        path = (Path(__file__).parent / "example.csv").resolve().absolute()
+        path = str((Path(__file__).parent / "example.csv").resolve().absolute())
         cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")

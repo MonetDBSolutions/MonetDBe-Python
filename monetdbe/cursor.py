@@ -1,7 +1,7 @@
 from collections import namedtuple
 from itertools import repeat
 from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, List, Dict
-
+from warnings import warn
 import numpy as np
 import pandas as pd
 
@@ -352,6 +352,14 @@ class Cursor:
         self.insert(table, values, schema=schema)
         return self
 
+    def _insert_slow(self, table: str, data: Dict[str, np.ndarray], schema: str = 'sys'):
+        column_names, rows = zip(*data.items())
+        columns = ", ".join([str(i) for i in column_names])
+        rows_zipped = list(zip(*rows))
+        qmarks = ", ".join(['?'] * len(column_names))
+        query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
+        return self.executemany(query, rows_zipped)
+
     def insert(self, table: str, values: Union[pd.DataFrame, Dict[str, np.ndarray]], schema: str = 'sys'):
         """
         Inserts a set of values into the specified table.
@@ -361,30 +369,20 @@ class Cursor:
             values: The values. must be either a pandas DataFrame or a dictionary of values.
             schema: The SQL schema to use. If no schema is specified, the "sys" schema is used.
        """
+        prepared = values
 
         if isinstance(values, pd.DataFrame):
-            values = _pandas_to_numpy_dict(values)
+            prepared = _pandas_to_numpy_dict(values)
 
-        if isinstance(values, dict):
-            for key, value in values.items():
-                if not isinstance(value, np.ma.core.MaskedArray):  # type: ignore
-                    values[key] = np.array(value)
+        for key, value in prepared.items():
+            if not isinstance(value, (np.ma.core.MaskedArray, np.ndarray)):  # type: ignore
+                prepared[key] = np.array(value)
 
-            column_names, rows = zip(*values.items())
-            columns = ", ".join([str(i) for i in column_names])
-            rows_zipped = list(zip(*rows))
-            qmarks = ", ".join(['?'] * len(column_names))
-            query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
-            return self.executemany(query, rows_zipped)
-
-        elif isinstance(values, list):
-            rows_zipped = list(zip(*values))
-            qmarks = ", ".join(['?'] * len(values))
-            query = f"insert into {schema}.{table} values ({qmarks})"
-            return self.executemany(query, rows_zipped)
-
-        # todo (gijs): use a faster embedded backend to directly insert data, which should be much faster
-        # return self.connection.inter.append(schema, table, values, column_count=len(values))
+        if sum(i.dtype.kind not in 'if' for i in prepared.values()):
+            warn("One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
+            return self._insert_slow(table, prepared, schema)
+        else:
+            return self.connection.lowlevel.append(schema=schema, table=table, data=prepared)
 
     def setoutputsize(self, *args, **kwargs) -> None:
         """

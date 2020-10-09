@@ -139,6 +139,7 @@ class RowFactoryTests(unittest.TestCase):
         with self.assertRaises(IndexError):
             row[2 ** 1000]
 
+    @unittest.skip("issue #99")
     def test_monetdbeRowIndexUnicode(self):
         self.con.row_factory = Row
         row = self.con.execute("select 1 as \xff").fetchone()
