@@ -41,6 +41,7 @@ jobs:
 
       -
         name: Compile monetdb
+        # TODO: why can't we use $Env:VCPKG_ROOT in cmake argument?
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
@@ -48,7 +49,7 @@ jobs:
           dir $Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
           cmake -G "Visual Studio 16 2019" `
             -A x64 `
-            -DCMAKE_TOOLCHAIN_FILE=$Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_TOOLCHAIN_FILE=D:\a\MonetDBe-Python\MonetDBe-Python\vcpkg\scripts\buildsystems\vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=C:\monetdb `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `

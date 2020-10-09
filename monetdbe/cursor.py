@@ -100,7 +100,7 @@ class Cursor:
         Raises:
             ProgrammingError: if no lower level interface is attached
         """
-        if not self.connection or not self.connection.lowlevel:
+        if not hasattr(self, 'connection') or not self.connection or not self.connection.lowlevel:
             raise ProgrammingError("no connection to lower level database available")
 
     def _check_result(self) -> None:

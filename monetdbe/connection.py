@@ -167,7 +167,7 @@ class Connection:
         cursor = factory(con=self)
         if not cursor:
             raise TypeError
-        if not self.lowlevel:
+        if not hasattr(self, 'lowlevel') or not self.lowlevel:
             raise exceptions.ProgrammingError
         return cursor
 

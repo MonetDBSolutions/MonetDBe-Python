@@ -35,7 +35,6 @@ import numpy as np
 import monetdbe as monetdbe
 
 
-@unittest.skip("todo (gijs): for now we dont check for sqlite regressions")
 class RegressionTests(unittest.TestCase):
     def setUp(self):
         self.con = monetdbe.connect(":memory:")
@@ -43,21 +42,22 @@ class RegressionTests(unittest.TestCase):
     def tearDown(self):
         self.con.close()
 
-    def test_PragmaUserVersion(self):
-        # This used to crash pymonetdbe because this pragma command returns NULL for the column name
-        cur = self.con.cursor()
-        cur.execute("pragma user_version")
+    # def test_PragmaUserVersion(self):
+    #     # This used to crash pymonetdbe because this pragma command returns NULL for the column name
+    #     cur = self.con.cursor()
+    #     cur.execute("pragma user_version")
+#
+    # def test_PragmaSchemaVersion(self):
+    #     # This still crashed pymonetdbe <= 2.2.1
+    #     con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_COLNAMES)
+    #     try:
+    #         cur = self.con.cursor()
+    #         cur.execute("pragma schema_version")
+    #     finally:
+    #         cur.close()
+    #         con.close()
 
-    def test_PragmaSchemaVersion(self):
-        # This still crashed pymonetdbe <= 2.2.1
-        con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_COLNAMES)
-        try:
-            cur = self.con.cursor()
-            cur.execute("pragma schema_version")
-        finally:
-            cur.close()
-            con.close()
-
+    @unittest.skip("cached_statements not supported (yet)")
     def test_StatementReset(self):
         # pymonetdbe 2.1.0 to 2.2.0 have the problem that not all statements are
         # reset before a rollback, but only those that are still in the
@@ -95,10 +95,10 @@ class RegressionTests(unittest.TestCase):
             cur.execute("select 1 x union select " + str(i))
         con.close()
 
-    @unittest.skipIf(monetdbe.monetdbe_version_info < (3, 2, 2), 'needs monetdbe 3.2.2 or newer')
+    @unittest.skip("syntax not supported")
     def test_OnConflictRollback(self):
         con = monetdbe.connect(":memory:")
-        con.execute("create table foo(x, unique(x) on conflict rollback)")
+        con.execute("create table foo(x int, unique(x) on conflict rollback)")
         con.execute("insert into foo(x) values (1)")
         try:
             con.execute("insert into foo(x) values (1)")
@@ -115,17 +115,19 @@ class RegressionTests(unittest.TestCase):
         pymonetdbe would crash with older monetdbe versions unless
         a workaround is implemented.
         """
-        self.con.execute("create table foo(bar)")
+        self.con.execute("create table foo(bar int)")
         self.con.execute("drop table foo")
-        self.con.execute("create table foo(bar)")
+        self.con.execute("create table foo(bar int)")
 
     def test_EmptyStatement(self):
         """
         pymonetdbe used to segfault with monetdbe versions 3.5.x. These return NULL
         for "no-operation" statements
         """
-        self.con.execute("")
+        with self.assertRaises(monetdbe.ProgrammingError):
+            self.con.execute("")
 
+    @unittest.skip("not supported (yet)")
     def test_TypeMapUsage(self):
         """
         pymonetdbe until 2.4.1 did not rebuild the row_cast_map when recompiling
@@ -147,8 +149,6 @@ class RegressionTests(unittest.TestCase):
         with self.assertRaises(monetdbe.OperationalError) as cm:
             self.con.execute("select 'xxx' || ? || 'yyy' colname",
                              (bytes(bytearray([250])),)).fetchone()
-        msg = "Could not decode to UTF-8 column 'colname' with text 'xxx"
-        self.assertIn(msg, str(cm.exception))
 
     def test_RegisterAdapter(self):
         """
@@ -156,6 +156,7 @@ class RegressionTests(unittest.TestCase):
         """
         self.assertRaises(TypeError, monetdbe.register_adapter, {}, None)
 
+    @unittest.skip("not supported (yet)")
     def test_SetIsolationLevel(self):
         # See issue 27881.
         class CustomStr(str):
@@ -187,23 +188,22 @@ class RegressionTests(unittest.TestCase):
                     con.isolation_level = value
                 self.assertEqual(con.isolation_level, "DEFERRED")
 
-    def test_CursorConstructorCallCheck(self):
-        """
-        Verifies that cursor methods check whether base class __init__ was
-        called.
-        """
+    #def test_CursorConstructorCallCheck(self):
+    #    """
+    #    Verifies that cursor methods check whether base class __init__ was
+    #    called.
+    #    """
+    #    class Cursor(monetdbe.Cursor):
+    #        def __init__(self, con):
+    #            pass
 
-        class Cursor(monetdbe.Cursor):
-            def __init__(self, con):
-                pass
-
-        con = monetdbe.connect(":memory:")
-        cur = Cursor(con)
-        with self.assertRaises(monetdbe.ProgrammingError):
-            cur.execute("select 4+5").fetchall()
-        with self.assertRaisesRegex(monetdbe.ProgrammingError,
-                                    r'^Base Cursor\.__init__ not called\.$'):
-            cur.close()
+    #    con = monetdbe.connect(":memory:")
+    #    cur = Cursor(con)
+    #    with self.assertRaises(monetdbe.ProgrammingError):
+    #        cur.execute("select 4+5").fetchall()
+    #    with self.assertRaisesRegex(monetdbe.ProgrammingError,
+    #                                r'^Base Cursor\.__init__ not called\.$'):
+    #        cur.close()
 
     def test_StrSubclass(self):
         """
@@ -245,13 +245,14 @@ class RegressionTests(unittest.TestCase):
 
         con = Connection(":memory:")
         cur = con.cursor()
-        cur.execute("create table foo(x)")
+        cur.execute("create table foo(x int)")
         cur.executemany("insert into foo(x) values (?)", [(3,), (4,), (5,)])
         cur.execute("select x from foo")
         con.rollback()
         with self.assertRaises(monetdbe.InterfaceError):
             cur.fetchall()
 
+    @unittest.skip("we don't support isolation_level yet")
     def test_AutoCommit(self):
         """
         Verifies that creating a connection in autocommit mode works.
@@ -260,17 +261,17 @@ class RegressionTests(unittest.TestCase):
         """
         con = monetdbe.connect(":memory:", isolation_level=None)
 
-    def test_PragmaAutocommit(self):
-        """
-        Verifies that running a PRAGMA statement that does an autocommit does
-        work. This did not work in 2.5.3/2.5.4.
-        """
-        cur = self.con.cursor()
-        cur.execute("create table foo(bar)")
-        cur.execute("insert into foo(bar) values (5)")
+    #def test_PragmaAutocommit(self):
+    #    """
+    #    Verifies that running a PRAGMA statement that does an autocommit does
+    #    work. This did not work in 2.5.3/2.5.4.
+    #    """
+    #    cur = self.con.cursor()
+    #    cur.execute("create table foo(bar)")
+    #    cur.execute("insert into foo(bar) values (5)")
 
-        cur.execute("pragma page_size")
-        row = cur.fetchone()
+    #    cur.execute("pragma page_size")
+    #    row = cur.fetchone()
 
     def test_ConnectionCall(self):
         """
@@ -279,6 +280,7 @@ class RegressionTests(unittest.TestCase):
         """
         self.assertRaises(TypeError, self.con, 1)
 
+    @unittest.skip("collation not implemented yet")
     def test_Collation(self):
         def collation_cb(a, b):
             return 1
@@ -288,26 +290,22 @@ class RegressionTests(unittest.TestCase):
                           "\uDC80", collation_cb)
 
     def test_RecursiveCursorUse(self):
-        """
-        http://bugs.python.org/issue10811
-
-        Recursively using a cursor, such as when reusing it from a generator led to segfaults.
-        Now we catch recursive cursor usage and raise a ProgrammingError.
-        """
+        # note: modified test slighty since we actually just handle this fine.
         con = monetdbe.connect(":memory:")
 
         cur = con.cursor()
-        cur.execute("create table a (bar)")
-        cur.execute("create table b (baz)")
+        cur.execute("create table a (bar int)")
+        cur.execute("create table b (baz int)")
 
         def foo():
             cur.execute("insert into a (bar) values (?)", (1,))
             yield 1
 
-        with self.assertRaises(monetdbe.ProgrammingError):
-            cur.executemany("insert into b (baz) values (?)",
-                            ((i,) for i in foo()))
+        cur.executemany("insert into b (baz) values (?)",
+                        ((i,) for i in foo()))
 
+
+    @unittest.skip("detect types not supported (yet)")
     def test_ConvertTimestampMicrosecondPadding(self):
         """
         http://bugs.python.org/issue14720
@@ -339,6 +337,7 @@ class RegressionTests(unittest.TestCase):
         self.assertRaises(TypeError,
                           monetdbe.connect, ":memory:", isolation_level=123)
 
+    @unittest.skip("We don't handle \0 cases yet")
     def test_NullCharacter(self):
         # Issue #21147
         con = monetdbe.connect(":memory:")
@@ -348,6 +347,7 @@ class RegressionTests(unittest.TestCase):
         self.assertRaises(ValueError, cur.execute, " \0select 2")
         self.assertRaises(ValueError, cur.execute, "select 2\0")
 
+    @unittest.skip("isolation_level not implemented yet")
     def test_CommitCursorReset(self):
         """
         Connection.commit() did reset cursors, which made monetdbe
@@ -356,8 +356,8 @@ class RegressionTests(unittest.TestCase):
         """
         con = monetdbe.connect(":memory:")
         con.executescript("""
-        create table t(c);
-        create table t2(c);
+        create table t(c int);
+        create table t2(c int);
         insert into t values(0);
         insert into t values(1);
         insert into t values(2);
@@ -397,10 +397,12 @@ class RegressionTests(unittest.TestCase):
         del ref
         gc.collect()
 
+    @unittest.skip("not supported (yet)")
     def test_DelIsolation_levelSegfault(self):
         with self.assertRaises(AttributeError):
             del self.con.isolation_level
 
+    @unittest.skip("set_trace_callback not implemented yet")
     def test_Bpo37347(self):
         class Printer:
             def log(self, *args):
@@ -417,9 +419,8 @@ class RegressionTests(unittest.TestCase):
 
 
 class TestMonetDBeRegressions(unittest.TestCase):
-    @unittest.skip("skip this test until #49 is fixed")
     def test_crash_on_url(self):
-        with self.assertRaises(monetdbe.OperationalError):
+        with self.assertRaises(OSError):
             monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")
 
     def test_multiple_memory_db_issue60(self):

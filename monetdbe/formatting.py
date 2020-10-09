@@ -121,6 +121,8 @@ def format_query(query: str,  # type: ignore
                 return query.replace('?', '{}').format(*escaped_list)
             elif '%s' in cleaned_query:  # pyformat style
                 return query % tuple(escaped_list)
+            else:
+                return cleaned_query
         else:
             raise ValueError(f"parameters '{parameters}' type '{type(parameters)}' not supported")
     else:
