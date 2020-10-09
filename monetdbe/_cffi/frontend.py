@@ -78,7 +78,7 @@ class Frontend:
         if not self.dbdir:
             url = ffi.NULL
         else:
-            url = str(self.dbdir).encode()
+            url = str(self.dbdir.resolve().absolute()).encode()
 
         p_connection = ffi.new("monetdbe_database *")
 

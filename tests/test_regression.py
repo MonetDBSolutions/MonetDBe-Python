@@ -26,6 +26,8 @@ import functools
 import gc
 import unittest
 import weakref
+from pathlib import Path
+from shutil import rmtree
 
 import pandas as pd
 import numpy as np
@@ -450,3 +452,22 @@ class TestMonetDBeRegressions(unittest.TestCase):
         cursor.execute('SELECT * FROM "test"')
         df_out = cursor.fetchdf()
         pd.testing.assert_frame_equal(df, df_out)
+
+    def test_relative_path(self):
+        path = Path('this_folder_can_be_removed')
+
+        def clean():
+            if path.exists():
+                rmtree(path)
+
+        clean()
+        try:
+            print('bla')
+            con = monetdbe.connect(str(path))
+            x = con.execute('select * from sys.tables').fetchall()
+            con.close()
+        except Exception:
+            clean()
+            raise
+        else:
+            clean()

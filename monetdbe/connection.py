@@ -144,8 +144,8 @@ class Connection:
         return self.execute("COMMIT")
 
     def close(self, *args, **kwargs) -> None:
-        del self.lowlevel
-        # todo (gijs): typing
+        if self.lowlevel:
+            self.lowlevel.close()
         self.lowlevel = None
 
     def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':

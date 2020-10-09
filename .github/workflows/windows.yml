@@ -20,6 +20,7 @@ jobs:
         name: Install choco packages
         run: |
           choco install winflexbison git unzip curl
+          choco install python --version 3.9.0 --force
           choco install python --version 3.8.5 --force
           choco install python --version 3.7.9 --force
           choco install python --version 3.6.8 --force
@@ -29,7 +30,7 @@ jobs:
         with:
           vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: c9027488970352953a59505234775b367d4cfd2a
+          vcpkgGitCommitId: df9c8e260e66713dcf768630cd434caf2c29bbff
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
