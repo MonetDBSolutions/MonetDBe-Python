@@ -36,9 +36,11 @@ def sql(query: str, client=None) -> DataFrame:
         return connect().execute(query).fetchdf()
 
 
-def create(*args, **kwargs) -> Cursor:
+def create(table, values, schema=None, conn=None) -> Cursor:
     warn("create() is deprecated and will be removed from future versions")
-    return connect().cursor().create(*args, **kwargs)
+    if not conn:
+        conn = connect()
+    return conn.cursor().create(table=table, values=values, schema=schema)
 
 
 def insert(*args, **kwargs) -> Cursor:

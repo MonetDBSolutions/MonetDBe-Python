@@ -1,7 +1,7 @@
 from collections import namedtuple
 from itertools import repeat
 from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, List, Dict
-
+from warnings import warn
 import numpy as np
 import pandas as pd
 
@@ -100,7 +100,7 @@ class Cursor:
         Raises:
             ProgrammingError: if no lower level interface is attached
         """
-        if not self.connection or not self.connection.lowlevel:
+        if not hasattr(self, 'connection') or not self.connection or not self.connection.lowlevel:
             raise ProgrammingError("no connection to lower level database available")
 
     def _check_result(self) -> None:
@@ -334,7 +334,7 @@ class Cursor:
                 column_type = 'REAL'
             elif arr.dtype == np.float64:
                 column_type = 'DOUBLE'
-            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_):
+            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_) or np.issubdtype(arr.dtype, np.object_):
                 column_type = 'STRING'
             else:
                 raise Exception('Unsupported dtype: %s' % (str(arr.dtype)))
@@ -352,6 +352,15 @@ class Cursor:
         self.insert(table, values, schema=schema)
         return self
 
+    def _insert_slow(self, table: str, data: Dict[str, np.ndarray], schema: str = 'sys'):
+        column_names = data.keys()
+        rows = data.values()
+        columns = ", ".join([str(i) for i in column_names])
+        rows_zipped = list(zip(*rows))
+        qmarks = ", ".join(['?'] * len(column_names))
+        query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
+        return self.executemany(query, rows_zipped)
+
     def insert(self, table: str, values: Union[pd.DataFrame, Dict[str, np.ndarray]], schema: str = 'sys'):
         """
         Inserts a set of values into the specified table.
@@ -361,30 +370,21 @@ class Cursor:
             values: The values. must be either a pandas DataFrame or a dictionary of values.
             schema: The SQL schema to use. If no schema is specified, the "sys" schema is used.
        """
-
         if isinstance(values, pd.DataFrame):
-            values = _pandas_to_numpy_dict(values)
+            prepared = _pandas_to_numpy_dict(values)
+        else:
+            prepared = values
 
-        if isinstance(values, dict):
-            for key, value in values.items():
-                if not isinstance(value, np.ma.core.MaskedArray):  # type: ignore
-                    values[key] = np.array(value)
+        for key, value in prepared.items():
+            if not isinstance(value, (np.ma.core.MaskedArray, np.ndarray)):  # type: ignore
+                prepared[key] = np.array(value)
 
-            column_names, rows = zip(*values.items())
-            columns = ", ".join([str(i) for i in column_names])
-            rows_zipped = list(zip(*rows))
-            qmarks = ", ".join(['?'] * len(column_names))
-            query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
-            return self.executemany(query, rows_zipped)
-
-        elif isinstance(values, list):
-            rows_zipped = list(zip(*values))
-            qmarks = ", ".join(['?'] * len(values))
-            query = f"insert into {schema}.{table} values ({qmarks})"
-            return self.executemany(query, rows_zipped)
-
-        # todo (gijs): use a faster embedded backend to directly insert data, which should be much faster
-        # return self.connection.inter.append(schema, table, values, column_count=len(values))
+        if sum(i.dtype.kind not in 'if' for i in prepared.values()):  # type: ignore
+            warn(
+                "One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
+            return self._insert_slow(table, prepared, schema)
+        else:
+            return self.connection.lowlevel.append(schema=schema, table=table, data=prepared)  # type: ignore
 
     def setoutputsize(self, *args, **kwargs) -> None:
         """
@@ -429,3 +429,10 @@ class Cursor:
         We dont support scrolling, since the full result is available.
         """
         raise NotImplementedError
+
+    def read_csv(self, table, *args, **kwargs):
+        values = pd.read_csv(*args, **kwargs)
+        return self.create(table=table, values=values)
+
+    def write_csv(self, table, *args, **kwargs):
+        return self.execute(f"select * from {table}").fetchdf().to_csv(*args, **kwargs)

@@ -20,6 +20,7 @@ jobs:
         name: Install choco packages
         run: |
           choco install winflexbison git unzip curl
+          choco install python --version 3.9.0 --force
           choco install python --version 3.8.5 --force
           choco install python --version 3.7.9 --force
           choco install python --version 3.6.8 --force
@@ -29,7 +30,7 @@ jobs:
         with:
           vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: c9027488970352953a59505234775b367d4cfd2a
+          vcpkgGitCommitId: df9c8e260e66713dcf768630cd434caf2c29bbff
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
@@ -39,15 +40,16 @@ jobs:
           unzip.exe ${{ env.branch }}.zip
 
       -
-        name: Compile monetdb
+        name: Compile and install MonetDB
+        # TODO: why can't we use $Env:VCPKG_ROOT in cmake argument?
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
-          dir ..
-          echo $Env:VCPKG_ROOT
+          dir $Env:VCPKG_ROOT\scripts\buildsystems
+          dir $Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
           cmake -G "Visual Studio 16 2019" `
             -A x64 `
-            -DCMAKE_TOOLCHAIN_FILE=..\vcpkg\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_TOOLCHAIN_FILE=D:\a\MonetDBe-Python\MonetDBe-Python\vcpkg\scripts\buildsystems\vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=C:\monetdb `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
@@ -55,13 +57,7 @@ jobs:
             -DODBC=false `
             -DPY3INTEGRATION=OFF `
             -DINT128=OFF  ..
-      -
-        name: Build MonetDB
-        run: |
           cmake --build . --target ALL_BUILD --parallel 4  --config Release
-      -
-        name: Install MonetDB
-        run: |
           cmake --build . --target INSTALL  --config Release
       -
         name: Collect DLLs

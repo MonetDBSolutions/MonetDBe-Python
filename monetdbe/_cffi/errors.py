@@ -20,16 +20,7 @@ errors = {
 }
 
 
-def check_if_we_can_import_lowlevel():
-    try:
-        from monetdbe._lowlevel import lib, ffi
-    except ImportError as e:
-        _logger.error(e)
-        _logger.error("try setting LD_LIBRARY_PATH to point to the location of libmonetdbe.so")
-        raise
-
-
-def check_error(msg: ffi.CData) -> None:
+def check_error(msg: 'ffi.CData') -> None:
     """
     Raises:
          exceptions.Error: or subclass in case of error, which exception depends on the error type.

@@ -68,7 +68,12 @@ class Connection:
         else:
             raise TypeError
 
+        from monetdbe._cffi import check_if_we_can_import_lowlevel
+
+        check_if_we_can_import_lowlevel()
+
         from monetdbe._cffi.frontend import Frontend
+
         self.lowlevel: Optional[Frontend] = Frontend(
             dbdir=database,
             memorylimit=memorylimit,
@@ -144,8 +149,8 @@ class Connection:
         return self.execute("COMMIT")
 
     def close(self, *args, **kwargs) -> None:
-        del self.lowlevel
-        # todo (gijs): typing
+        if self.lowlevel:
+            self.lowlevel.close()
         self.lowlevel = None
 
     def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':
@@ -167,7 +172,7 @@ class Connection:
         cursor = factory(con=self)
         if not cursor:
             raise TypeError
-        if not self.lowlevel:
+        if not hasattr(self, 'lowlevel') or not self.lowlevel:
             raise exceptions.ProgrammingError
         return cursor
 
@@ -231,6 +236,14 @@ class Connection:
         """
         self._check()
         return self.lowlevel.set_autocommit(value)  # type: ignore
+
+    def read_csv(self, table, *args, **kwargs):
+        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
+        cur = Cursor(con=self).read_csv(table, *args, **kwargs)
+
+    def write_csv(self, table, *args, **kwargs):
+        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
+        cur = Cursor(con=self).write_csv(table, *args, **kwargs)
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

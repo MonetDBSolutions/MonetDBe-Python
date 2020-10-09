@@ -78,7 +78,7 @@ class Frontend:
         if not self.dbdir:
             url = ffi.NULL
         else:
-            url = str(self.dbdir).encode()
+            url = str(self.dbdir.resolve().absolute()).encode()
 
         p_connection = ffi.new("monetdbe_database *")
 
@@ -202,13 +202,13 @@ class Frontend:
 
     def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
         """
-        Directly apply an array structure
+        Directly append an array structure
         """
         n_columns = len(data)
         existing_columns = list(self.get_columns(schema=schema, table=table))
         existing_names, existing_types = zip(*existing_columns)
         if not set(existing_names) == set(data.keys()):
-            error = f"Appended column names ({', '.join(data.keys())}) " \
+            error = f"Appended column names ({', '.join(str(i) for i in data.keys())}) " \
                     f"don't match existing column names ({', '.join(existing_names)})"
             raise exceptions.ProgrammingError(error)
 

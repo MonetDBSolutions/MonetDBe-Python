@@ -1,7 +1,6 @@
 import numpy
 import pytest
-import shutil
-
+from shutil import rmtree
 import monetdbe
 
 
@@ -10,9 +9,9 @@ def monetdbe_empty_cursor(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
     def finalizer():
-        monetdbe.shutdown()
         if tmp_path.is_dir():
-            shutil.rmtree(test_dbfarm)
+            monetdbe.connect(tmp_path).close()
+            rmtree(test_dbfarm)
 
     request.addfinalizer(finalizer)
     connection = monetdbe.make_connection(test_dbfarm)
@@ -25,9 +24,9 @@ def monetdbe_cursor(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
     def finalizer():
-        monetdbe.shutdown()
         if tmp_path.is_dir():
-            shutil.rmtree(test_dbfarm)
+            monetdbe.connect(tmp_path).close()
+            rmtree(test_dbfarm)
 
     request.addfinalizer(finalizer)
 
@@ -43,10 +42,9 @@ def monetdbe_cursor_autocommit(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
     def finalizer():
-        connection = monetdbe.connect(test_dbfarm)
-        connection.close()
         if tmp_path.is_dir():
-            shutil.rmtree(test_dbfarm, ignore_errors=True)
+            monetdbe.connect(tmp_path).close()
+            rmtree(test_dbfarm)
 
     request.addfinalizer(finalizer)
     connection = monetdbe.connect(test_dbfarm)
@@ -60,10 +58,9 @@ def initialize_monetdbe(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
     def finalizer():
-        connection = monetdbe.connect(test_dbfarm)
-        connection.close()
         if tmp_path.is_dir():
-            shutil.rmtree(test_dbfarm, ignore_errors=True)
+            monetdbe.connect(tmp_path).close()
+            rmtree(test_dbfarm)
 
     request.addfinalizer(finalizer)
     monetdbe.connect(test_dbfarm)
