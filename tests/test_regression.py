@@ -29,8 +29,8 @@ import weakref
 from pathlib import Path
 from shutil import rmtree
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 import monetdbe as monetdbe
 
@@ -46,7 +46,7 @@ class RegressionTests(unittest.TestCase):
     #     # This used to crash pymonetdbe because this pragma command returns NULL for the column name
     #     cur = self.con.cursor()
     #     cur.execute("pragma user_version")
-#
+    #
     # def test_PragmaSchemaVersion(self):
     #     # This still crashed pymonetdbe <= 2.2.1
     #     con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_COLNAMES)
@@ -188,7 +188,7 @@ class RegressionTests(unittest.TestCase):
                     con.isolation_level = value
                 self.assertEqual(con.isolation_level, "DEFERRED")
 
-    #def test_CursorConstructorCallCheck(self):
+    # def test_CursorConstructorCallCheck(self):
     #    """
     #    Verifies that cursor methods check whether base class __init__ was
     #    called.
@@ -261,7 +261,7 @@ class RegressionTests(unittest.TestCase):
         """
         con = monetdbe.connect(":memory:", isolation_level=None)
 
-    #def test_PragmaAutocommit(self):
+    # def test_PragmaAutocommit(self):
     #    """
     #    Verifies that running a PRAGMA statement that does an autocommit does
     #    work. This did not work in 2.5.3/2.5.4.
@@ -303,7 +303,6 @@ class RegressionTests(unittest.TestCase):
 
         cur.executemany("insert into b (baz) values (?)",
                         ((i,) for i in foo()))
-
 
     @unittest.skip("detect types not supported (yet)")
     def test_ConvertTimestampMicrosecondPadding(self):
@@ -420,7 +419,7 @@ class RegressionTests(unittest.TestCase):
 
 class TestMonetDBeRegressions(unittest.TestCase):
     def test_crash_on_url(self):
-        with self.assertRaises(OSError):
+        with self.assertRaises(Exception):
             monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")
 
     def test_multiple_memory_db_issue60(self):

@@ -1,7 +1,9 @@
 from unittest import TestCase
+
 import numpy
-import pytest
 import pandas as pd
+import pytest
+
 import monetdbe
 
 
@@ -59,7 +61,7 @@ class TestmonetdbeBase(TestCase):
         result = monetdbe.sql('SELECT MIN(i) AS minimum FROM pylite05', client=conn)
         assert result['minimum'][0] == 0, "Incorrect result"
         # attempt to query the table from another client
-        #with pytest.raises(monetdbe.DatabaseError):
+        # with pytest.raises(monetdbe.DatabaseError):
         monetdbe.sql('SELECT * FROM pylite05', client=conn2)
 
         # now commit the table
@@ -105,14 +107,14 @@ class TestmonetdbeBase(TestCase):
         # too few columns in insert
         cur = monetdbe.create('pylite10', dict(a=[], b=[], c=[]))
         with pytest.raises(monetdbe.DatabaseError):
-            cur.insert('pylite10', {'a': [33], 'b':[44] })
+            cur.insert('pylite10', {'a': [33], 'b': [44]})
 
     def test_many_sql_statements(self):
         for i in range(5):  # FIXME 1000
             conn = monetdbe.connect()
-            monetdbe.sql('CREATE TABLE pylite11 (i INTEGER)', client=conn)
-            monetdbe.insert('pylite11', {'i': numpy.arange(10)}, client=conn)
-            result = monetdbe.sql('SELECT * FROM pylite11', client=conn)
+            cur = conn.execute('CREATE TABLE pylite11 (i INTEGER)')
+            cur.insert('pylite11', {'i': numpy.arange(10).astype(numpy.int32)})
+            result = cur.execute('SELECT * FROM pylite11').fetchdf()
             assert result['i'][0] == 0, "Invalid result"
             monetdbe.sql('DROP TABLE pylite11', client=conn)
             monetdbe.sql('ROLLBACK', client=conn)

@@ -370,21 +370,21 @@ class Cursor:
             values: The values. must be either a pandas DataFrame or a dictionary of values.
             schema: The SQL schema to use. If no schema is specified, the "sys" schema is used.
        """
-        prepared = values
-
         if isinstance(values, pd.DataFrame):
             prepared = _pandas_to_numpy_dict(values)
+        else:
+            prepared = values
 
         for key, value in prepared.items():
             if not isinstance(value, (np.ma.core.MaskedArray, np.ndarray)):  # type: ignore
                 prepared[key] = np.array(value)
 
-        if sum(i.dtype.kind not in 'if' for i in prepared.values()):
+        if sum(i.dtype.kind not in 'if' for i in prepared.values()):  # type: ignore
             warn(
                 "One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
             return self._insert_slow(table, prepared, schema)
         else:
-            return self.connection.lowlevel.append(schema=schema, table=table, data=prepared)
+            return self.connection.lowlevel.append(schema=schema, table=table, data=prepared)  # type: ignore
 
     def setoutputsize(self, *args, **kwargs) -> None:
         """

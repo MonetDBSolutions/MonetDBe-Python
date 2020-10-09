@@ -68,7 +68,12 @@ class Connection:
         else:
             raise TypeError
 
+        from monetdbe._cffi import check_if_we_can_import_lowlevel
+
+        check_if_we_can_import_lowlevel()
+
         from monetdbe._cffi.frontend import Frontend
+
         self.lowlevel: Optional[Frontend] = Frontend(
             dbdir=database,
             memorylimit=memorylimit,

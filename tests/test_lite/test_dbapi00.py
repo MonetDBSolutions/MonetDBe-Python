@@ -50,7 +50,7 @@ class TestSimpleDBAPI:
         numpy.testing.assert_array_equal(result['v'], data_dict['v'])
 
     def test_numpy_insertion(self, monetdbe_cursor):
-        data_dict = {'i': numpy.arange(10), 'v': numpy.random.randint(100, size=10)}
+        data_dict = {'i': numpy.arange(10).astype(numpy.int32), 'v': numpy.random.randint(100, size=10).astype(numpy.int32)}
         monetdbe_cursor.execute("CREATE TABLE numpy_insertion (i INT, v INT)")
         monetdbe_cursor.insert('numpy_insertion', data_dict)
         monetdbe_cursor.commit()
@@ -62,7 +62,7 @@ class TestSimpleDBAPI:
         numpy.testing.assert_array_equal(result['v'], data_dict['v'])
 
     def test_pandas_insertion(self, monetdbe_cursor):
-        data_dict = {'i': numpy.arange(10), 'v': numpy.random.randint(100, size=10)}
+        data_dict = {'i': numpy.arange(10).astype(numpy.int32), 'v': numpy.random.randint(100, size=10).astype(numpy.int32)}
         dframe = pandas.DataFrame.from_dict(data_dict)
         monetdbe_cursor.execute("CREATE TABLE pandas_insertion (i INT, v INT)")
         monetdbe_cursor.insert('pandas_insertion', dframe)
@@ -75,7 +75,7 @@ class TestSimpleDBAPI:
         numpy.testing.assert_array_equal(result['v'], data_dict['v'])
 
     def test_masked_array_insertion(self, monetdbe_cursor):
-        data_dict = {'i': numpy.ma.masked_array(numpy.arange(10), mask=([False] * 9 + [True]))}
+        data_dict = {'i': numpy.ma.masked_array(numpy.arange(10).astype(numpy.int32), mask=([False] * 9 + [True]))}
         monetdbe_cursor.execute("CREATE TABLE masked_array_insertion (i INT)")
         monetdbe_cursor.insert("masked_array_insertion", data_dict)
         monetdbe_cursor.commit()
