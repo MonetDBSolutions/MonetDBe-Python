@@ -462,7 +462,6 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         clean()
         try:
-            print('bla')
             con = monetdbe.connect(str(path))
             x = con.execute('select * from sys.tables').fetchall()
             con.close()
