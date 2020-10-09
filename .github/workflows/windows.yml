@@ -40,7 +40,7 @@ jobs:
           unzip.exe ${{ env.branch }}.zip
 
       -
-        name: Compile monetdb
+        name: Compile and install MonetDB
         # TODO: why can't we use $Env:VCPKG_ROOT in cmake argument?
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
@@ -57,13 +57,7 @@ jobs:
             -DODBC=false `
             -DPY3INTEGRATION=OFF `
             -DINT128=OFF  ..
-      -
-        name: Build MonetDB
-        run: |
           cmake --build . --target ALL_BUILD --parallel 4  --config Release
-      -
-        name: Install MonetDB
-        run: |
           cmake --build . --target INSTALL  --config Release
       -
         name: Collect DLLs
