@@ -334,7 +334,7 @@ class Cursor:
                 column_type = 'REAL'
             elif arr.dtype == np.float64:
                 column_type = 'DOUBLE'
-            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_):
+            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_) or np.issubdtype(arr.dtype, np.object_):
                 column_type = 'STRING'
             else:
                 raise Exception('Unsupported dtype: %s' % (str(arr.dtype)))
@@ -353,7 +353,8 @@ class Cursor:
         return self
 
     def _insert_slow(self, table: str, data: Dict[str, np.ndarray], schema: str = 'sys'):
-        column_names, rows = zip(*data.items())
+        column_names = data.keys()
+        rows = data.values()
         columns = ", ".join([str(i) for i in column_names])
         rows_zipped = list(zip(*rows))
         qmarks = ", ".join(['?'] * len(column_names))
@@ -379,7 +380,8 @@ class Cursor:
                 prepared[key] = np.array(value)
 
         if sum(i.dtype.kind not in 'if' for i in prepared.values()):
-            warn("One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
+            warn(
+                "One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
             return self._insert_slow(table, prepared, schema)
         else:
             return self.connection.lowlevel.append(schema=schema, table=table, data=prepared)
@@ -427,3 +429,10 @@ class Cursor:
         We dont support scrolling, since the full result is available.
         """
         raise NotImplementedError
+
+    def read_csv(self, table, *args, **kwargs):
+        values = pd.read_csv(*args, **kwargs)
+        return self.create(table=table, values=values)
+
+    def write_csv(self, table, *args, **kwargs):
+        return self.execute(f"select * from {table}").fetchdf().to_csv(*args, **kwargs)

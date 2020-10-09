@@ -55,3 +55,4 @@ class TestDataFrame(TestCase):
         values = ['6c49869d-45dc-4b00-ae55-5bd363c0c72c', '2ad49a96-ba10-11ea-b3de-0242ac130004']
         df = _connect(values, 'uuid')
         self.assertEqual(values, list(df['d']))
+

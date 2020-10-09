@@ -232,6 +232,14 @@ class Connection:
         self._check()
         return self.lowlevel.set_autocommit(value)  # type: ignore
 
+    def read_csv(self, table, *args, **kwargs):
+        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
+        cur = Cursor(con=self).read_csv(table, *args, **kwargs)
+
+    def write_csv(self, table, *args, **kwargs):
+        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
+        cur = Cursor(con=self).write_csv(table, *args, **kwargs)
+
     # these are required by the python DBAPI
     Warning = exceptions.Warning
     Error = exceptions.Error
