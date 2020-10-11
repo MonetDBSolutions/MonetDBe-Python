@@ -49,22 +49,22 @@ The following functionality is not supported by MonetDB/e or contains syntax/sem
 - `FTS5 <https://www.sqlite.org/fts5.html>`_ not supported.
 - `Rtree <https://www.sqlite.org/rtree.html>`_ not supported.
 
-..comments Porting DuckDB programs
-..comments -----------------------
+.. Porting DuckDB programs
+.. -----------------------
 
-..comments `DuckDB <https://www.duckdb.org>`_ is an embedded analytical data management system researched
-..comments at the `Database Architectures group of CWI <https://www.cwi.nl/research/groups/database-architectures>`_.
-..comments Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
+.. `DuckDB <https://www.duckdb.org>`_ is an embedded analytical data management system researched
+.. at the `Database Architectures group of CWI <https://www.cwi.nl/research/groups/database-architectures>`_.
+.. Migration starts with replacing all occurrences of 'duckdb' with 'monetdbe'.
 
-..comments The following functionality is not supported by MonetDB/e or contains syntax/semantic differences (July 2020).
+.. The following functionality is not supported by MonetDB/e or contains syntax/semantic differences (July 2020).
 
-..comments - `COPY into statement <https://duckdb.org/docs/data/csv>`_ uses a different delimiter structure.
-..comments - `Appender function <https://duckdb.org/docs/data/appender>`_ currently only in C-version.
-..comments - `Loading parquet files <https://duckdb.org/docs/data/parquet>`_.
-..comments - `R embedding using DBI <https://duckdb.org/docs/api/r>`_.
-..comments - `JDBC connector <https://duckdb.org/docs/api/java>`_.
-..comments - `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_ no optimizer hooks needed.
-..comments - `Pandas registration as SQL view <https://duckdb.org/docs/api/python>`_.
+.. - `COPY into statement <https://duckdb.org/docs/data/csv>`_ uses a different delimiter structure.
+.. - `Appender function <https://duckdb.org/docs/data/appender>`_ currently only in C-version.
+.. - `Loading parquet files <https://duckdb.org/docs/data/parquet>`_.
+.. - `R embedding using DBI <https://duckdb.org/docs/api/r>`_.
+.. - `JDBC connector <https://duckdb.org/docs/api/java>`_.
+.. - `PRAGMA <https://duckdb.org/docs/sql/pragmas>`_ no optimizer hooks needed.
+.. - `Pandas registration as SQL view <https://duckdb.org/docs/api/python>`_.
 
 Reporting issues
 ----------------
