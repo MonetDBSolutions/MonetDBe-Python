@@ -31,7 +31,7 @@ from source. Make sure you compile with the rights flags, for example have INT12
 
 .. code-block::
 
-    $ hg clone hg://dev.monetdb.org/hg/MonetDB
+    $ hg clone https://dev.monetdb.org/hg/MonetDB
     $ cd MonetDB
     $ mkdir build
     $ cd build
@@ -56,10 +56,10 @@ variables to have pip find MonetDB:
 
 .. code-block::
 
-    $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib/monetdb" pip install .
+    $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib" pip install .
 
 If you set the library CFLAGS at compile time you probably also need to set the `LD_LIBRARY_PATH` runtime:
 
 .. code-block::
 
-    $ LD_LIBRARY_PATH=-L<monetdb_prefix>/lib/monetdb
+    $ LD_LIBRARY_PATH=<monetdb_prefix>/lib
