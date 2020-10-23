@@ -45,8 +45,8 @@ jobs:
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
-          dir $Env:VCPKG_ROOT\scripts\buildsystems
           dir $Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
+          dir $GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake
           cmake -G "Visual Studio 16 2019" `
             -A x64 `
             -DCMAKE_TOOLCHAIN_FILE=D:\a\MonetDBe-Python\MonetDBe-Python\vcpkg\scripts\buildsystems\vcpkg.cmake `
@@ -63,23 +63,22 @@ jobs:
         name: Collect DLLs
         run: |
           Set-Location $GITHUB_WORKSPACE
-          $VCPKG_ROOT = "c:\build\vcpkg"
           Copy-Item C:\monetdb\bin\bat.dll monetdbe\.
           Copy-Item C:\monetdb\bin\mapi.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdb5.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdbe.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdbsql.dll monetdbe\.
           Copy-Item C:\monetdb\bin\stream.dll monetdbe\.
-          ls $VCPKG_ROOT\installed\x64-windows\bin\*.dll
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\lzma.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcharset.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\bz2.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
+          ls $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\*.dll
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\libiconv.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\libxml2.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\pcre.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\zlib1.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\lzma.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\libcharset.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\bz2.dll monetdbe\.
+          Copy-Item $GITHUB_WORKSPACE\vcpkg\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
         name: Build binary python stuff
         run: |
