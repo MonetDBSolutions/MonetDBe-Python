@@ -21,13 +21,11 @@ setup: venv/installed
 test: setup
 	venv/bin/pytest
 
-
-docker-wheels: # venv/
-#venv/bin/python setup.py sdist
+docker-wheels:
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.6"
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.7"
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.8"
-	
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.9"
 
 docker-test:
 	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/test.sh"
