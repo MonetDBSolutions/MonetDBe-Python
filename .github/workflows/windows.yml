@@ -81,10 +81,12 @@ jobs:
       -
         name: Upgrade pip and wheel for all pythons
         run: |
-          C:\Python36\python.exe -m pip install --upgrade pip wheel
-          C:\Python37\python.exe -m pip install --upgrade pip wheel
-          C:\Python38\python.exe -m pip install --upgrade pip wheel
-          C:\Python39\python.exe -m pip install --upgrade pip wheel
+          ls c:\
+          ls c:\Python36
+          & C:\Python36\python.exe -m pip install --upgrade pip wheel
+          & C:\Python37\python.exe -m pip install --upgrade pip wheel
+          & C:\Python38\python.exe -m pip install --upgrade pip wheel
+          & C:\Python39\python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
         run: |
