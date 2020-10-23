@@ -30,7 +30,7 @@ jobs:
         with:
           vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
           vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: df9c8e260e66713dcf768630cd434caf2c29bbff
+          vcpkgGitCommitId: 70f380e802852fc09c929dead9d8b8659d394181
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
@@ -70,6 +70,7 @@ jobs:
           Copy-Item C:\monetdb\bin\monetdbe.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdbsql.dll monetdbe\.
           Copy-Item C:\monetdb\bin\stream.dll monetdbe\.
+          ls $VCPKG_ROOT\installed\x64-windows\bin\*.dll
           Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
           Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
           Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
