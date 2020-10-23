@@ -28,7 +28,7 @@ jobs:
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3
         with:
-          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
+          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
           vcpkgTriplet: x64-windows
           vcpkgGitCommitId: 70f380e802852fc09c929dead9d8b8659d394181
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
@@ -41,15 +41,12 @@ jobs:
 
       -
         name: Compile and install MonetDB
-        # TODO: why can't we use $Env:VCPKG_ROOT in cmake argument?
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
-          dir $Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
-          dir $Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
           cmake -G "Visual Studio 16 2019" `
             -A x64 `
-            -DCMAKE_TOOLCHAIN_FILE=D:\a\MonetDBe-Python\MonetDBe-Python\vcpkg\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_TOOLCHAIN_FILE=$Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=C:\monetdb `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
@@ -80,21 +77,34 @@ jobs:
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\bz2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
-        name: Build binary python stuff
+        name: Upgrade pip and wheel for all pythons
         run: |
+          C:\Python36\python.exe -m pip install --upgrade pip wheel
+          C:\Python37\python.exe -m pip install --upgrade pip wheel
           C:\Python38\python.exe -m pip install --upgrade pip wheel
-          C:\Python38\python.exe setup.py build_ext `
-            --include-dirs=C:\monetdb\include `
-            --library-dirs=C:\monetdb\lib
+          C:\Python39\python.exe -m pip install --upgrade pip wheel
+      -
+        name: Build binary python extension
+        run: |
+          C:\Python36\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+          C:\Python37\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+          C:\Python38\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+          C:\Python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
         run: |
+          C:\Python36\python.exe -m pip install .[test]
+          C:\Python37\python.exe -m pip install .[test]
           C:\Python38\python.exe -m pip install .[test]
+          C:\Python39\python.exe -m pip install .[test]
 # C:\Python38\Scripts\pytest.exe
       -
         name: Make wheel
         run: |
+          C:\Python36\python.exe setup.py bdist_wheel
+          C:\Python37\python.exe setup.py bdist_wheel
           C:\Python38\python.exe setup.py bdist_wheel
+          C:\Python39\python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
