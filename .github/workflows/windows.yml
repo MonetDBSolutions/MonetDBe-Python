@@ -83,21 +83,24 @@ jobs:
         run: |
           ls c:\
           ls c:\Python36
-          & C:\Python36\python.exe -m pip install --upgrade pip wheel
+          ls c:\Python37
+          ls c:\Python38
+          ls c:\Python39
+#         & C:\Python36\python.exe -m pip install --upgrade pip wheel
           & C:\Python37\python.exe -m pip install --upgrade pip wheel
           & C:\Python38\python.exe -m pip install --upgrade pip wheel
           & C:\Python39\python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
         run: |
-          C:\Python36\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+#          C:\Python36\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
           C:\Python37\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
           C:\Python38\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
           C:\Python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
         run: |
-          C:\Python36\python.exe -m pip install .[test]
+#          C:\Python36\python.exe -m pip install .[test]
           C:\Python37\python.exe -m pip install .[test]
           C:\Python38\python.exe -m pip install .[test]
           C:\Python39\python.exe -m pip install .[test]
@@ -105,7 +108,7 @@ jobs:
       -
         name: Make wheel
         run: |
-          C:\Python36\python.exe setup.py bdist_wheel
+#          C:\Python36\python.exe setup.py bdist_wheel
           C:\Python37\python.exe setup.py bdist_wheel
           C:\Python38\python.exe setup.py bdist_wheel
           C:\Python39\python.exe setup.py bdist_wheel
