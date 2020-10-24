@@ -7,7 +7,7 @@ set -v
 brew install cmake bison openssl pyenv readline bzip2
 
 # some settings and variables
-PYTHONS=(3.6.11 3.7.8 3.8.5 3.9.0b5)
+PYTHONS=(3.6.11 3.7.8 3.8.5 3.9.0)
 BRANCH=Oct2020
 
 # no lets set some derivative variables

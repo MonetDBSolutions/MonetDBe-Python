@@ -19,18 +19,18 @@ jobs:
       -
         name: Install choco packages
         run: |
-          choco install winflexbison git unzip curl
-          choco install python --version 3.9.0 --force
-          choco install python --version 3.8.5 --force
-          choco install python --version 3.7.9 --force
-          choco install python --version 3.6.8 --force
+          choco install winflexbison git unzip curl python
+#          choco install python --version 3.9.0 --force
+#          choco install python --version 3.8.5 --force
+#          choco install python --version 3.7.9 --force
+#          choco install python --version 3.6.8 --force
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3
         with:
-          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt
+          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
           vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: df9c8e260e66713dcf768630cd434caf2c29bbff
+          vcpkgGitCommitId: 70f380e802852fc09c929dead9d8b8659d394181
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
@@ -41,7 +41,6 @@ jobs:
 
       -
         name: Compile and install MonetDB
-        # TODO: why can't we use $Env:VCPKG_ROOT in cmake argument?
         run: |
           mkdir c:\MonetDB-${{ env.branch }}\build
           Set-Location c:\MonetDB-${{ env.branch }}\build
@@ -63,38 +62,42 @@ jobs:
         name: Collect DLLs
         run: |
           Set-Location $GITHUB_WORKSPACE
-          $VCPKG_ROOT = "c:\build\vcpkg"
           Copy-Item C:\monetdb\bin\bat.dll monetdbe\.
           Copy-Item C:\monetdb\bin\mapi.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdb5.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdbe.dll monetdbe\.
           Copy-Item C:\monetdb\bin\monetdbsql.dll monetdbe\.
           Copy-Item C:\monetdb\bin\stream.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\lzma.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcharset.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\bz2.dll monetdbe\.
-          Copy-Item $VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
+          ls $Env:VCPKG_ROOT\installed\x64-windows\bin\*.dll
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\lzma.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcharset.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\bz2.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
-        name: Build binary python stuff
+        name: Upgrade pip and wheel for all pythons
         run: |
-          C:\Python38\python.exe -m pip install --upgrade pip wheel
-          C:\Python38\python.exe setup.py build_ext `
-            --include-dirs=C:\monetdb\include `
-            --library-dirs=C:\monetdb\lib
+          C:\Python39\python.exe -m pip install --upgrade pip wheel
+      -
+        name: Build binary python extension
+        run: |
+          C:\Python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
         run: |
-          C:\Python38\python.exe -m pip install .[test]
-# C:\Python38\Scripts\pytest.exe
+          C:\Python39\python.exe -m pip install .[test]
+#      -
+#        name: Run tests
+#        run: |
+#          C:\Python39\Scripts\pytest.exe
       -
         name: Make wheel
         run: |
-          C:\Python38\python.exe setup.py bdist_wheel
+          C:\Python39\python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
