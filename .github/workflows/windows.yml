@@ -19,11 +19,11 @@ jobs:
       -
         name: Install choco packages
         run: |
-          choco install winflexbison git unzip curl
-          choco install python --version 3.9.0 --force
-          choco install python --version 3.8.5 --force
-          choco install python --version 3.7.9 --force
-          choco install python --version 3.6.8 --force
+          choco install winflexbison git unzip curl python
+#          choco install python --version 3.9.0 --force
+#          choco install python --version 3.8.5 --force
+#          choco install python --version 3.7.9 --force
+#          choco install python --version 3.6.8 --force
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v3
@@ -81,32 +81,22 @@ jobs:
       -
         name: Upgrade pip and wheel for all pythons
         run: |
-          ls c:\
-          ls c:\Python36
-          ls c:\Python37
-          ls c:\Python38
-          ls c:\Python39
-          & C:\Python37\python.exe -m pip install --upgrade pip wheel
-          & C:\Python38\python.exe -m pip install --upgrade pip wheel
-          & C:\Python39\python.exe -m pip install --upgrade pip wheel
+          C:\Python39\python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
         run: |
-          C:\Python37\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
-          C:\Python38\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
           C:\Python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
         run: |
-          C:\Python37\python.exe -m pip install .[test]
-          C:\Python38\python.exe -m pip install .[test]
           C:\Python39\python.exe -m pip install .[test]
-# C:\Python38\Scripts\pytest.exe
+      -
+        name: Run tests
+        run: |
+          C:\Python38\Scripts\pytest.exe
       -
         name: Make wheel
         run: |
-          C:\Python37\python.exe setup.py bdist_wheel
-          C:\Python38\python.exe setup.py bdist_wheel
           C:\Python39\python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
