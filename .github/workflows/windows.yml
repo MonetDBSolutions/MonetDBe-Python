@@ -90,10 +90,10 @@ jobs:
         name: Install python libraries
         run: |
           C:\Python39\python.exe -m pip install .[test]
-      -
-        name: Run tests
-        run: |
-          C:\Python38\Scripts\pytest.exe
+#      -
+#        name: Run tests
+#        run: |
+#          C:\Python39\Scripts\pytest.exe
       -
         name: Make wheel
         run: |
