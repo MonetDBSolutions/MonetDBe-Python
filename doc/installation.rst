@@ -10,7 +10,7 @@ are supported.
 
 You need:
 
- * Linux or OSX 10.13+
+ * Linux or OSX 10.13+ or Windows
  * pip >= 19.3
  * Python >= 3.6
 
