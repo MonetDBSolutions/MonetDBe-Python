@@ -231,16 +231,16 @@ class Frontend:
             work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
 
-    def prepare(self, query):
-        # todo (gijs): use :)
+    def prepare(self, query: str):
         stmt = ffi.new("monetdbe_statement **")
-        lib.monetdbe_prepare(self._connection, query.encode(), stmt)
+        check_error(lib.monetdbe_prepare(self._connection, query.encode(), stmt))
         return stmt[0]
 
-    def bind(self, statement, data, parameter_nr):
+    def bind(self, statement, data, parameter_nr: int):
         ...
         # todo (gijs): use :)
         #     extern char* monetdbe_bind(monetdbe_statement *stmt, void *data, size_t parameter_nr);
+        lib.monetdbe_bind(statement, data, parameter_nrr)
 
     def execute(self, statement):
         ...
