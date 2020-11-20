@@ -10,7 +10,7 @@ from monetdbe.connection import Connection
 
 from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
-from monetdbe.monetize import monet_identifier_escape
+from monetdbe.monetize import monet_identifier_escape, convert
 from monetdbe._cffi.internal import result_fetch, result_fetch_numpy, bind, execute
 
 if TYPE_CHECKING:
@@ -175,7 +175,7 @@ class Cursor:
 
         statement = self.connection._internal.prepare(operation)  # type: ignore[union-attr]
         for index, parameter in enumerate(parameters):
-            bind(statement, parameter, index)
+            bind(statement, convert(parameter), index)
         self.result, self.rowcount = execute(statement, make_result=True)
         self.connection._internal.cleanup_statement(statement)  # type: ignore[union-attr]
         self.connection.total_changes += self.rowcount

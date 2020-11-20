@@ -80,24 +80,19 @@ jobs:
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
         name: Upgrade pip and wheel for all pythons
-        run: |
-          C:\Python39\python.exe -m pip install --upgrade pip wheel
+        run: python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
-        run: |
-          C:\Python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+        run: python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
-        run: |
-          C:\Python39\python.exe -m pip install .[test]
-#      -
-#        name: Run tests
-#        run: |
-#          C:\Python39\Scripts\pytest.exe
+        run: python.exe -m pip install .[test]
+      -
+        name: Run tests
+        run: pytest.exe
       -
         name: Make wheel
-        run: |
-          C:\Python39\python.exe setup.py bdist_wheel
+        run: python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
