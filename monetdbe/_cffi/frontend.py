@@ -9,7 +9,7 @@ from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
 from monetdbe._cffi.errors import check_error
-from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column
+from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
 _logger = logging.getLogger(__name__)
 
@@ -157,7 +157,7 @@ class Frontend:
     @staticmethod
     def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ma.MaskedArray]:
 
-        result = {}
+        result_dict = {}
         for c in range(result.ncols):
             rcol = Frontend.result_fetch(result, c)
             name = make_string(rcol.name)
@@ -186,8 +186,8 @@ class Frontend:
 
             masked = np.ma.masked_array(np_col, mask=mask)
 
-            result[name] = masked
-        return result
+            result_dict[name] = masked
+        return result_dict
 
     def set_autocommit(self, value: bool) -> None:
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
@@ -237,21 +237,29 @@ class Frontend:
         check_error(lib.monetdbe_prepare(self._connection, query.encode(), stmt))
         return stmt[0]
 
-    def bind(self, statement, data, parameter_nr: int):
-        ...
-        # todo (gijs): use :)
-        #     extern char* monetdbe_bind(monetdbe_statement *stmt, void *data, size_t parameter_nr);
-        lib.monetdbe_bind(statement, data, parameter_nrr)
+    @staticmethod
+    def bind(statement: monetdbe_statement, data, parameter_nr: int):
+        check_error(lib.monetdbe_bind(statement, str(data).encode(), parameter_nr))
 
-    def execute(self, statement):
-        ...
-        # todo (gijs): use :)
-        # extern char* monetdbe_execute(monetdbe_statement *stmt, monetdbe_result **result, monetdbe_cnt* affected_rows);
+    @staticmethod
+    def execute(statement: monetdbe_statement, make_result: bool = False):
+        if make_result:
+            p_result = ffi.new("monetdbe_result **")
+        else:
+            p_result = ffi.NULL
 
-    def cleanup_statement(self, statement):
-        ...
-        # todo (gijs): use :)
-        # extern char* monetdbe_cleanup_statement(monetdbe_database dbhdl, monetdbe_statement *stmt);
+        affected_rows = ffi.new("monetdbe_cnt *")
+        check_error(lib.monetdbe_execute(statement, p_result, affected_rows))
+
+        if make_result:
+            result = p_result[0]
+        else:
+            result = None
+
+        return result, affected_rows[0]
+
+    def cleanup_statement(self, statement: monetdbe_statement):
+        lib.monetdbe_cleanup_statement(self._connection, statement)
 
     def dump_database(self, backupfile: Path):
         # todo (gijs): use :)
