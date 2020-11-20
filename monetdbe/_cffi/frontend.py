@@ -9,6 +9,7 @@ from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
 from monetdbe._cffi.errors import check_error
+from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column
 
 _logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ _logger = logging.getLogger(__name__)
 class Frontend:
     _active_context: Optional['Frontend'] = None
     in_memory_active: bool = False
-    _connection: Optional[ffi.CData] = None
+    _connection: Optional[monetdbe_database] = None
 
     def __init__(
             self,
@@ -44,7 +45,7 @@ class Frontend:
         cls.in_memory_active = value
 
     @classmethod
-    def set_connection(cls, connection: Optional[ffi.CData]):
+    def set_connection(cls, connection: Optional[monetdbe_database]):
         cls._connection = connection
 
     def __del__(self):
@@ -68,7 +69,7 @@ class Frontend:
         if not self.dbdir:
             self.set_in_memory_active(True)
 
-    def cleanup_result(self, result: ffi.CData):
+    def cleanup_result(self, result: monetdbe_result):
         _logger.info("cleanup_result called")
         if result and self._connection:
             check_error(lib.monetdbe_cleanup_result(self._connection, result))
@@ -148,23 +149,23 @@ class Frontend:
         return result, affected_rows[0]
 
     @staticmethod
-    def result_fetch(result: ffi.CData, column: int) -> ffi.CData:
+    def result_fetch(result: monetdbe_result, column: int) -> monetdbe_column:
         p_rcol = ffi.new("monetdbe_column **")
         check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
         return p_rcol[0]
 
     @staticmethod
-    def result_fetch_numpy(monetdbe_result: ffi.CData) -> Mapping[str, np.ma.MaskedArray]:
+    def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ma.MaskedArray]:
 
         result = {}
-        for c in range(monetdbe_result.ncols):
-            rcol = Frontend.result_fetch(monetdbe_result, c)
+        for c in range(result.ncols):
+            rcol = Frontend.result_fetch(result, c)
             name = make_string(rcol.name)
             cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
 
             # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
             if numpy_type.type == np.object_:
-                np_col: np.ndarray = np.array([extract(rcol, r) for r in range(monetdbe_result.nrows)])
+                np_col: np.ndarray = np.array([extract(rcol, r) for r in range(result.nrows)])
                 if rcol.type == lib.monetdbe_str:
                     np_col = np_col.astype(str)
                 elif rcol.type == lib.monetdbe_date:
@@ -174,7 +175,7 @@ class Frontend:
                 elif rcol.type == lib.monetdbe_timestamp:
                     np_col = np_col.astype('datetime64[ns]')  # type: ignore
             else:
-                buffer_size = monetdbe_result.nrows * numpy_type.itemsize  # type: ignore
+                buffer_size = result.nrows * numpy_type.itemsize  # type: ignore
                 c_buffer = ffi.buffer(rcol.data, buffer_size)
                 np_col = np.frombuffer(c_buffer, dtype=numpy_type)  # type: ignore
 

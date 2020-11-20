@@ -2,27 +2,28 @@ from typing import List, Tuple, Optional, Callable, Union, Any
 
 import numpy as np
 from monetdbe._lowlevel import lib, ffi
+from monetdbe._cffi.types import monetdbe_column, char_p
 
 from monetdbe.converters import converters
 from monetdbe.exceptions import ProgrammingError
 from monetdbe.pythonize import py_date, py_time, py_timestamp
 
 
-def make_string(blob: ffi.CData) -> str:
+def make_string(blob: char_p) -> str:
     if blob:
         return ffi.string(blob).decode()
     else:
         return ""
 
 
-def make_blob(blob: ffi.CData) -> str:
+def make_blob(blob: char_p) -> str:
     if blob:
         return ffi.string(blob.data[0:blob.size])
     else:
         return ""
 
 
-def py_float(data: ffi.CData) -> float:
+def py_float(data: char_p) -> float:
     """
     Convert a monetdb FFI float to a python float
     """
@@ -61,7 +62,7 @@ def numpy_monetdb_map(numpy_type: np.dtype):
     raise ProgrammingError("append() only support int and float family types")
 
 
-def extract(rcol: ffi.CData, r: int, text_factory: Optional[Callable[[str], Any]] = None):
+def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str], Any]] = None):
     """
     Extracts values from a monetdbe_column.
 

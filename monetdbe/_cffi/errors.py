@@ -2,6 +2,7 @@ import logging
 from re import compile, DOTALL
 
 from monetdbe._lowlevel import ffi
+from monetdbe._cffi.types import char_p
 
 from monetdbe import exceptions
 
@@ -20,7 +21,7 @@ errors = {
 }
 
 
-def check_error(msg: 'ffi.CData') -> None:
+def check_error(msg: char_p) -> None:
     """
     Raises:
          exceptions.Error: or subclass in case of error, which exception depends on the error type.
