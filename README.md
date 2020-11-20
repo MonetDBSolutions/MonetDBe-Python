@@ -2,6 +2,8 @@
 
 MonetDBe-Python - the serverless Python embedded MonetDB
 
+![alt text](monetdbe-python.png)
+
 Want to store and search a massive amount of numbers? You don't want to run a database service? Is SQLite too slow for what you want to do? Search no further! MonetDBe-Python is here. Just pip install the binary wheel on your Windows, Linux or OS X system and you are ready to go, no compilation needed.
 
 MonetDBe-Python internally relies on a serverless and trimmed-down version of the blazingly fast MonetDB, the open-source column-store database.
@@ -10,28 +12,24 @@ The documentation can be found at: https://monetdbe.readthedocs.io/
 
 The source code can be found at: https://github.com/monetdBSolutions/MonetDBe-Python/
 
-# requirements
-
-For a binary wheel installation you need:
-
- * An up-to-date Linux, OSX or Windows
- * pip >= 19.3
- * Python >= 3.6
-
-For a non-binary wheel installation you need to have
-MonetDB installed, see the source installation section below.
-
 
 # install
 
-You can install monetdbe from pypi using:
+you need:
+
+ * An up-to-date Linux, OSX or Windows
+ * pip `>= 19.3`
+ * Python `>= 3.6`
+
+to make sure you have a recent pip first upgrade pip:
 ```
-$ pip install --upgrade pip   # yes you need a recent pip
-$ pip install monetdbe
+$ pip install --upgrade pip
 ```
 
-On supported platforms, this will download and install the Binary wheel,
-otherwise a source compile is started. 
+now you can install MonetDBe-Python with:
+```
+$ pip install monetdbe
+```
 
 
 # usage
