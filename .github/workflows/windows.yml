@@ -69,7 +69,7 @@ jobs:
           Copy-Item C:\monetdb\bin\stream.dll monetdbe\.
           ls $Env:VCPKG_ROOT\installed\x64-windows\bin\*.dll
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
-          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\iconv-2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
