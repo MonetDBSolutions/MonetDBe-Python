@@ -22,23 +22,21 @@ jobs:
       - name: Install Python version
         run:  |
           pyenv install -s ${{ matrix.python-version }}
-          eval "$(pyenv init -)"
-          pyenv shell ${{ matrix.python-version }}
 
       - name: Install Python dependencies
-        run: pip install --upgrade pip wheel delocate pytest
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/pip install --upgrade pip wheel delocate pytest
 
       - name: Compile and install MonetDBe-python
-        run: CFLAGS="-I/usr/local/include -L/usr/local/lib" pip install -e ".[test]"
+        run: CFLAGS="-I/usr/local/include -L/usr/local/lib" ~/.pyenv/versions/${{ matrix.python-version }}/bin/pip install -e ".[test]"
 
       - name: Run pytest
-        run: pytest
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/pytest
 
       - name: make binary wheel
-        run: python setup.py bdist_wheel
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/python setup.py bdist_wheel
 
       - name: Delocate binary wheel
-        run: delocate-wheel -v dist/*.whl
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/delocate-wheel -v dist/*.whl
 
       - name: Publish OS X binary wheels
         uses: actions/upload-artifact@v2
