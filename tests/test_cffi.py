@@ -8,7 +8,7 @@ from monetdbe.exceptions import ProgrammingError
 class TestCffi(unittest.TestCase):
     def test_cffi(self):
         # if this tests fails you probably compiled monetdb with 128 bit support
-        self.assertEqual(lib.monetdbe_type_unknown, 13)
+        self.assertEqual(lib.monetdbe_type_unknown, 14)
 
     def test_append_too_many_columns(self):
         con = connect()

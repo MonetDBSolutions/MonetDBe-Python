@@ -26,11 +26,10 @@ jobs:
 #          choco install python --version 3.6.8 --force
       -
         name: Install vcpkg packages
-        uses: lukka/run-vcpkg@v3
+        uses: lukka/run-vcpkg@v5
         with:
-          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
-          vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: 70f380e802852fc09c929dead9d8b8659d394181
+          vcpkgArguments: --triplet x64-windows libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
+          vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
@@ -55,7 +54,7 @@ jobs:
             -DASSERT=OFF `
             -DODBC=false `
             -DPY3INTEGRATION=OFF `
-            -DINT128=OFF  ..
+            ..
           cmake --build . --target ALL_BUILD --parallel 4  --config Release
           cmake --build . --target INSTALL  --config Release
       -
@@ -70,34 +69,29 @@ jobs:
           Copy-Item C:\monetdb\bin\stream.dll monetdbe\.
           ls $Env:VCPKG_ROOT\installed\x64-windows\bin\*.dll
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcrypto-1_1-x64.dll monetdbe\.
-          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libiconv.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\iconv-2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libxml2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\lzma.dll monetdbe\.
-          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcharset.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\charset-1.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\bz2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
         name: Upgrade pip and wheel for all pythons
-        run: |
-          C:\Python39\python.exe -m pip install --upgrade pip wheel
+        run: python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
-        run: |
-          C:\Python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+        run: python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
-        run: |
-          C:\Python39\python.exe -m pip install .[test]
-#      -
-#        name: Run tests
-#        run: |
-#          C:\Python39\Scripts\pytest.exe
+        run: python.exe -m pip install .[test]
+      -
+        name: Run tests
+        run: pytest.exe
       -
         name: Make wheel
-        run: |
-          C:\Python39\python.exe setup.py bdist_wheel
+        run: python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
