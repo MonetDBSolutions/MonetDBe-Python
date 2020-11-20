@@ -74,7 +74,7 @@ class Frontend:
         if result and self._connection:
             check_error(lib.monetdbe_cleanup_result(self._connection, result))
 
-    def open(self):
+    def open(self) -> monetdbe_database:
 
         if not self.dbdir:
             url = ffi.NULL
@@ -232,17 +232,17 @@ class Frontend:
             work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
 
-    def prepare(self, query: str):
+    def prepare(self, query: str) -> monetdbe_statement:
         stmt = ffi.new("monetdbe_statement **")
         check_error(lib.monetdbe_prepare(self._connection, query.encode(), stmt))
         return stmt[0]
 
     @staticmethod
-    def bind(statement: monetdbe_statement, data, parameter_nr: int):
+    def bind(statement: monetdbe_statement, data, parameter_nr: int) -> None:
         check_error(lib.monetdbe_bind(statement, str(data).encode(), parameter_nr))
 
     @staticmethod
-    def execute(statement: monetdbe_statement, make_result: bool = False):
+    def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[monetdbe_result, int]:
         if make_result:
             p_result = ffi.new("monetdbe_result **")
         else:
@@ -258,7 +258,7 @@ class Frontend:
 
         return result, affected_rows[0]
 
-    def cleanup_statement(self, statement: monetdbe_statement):
+    def cleanup_statement(self, statement: monetdbe_statement) -> None:
         lib.monetdbe_cleanup_statement(self._connection, statement)
 
     def dump_database(self, backupfile: Path):

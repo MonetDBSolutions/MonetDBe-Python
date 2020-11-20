@@ -37,6 +37,11 @@ class Cursor:
         self.description: Optional[Description] = None
         self.row_factory = None
 
+    def __del__(self):
+        if self.result:
+            self.connection.lowlevel.cleanup_result(self.result)
+            self.result = None
+
     def _set_description(self):
         if not self.result:
             return
@@ -44,7 +49,8 @@ class Cursor:
         self._columns = list(
             map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
 
-        # we import this late, otherwise the whole monetdbe project is unimportable if we don't have access to monetdbe.so
+        # we import this late, otherwise the whole monetdbe project is unimportable
+        # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import make_string, monet_numpy_map
 
         name = (make_string(rcol.name) for rcol in self._columns)
@@ -60,7 +66,8 @@ class Cursor:
         self.description = [Description(*i) for i in descriptions]
 
     def __iter__(self):
-        # we import this late, otherwise the whole monetdbe project is unimportable if we don't have access to monetdbe.so
+        # we import this late, otherwise the whole monetdbe project is unimportable
+        # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import extract
 
         columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
@@ -146,6 +153,15 @@ class Cursor:
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
+
+    def execute_qmark(self, operation: str, parameters: Optional[Iterable] = None) -> 'Cursor':
+        statement = self.connection.lowlevel.prepare(operation)
+        for index, parameter in enumerate(parameters):
+            self.connection.lowlevel.bind(statement, parameter, index)
+        self.result, self.rowcount = self.connection.lowlevel.execute(statement, make_result=True)
+        self.connection.lowlevel.cleanup_statement(statement)
+        self.connection.total_changes += self.rowcount
+        self._set_description()
 
     def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
         """
@@ -272,8 +288,7 @@ class Cursor:
         if not self._fetch_generator:
             self._fetch_generator = self.__iter__()
         try:
-            # todo (gijs): type
-            return next(self._fetch_generator)  # type: ignore
+            return next(self._fetch_generator)
         except StopIteration:
             return None
 

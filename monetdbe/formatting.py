@@ -59,9 +59,8 @@ class DefaultFormatter(Formatter):
             return s
 
 
-# todo (gijs): check typing
-def format_query(query: str,  # type: ignore
-                 parameters: Optional[Union[Iterable[str], Dict[str, Any], Sized]] = None) -> str:  # type: ignore
+def format_query(query: str,
+                 parameters: Optional[Union[Iterable[str], Dict[str, Any], Sized]] = None) -> str:
     if type(query) != str:
         raise TypeError
 
@@ -75,18 +74,18 @@ def format_query(query: str,  # type: ignore
             if '?' in cleaned_query:
                 raise ProgrammingError("'?' in formatting with mapping as parameters")
 
-            escaped: Dict[str, str] = {k: convert(v) for k, v in parameters.items()}  # type: ignore
+            escaped: Dict[str, str] = {k: convert(v) for k, v in parameters.items()}
 
             if ':' in cleaned_query:  # qmark
                 x = sub(r':(\w+)', r'{\1}', query)
-            elif '%' in cleaned_query:  # pyformat
+            elif '%' in cleaned_query:
                 return query % escaped
 
             if hasattr(type(parameters), '__missing__'):
                 # this is something like a dict with a default value
                 try:
                     # mypy doesn't understand that this is a dict-like with a default __missing__ value
-                    return DefaultFormatter(parameters).format(x, **escaped)  # type: ignore
+                    return DefaultFormatter(parameters).format(x, **escaped)
                 except KeyError as e:
                     raise ProgrammingError(e)
             try:
@@ -98,21 +97,18 @@ def format_query(query: str,  # type: ignore
         elif hasattr(type(parameters), '__iter__') \
                 or (hasattr(type(parameters), '__len__') and hasattr(type(parameters), '__getitem__')):
 
-            # todo (gijs): check typing
             # we do this a bit strange to make sure the test_ExecuteParamSequence sqlite test passes
-            escaped_list: List[Optional[str]] = [convert(parameters[i]) for i in range(len(parameters))]  # type: ignore
+            escaped_list: List[Optional[str]] = [convert(parameters[i]) for i in range(len(parameters))]
 
             if ':' in cleaned_query:
-                # raise ProgrammingError("':' in formatting with named style parameters")
                 x = sub(r':(\w+)', r'{\1}', query)
 
                 # off by one error
-                # todo (gijs): check typing
-                prefixed = [None] + escaped_list  # type: ignore
+                prefixed = [None] + escaped_list
 
                 return x.format(*prefixed)
 
-            if '?' in cleaned_query:  # named style
+            if '?' in cleaned_query:  # qmark style
 
                 if cleaned_query.count('?') != len(escaped_list):
                     raise ProgrammingError(f"Number of arguments ({len(escaped_list)}) doesn't "
