@@ -1,7 +1,7 @@
 import logging
 from _warnings import warn
 from pathlib import Path
-from typing import Optional, Tuple, Any, Mapping, Iterator
+from typing import Optional, Tuple, Any, Mapping, Iterator, Dict
 
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
@@ -14,8 +14,75 @@ from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_co
 _logger = logging.getLogger(__name__)
 
 
-class Frontend:
-    _active_context: Optional['Frontend'] = None
+def result_fetch(result: monetdbe_result, column: int) -> monetdbe_column:
+    p_rcol = ffi.new("monetdbe_column **")
+    check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
+    return p_rcol[0]
+
+
+def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
+    result_dict: Dict[str, np.ndarray] = {}
+    for c in range(result.ncols):
+        rcol = result_fetch(result, c)
+        name = make_string(rcol.name)
+        cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
+
+        # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
+        if numpy_type.type == np.object_:
+            np_col: np.ndarray = np.array([extract(rcol, r) for r in range(result.nrows)])
+            if rcol.type == lib.monetdbe_str:
+                np_col = np_col.astype(str)
+            elif rcol.type == lib.monetdbe_date:
+                np_col = np_col.astype('datetime64[D]')  # type: ignore
+            elif rcol.type == lib.monetdbe_time:
+                warn("Not converting column with type column since no proper numpy equivalent")
+            elif rcol.type == lib.monetdbe_timestamp:
+                np_col = np_col.astype('datetime64[ns]')  # type: ignore
+        else:
+            buffer_size = result.nrows * numpy_type.itemsize  # type: ignore
+            c_buffer = ffi.buffer(rcol.data, buffer_size)
+            np_col = np.frombuffer(c_buffer, dtype=numpy_type)  # type: ignore
+
+        if monetdbe_null:
+            mask = np_col == monetdbe_null
+        else:
+            mask = np.ma.nomask  # type: ignore[attr-defined]
+
+        masked = np.ma.masked_array(np_col, mask=mask)
+
+        result_dict[name] = masked
+    return result_dict
+
+
+def get_autocommit() -> bool:
+    value = ffi.new("int *")
+    check_error(lib.monetdbe_get_autocommit(value))
+    return bool(value[0])
+
+
+def bind(statement: monetdbe_statement, data, parameter_nr: int) -> None:
+    check_error(lib.monetdbe_bind(statement, str(data).encode(), parameter_nr))
+
+
+def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[monetdbe_result, int]:
+    if make_result:
+        p_result = ffi.new("monetdbe_result **")
+    else:
+        p_result = ffi.NULL
+
+    affected_rows = ffi.new("monetdbe_cnt *")
+    check_error(lib.monetdbe_execute(statement, p_result, affected_rows))
+
+    if make_result:
+        result = p_result[0]
+    else:
+        result = None
+
+    return result, affected_rows[0]
+
+
+class Internal:
+    _active_context: Optional['Internal'] = None
     in_memory_active: bool = False
     _connection: Optional[monetdbe_database] = None
 
@@ -37,7 +104,7 @@ class Frontend:
         self._switch()
 
     @classmethod
-    def set_active_context(cls, active_context: Optional['Frontend']):
+    def set_active_context(cls, active_context: Optional['Internal']):
         cls._active_context = active_context
 
     @classmethod
@@ -148,55 +215,8 @@ class Frontend:
 
         return result, affected_rows[0]
 
-    @staticmethod
-    def result_fetch(result: monetdbe_result, column: int) -> monetdbe_column:
-        p_rcol = ffi.new("monetdbe_column **")
-        check_error(lib.monetdbe_result_fetch(result, p_rcol, column))
-        return p_rcol[0]
-
-    @staticmethod
-    def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ma.MaskedArray]:
-
-        result_dict = {}
-        for c in range(result.ncols):
-            rcol = Frontend.result_fetch(result, c)
-            name = make_string(rcol.name)
-            cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
-
-            # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
-            if numpy_type.type == np.object_:
-                np_col: np.ndarray = np.array([extract(rcol, r) for r in range(result.nrows)])
-                if rcol.type == lib.monetdbe_str:
-                    np_col = np_col.astype(str)
-                elif rcol.type == lib.monetdbe_date:
-                    np_col = np_col.astype('datetime64[D]')  # type: ignore
-                elif rcol.type == lib.monetdbe_time:
-                    warn("Not converting column with type column since no proper numpy equivalent")
-                elif rcol.type == lib.monetdbe_timestamp:
-                    np_col = np_col.astype('datetime64[ns]')  # type: ignore
-            else:
-                buffer_size = result.nrows * numpy_type.itemsize  # type: ignore
-                c_buffer = ffi.buffer(rcol.data, buffer_size)
-                np_col = np.frombuffer(c_buffer, dtype=numpy_type)  # type: ignore
-
-            if monetdbe_null:
-                mask = np_col == monetdbe_null
-            else:
-                mask = np.ma.nomask  # type: ignore
-
-            masked = np.ma.masked_array(np_col, mask=mask)
-
-            result_dict[name] = masked
-        return result_dict
-
     def set_autocommit(self, value: bool) -> None:
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
-
-    @staticmethod
-    def get_autocommit() -> bool:
-        value = ffi.new("int *")
-        check_error(lib.monetdbe_get_autocommit(value))
-        return bool(value[0])
 
     def in_transaction(self) -> bool:
         return bool(lib.monetdbe_in_transaction(self._connection))
@@ -236,27 +256,6 @@ class Frontend:
         stmt = ffi.new("monetdbe_statement **")
         check_error(lib.monetdbe_prepare(self._connection, query.encode(), stmt))
         return stmt[0]
-
-    @staticmethod
-    def bind(statement: monetdbe_statement, data, parameter_nr: int) -> None:
-        check_error(lib.monetdbe_bind(statement, str(data).encode(), parameter_nr))
-
-    @staticmethod
-    def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[monetdbe_result, int]:
-        if make_result:
-            p_result = ffi.new("monetdbe_result **")
-        else:
-            p_result = ffi.NULL
-
-        affected_rows = ffi.new("monetdbe_cnt *")
-        check_error(lib.monetdbe_execute(statement, p_result, affected_rows))
-
-        if make_result:
-            result = p_result[0]
-        else:
-            result = None
-
-        return result, affected_rows[0]
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:
         lib.monetdbe_cleanup_statement(self._connection, statement)

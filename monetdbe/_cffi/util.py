@@ -1,6 +1,6 @@
-def get_info() -> dict:
+def get_info():
     """
     Fetch some MonetDBe specific properties
     """
     from monetdbe import connect
-    return dict(connect("/tmp/test").execute("select * from env()").fetchall())
+    return connect("/tmp/test").execute("select * from env()").fetchall()

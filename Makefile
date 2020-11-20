@@ -50,30 +50,35 @@ clean: venv/
 
 venv/bin/mypy: venv/
 	venv/bin/pip install mypy
+	touch venv/bin/mypy
 
 venv/bin/pycodestyle: venv/
 	venv/bin/pip install pycodestyle
+	touch venv/bin/pycodestyle
 
 mypy: venv/bin/mypy
-	venv/bin/mypy monetdbe tests
+	venv/bin/mypy --show-error-codes monetdbe tests
 
 pycodestyle: venv/bin/pycodestyle
 	venv/bin/pycodestyle monetdbe tests
 
 venv/bin/jupyter-notebook: venv/
 	venv/bin/pip install notebook
+	touch venv/bin/jupyter-notebook
 
 notebook: venv/bin/jupyter-notebook
 	venv/bin/jupyter-notebook
 
 venv/bin/delocate-wheel: venv/
 	venv/bin/pip install delocate
+	touch venv/bin/delocate-wheel
 
 delocate: venv/bin/delocate-wheel
 	venv/bin/delocate-wheel -v dist/*.whl
 
 venv/bin/twine: venv/
 	venv/bin/pip install twine
+	touch venv/bin/twine
 
 twine: venv/bin/twine
 	venv/bin/twine upload dist/*.whl

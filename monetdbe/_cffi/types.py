@@ -1,9 +1,7 @@
-from typing import NewType
-
 from monetdbe._lowlevel import ffi
 
-monetdbe_result = NewType('monetdbe_result', ffi.CData)
-monetdbe_database = NewType('monetdbe_database', ffi.CData)
-monetdbe_column = NewType('monetdbe_column', ffi.CData)
-monetdbe_statement = NewType('monetdbe_statement', ffi.CData)
-char_p = NewType('char_p', ffi.CData)
+monetdbe_result = ffi.CData
+monetdbe_database = ffi.CData
+monetdbe_column = ffi.CData
+monetdbe_statement = ffi.CData
+char_p = ffi.CData

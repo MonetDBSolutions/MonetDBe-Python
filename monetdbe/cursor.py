@@ -1,14 +1,20 @@
 from collections import namedtuple
 from itertools import repeat
-from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, List, Dict
+from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, Mapping, Dict, Sequence, cast, List, \
+    TYPE_CHECKING
 from warnings import warn
 import numpy as np
 import pandas as pd
 
 from monetdbe.connection import Connection
+
 from monetdbe.exceptions import ProgrammingError, InterfaceError
-from monetdbe.formatting import format_query, strip_split_and_clean
+from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape
+from monetdbe._cffi.internal import result_fetch, result_fetch_numpy, bind, execute
+
+if TYPE_CHECKING:
+    from monetdbe.row import Row
 
 Description = namedtuple('Description', ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale',
                                          'null_ok'))
@@ -29,7 +35,7 @@ class Cursor:
         # changing array size has no effect for monetdbe
         self.arraysize = 1
 
-        self.connection = con
+        self.connection: Optional[Connection] = con
         self.result: Optional[Any] = None  # todo: maybe make a result python wrapper?
         self.rowcount = -1
         self.prepare_id: Optional[int] = None
@@ -38,16 +44,14 @@ class Cursor:
         self.row_factory = None
 
     def __del__(self):
-        if self.result:
-            self.connection.lowlevel.cleanup_result(self.result)
-            self.result = None
+        self.close()
 
     def _set_description(self):
         if not self.result:
             return
 
         self._columns = list(
-            map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
+            map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
 
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
@@ -65,12 +69,18 @@ class Cursor:
         descriptions = list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok))
         self.description = [Description(*i) for i in descriptions]
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[Union['Row', Sequence[Any]], None, None]:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import extract
 
-        columns = list(map(lambda x: self.connection.lowlevel.result_fetch(self.result, x), range(self.result.ncols)))
+        if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
+            raise ProgrammingError("no connection to lower level database available")
+
+        if not self.result:
+            raise StopIteration
+
+        columns = list(map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
         for r in range(self.result.nrows):
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
@@ -80,7 +90,7 @@ class Cursor:
             else:
                 yield row
 
-    def fetchnumpy(self) -> np.ndarray:
+    def fetchnumpy(self) -> Mapping[str, np.ndarray]:
         """
         Fetch all results and return a numpy array.
 
@@ -88,7 +98,7 @@ class Cursor:
         """
         self._check_connection()
         self._check_result()
-        return self.connection.lowlevel.result_fetch_numpy(self.result)  # type: ignore
+        return result_fetch_numpy(self.result)
 
     def fetchdf(self) -> pd.DataFrame:
         """
@@ -98,16 +108,16 @@ class Cursor:
         """
         self._check_connection()
         self._check_result()
-        return pd.DataFrame(self.fetchnumpy())
+        return pd.DataFrame(cast(pd.DataFrame, self.fetchnumpy()))  # cast to make mypy happy
 
-    def _check_connection(self) -> None:
+    def _check_connection(self):
         """
         Check if we are attached to the lower level interface
 
         Raises:
             ProgrammingError: if no lower level interface is attached
         """
-        if not hasattr(self, 'connection') or not self.connection or not self.connection.lowlevel:
+        if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
             raise ProgrammingError("no connection to lower level database available")
 
     def _check_result(self) -> None:
@@ -120,7 +130,7 @@ class Cursor:
         if not self.result:
             raise ProgrammingError("fetching data but no query executed")
 
-    def execute(self, operation: str, parameters: Optional[Iterable] = None) -> 'Cursor':
+    def execute_python(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
         """
         Execute operation
 
@@ -134,12 +144,14 @@ class Cursor:
         Raises:
             OperationalError: if the execution failed
         """
-        self._check_connection()
+        if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
+            raise ProgrammingError("no connection to lower level database available")
+
         self.description = None  # which will be set later in fetchall
         self._fetch_generator = None
 
         if self.result:
-            self.connection.lowlevel.cleanup_result(self.result)  # type: ignore
+            self.connection._internal.cleanup_result(self.result)
             self.result = None
 
         splitted = strip_split_and_clean(operation)
@@ -149,19 +161,26 @@ class Cursor:
             raise ProgrammingError("Multiple queries in one execute() call")
 
         formatted = format_query(operation, parameters)
-        self.result, self.rowcount = self.connection.lowlevel.query(formatted, make_result=True)  # type: ignore
+        self.result, self.rowcount = self.connection._internal.query(formatted, make_result=True)
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
 
-    def execute_qmark(self, operation: str, parameters: Optional[Iterable] = None) -> 'Cursor':
-        statement = self.connection.lowlevel.prepare(operation)
+    def execute(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
+        if not isinstance(parameters, Sequence):
+            return self.execute_python(operation, parameters)
+
+        if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
+            raise ProgrammingError("no connection to lower level database available")
+
+        statement = self.connection._internal.prepare(operation)  # type: ignore[union-attr]
         for index, parameter in enumerate(parameters):
-            self.connection.lowlevel.bind(statement, parameter, index)
-        self.result, self.rowcount = self.connection.lowlevel.execute(statement, make_result=True)
-        self.connection.lowlevel.cleanup_statement(statement)
+            bind(statement, parameter, index)
+        self.result, self.rowcount = execute(statement, make_result=True)
+        self.connection._internal.cleanup_statement(statement)  # type: ignore[union-attr]
         self.connection.total_changes += self.rowcount
         self._set_description()
+        return self
 
     def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
         """
@@ -172,11 +191,13 @@ class Cursor:
             operation: the SQL query to execute
             seq_of_parameters: An optional iterator or iterable containing an iterable of arguments
         """
-        self._check_connection()
+        if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
+            raise ProgrammingError("no connection to lower level database available")
+
         self.description = None  # which will be set later in fetchall
 
         if self.result:
-            self.connection.lowlevel.cleanup_result(self.result)  # type: ignore
+            self.connection._internal.cleanup_result(self.result)
             self.result = None
 
         total_affected_rows = 0
@@ -196,7 +217,7 @@ class Cursor:
                 break
 
             formatted = format_query(operation, parameters)
-            self.result, affected_rows = self.connection.lowlevel.query(formatted, make_result=True)  # type: ignore
+            self.result, affected_rows = self.connection._internal.query(formatted, make_result=True)
             total_affected_rows += affected_rows
 
         self.rowcount = total_affected_rows
@@ -204,13 +225,16 @@ class Cursor:
         self._set_description()
         return self
 
-    def close(self, *args, **kwargs):
+    def close(self) -> None:
         """
         Shut down the connection.
         """
+        if self.connection and self.result and self.connection._internal:
+            self.connection._internal.cleanup_result(self.result)
+            self.result = None
         self.connection = None
 
-    def fetchall(self) -> Iterable[Tuple[Any, Any]]:
+    def fetchall(self) -> List[Union['Row', Sequence]]:
         """
         Fetch all (remaining) rows of a query result, returning them as a list of tuples).
 
@@ -220,7 +244,8 @@ class Cursor:
         Raises:
             Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
         """
-        self._check_connection()
+        if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
+            raise ProgrammingError("no connection to lower level database available")
 
         # note (gijs): sqlite test suite doesn't want us to raise exception here, so for now I disable this
         # self._check_result()
@@ -349,7 +374,8 @@ class Cursor:
                 column_type = 'REAL'
             elif arr.dtype == np.float64:
                 column_type = 'DOUBLE'
-            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_) or np.issubdtype(arr.dtype, np.object_):
+            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.unicode_) or np.issubdtype(arr.dtype,
+                                                                                                             np.object_):
                 column_type = 'STRING'
             else:
                 raise Exception('Unsupported dtype: %s' % (str(arr.dtype)))
@@ -399,7 +425,7 @@ class Cursor:
                 "One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
             return self._insert_slow(table, prepared, schema)
         else:
-            return self.connection.lowlevel.append(schema=schema, table=table, data=prepared)  # type: ignore
+            return self.connection._internal.append(schema=schema, table=table, data=prepared)  # type: ignore
 
     def setoutputsize(self, *args, **kwargs) -> None:
         """
@@ -425,6 +451,9 @@ class Cursor:
         Returns:
             the current cursor
         """
+        if not hasattr(self, 'connection') or not self.connection:
+            raise ProgrammingError("no connection to lower level database available")
+
         self.connection.commit()
         return self
 

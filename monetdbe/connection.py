@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any, Iterator
 
 from monetdbe import exceptions
+from monetdbe.formatting import parameters_type
+from monetdbe._cffi.types import monetdbe_column
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -72,9 +74,9 @@ class Connection:
 
         check_if_we_can_import_lowlevel()
 
-        from monetdbe._cffi.frontend import Frontend
+        from monetdbe._cffi.internal import Internal
 
-        self.lowlevel: Optional[Frontend] = Frontend(
+        self._internal: Optional[Internal] = Internal(
             dbdir=database,
             memorylimit=memorylimit,
             nr_threads=nr_threads,
@@ -101,10 +103,10 @@ class Connection:
         raise exceptions.ProgrammingError
 
     def _check(self):
-        if not self.lowlevel:
+        if not self._internal:
             raise exceptions.ProgrammingError
 
-    def execute(self, query: str, args: Optional[Iterable] = None) -> 'Cursor':
+    def execute(self, query: str, args: parameters_type = None) -> 'Cursor':
         """
         Execute a SQL query
 
@@ -123,7 +125,7 @@ class Connection:
         self.consistent = True
         return cur
 
-    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
+    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[parameters_type]]) -> 'Cursor':
         """
         Prepare a database query and then execute it against all parameter sequences or mappings found in the
         sequence seq_of_parameters.
@@ -149,9 +151,9 @@ class Connection:
         return self.execute("COMMIT")
 
     def close(self, *args, **kwargs) -> None:
-        if self.lowlevel:
-            self.lowlevel.close()
-        self.lowlevel = None
+        if self._internal:
+            self._internal.close()
+        self._internal = None
 
     def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':
         """
@@ -172,7 +174,7 @@ class Connection:
         cursor = factory(con=self)
         if not cursor:
             raise TypeError
-        if not hasattr(self, 'lowlevel') or not self.lowlevel:
+        if not hasattr(self, '_internal') or not self._internal:
             raise exceptions.ProgrammingError
         return cursor
 
@@ -225,7 +227,7 @@ class Connection:
 
     @property
     def in_transaction(self):
-        return self.lowlevel.in_transaction()
+        return self._internal.in_transaction()
 
     def set_autocommit(self, value: bool) -> None:
         """
@@ -235,7 +237,7 @@ class Connection:
             value: a boolean value
         """
         self._check()
-        return self.lowlevel.set_autocommit(value)  # type: ignore
+        return self._internal.set_autocommit(value)  # type: ignore
 
     def read_csv(self, table, *args, **kwargs):
         from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import

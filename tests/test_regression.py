@@ -427,7 +427,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         m = monetdbe.connect()
         c = m.cursor()
         c.execute(q)
-        del m.lowlevel
+        del m._internal
         del m
         m = monetdbe.connect()
         c = m.cursor()
