@@ -2,6 +2,6 @@
 set -e
 set -v
 
-pip3 install .[test]
+pip3 install ".[test]"
 pycodestyle monetdbe tests
 
