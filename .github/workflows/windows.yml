@@ -74,7 +74,7 @@ jobs:
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\pcre.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\zlib1.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\lzma.dll monetdbe\.
-          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcharset.dll monetdbe\.
+          Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\charset-1.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\bz2.dll monetdbe\.
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
