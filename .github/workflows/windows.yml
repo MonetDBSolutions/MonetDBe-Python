@@ -26,11 +26,10 @@ jobs:
 #          choco install python --version 3.6.8 --force
       -
         name: Install vcpkg packages
-        uses: lukka/run-vcpkg@v3
+        uses: lukka/run-vcpkg@v5
         with:
-          vcpkgArguments: libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
-          vcpkgTriplet: x64-windows
-          vcpkgGitCommitId: 70f380e802852fc09c929dead9d8b8659d394181
+          vcpkgArguments: --triplet x64 libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
+          vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
         name: Get monetdb
