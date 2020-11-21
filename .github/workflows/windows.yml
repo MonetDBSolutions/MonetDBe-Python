@@ -19,11 +19,10 @@ jobs:
       -
         name: Install choco packages
         run: |
-          choco install winflexbison unzip curl python
-#          choco install python --version 3.9.0 --force
-#          choco install python --version 3.8.5 --force
-#          choco install python --version 3.7.9 --force
-#          choco install python --version 3.6.8 --force
+           choco install python3 --version 3.9.0 --no-progress -y --allowmultiple
+           choco install python3 --version 3.8.6 --no-progress -y --allowmultiple
+           choco install python3 --version 3.7.9 --no-progress -y --allowmultiple
+           choco install python3 --version 3.6.8 --no-progress -y --allowmultiple
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v5
@@ -80,19 +79,19 @@ jobs:
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
         name: Upgrade pip and wheel for all pythons
-        run: python.exe -m pip install --upgrade pip wheel
+        run: c:\python39\python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
-        run: python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+        run: c:\python39\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
-        run: python.exe -m pip install .[test]
+        run: c:\python39\python.exe -m pip install .[test]
       -
         name: Run tests
         run: pytest.exe
       -
         name: Make wheel
-        run: python.exe setup.py bdist_wheel
+        run: c:\python39\python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
