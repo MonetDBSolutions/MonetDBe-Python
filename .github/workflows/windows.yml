@@ -1,14 +1,14 @@
-name: Windows Test & Wheels
+name: Windows
 
 on:
   push:
     branches: [ master ]
+    tags: [ "*" ]
   pull_request:
     branches: [ master ]
 
 jobs:
   windows_wheel:
-    continue-on-error: true
     runs-on: windows-2019
     env:
       branch: Oct2020
@@ -18,17 +18,24 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Install choco packages
-        run: |
-          choco install winflexbison git unzip curl python
-#          choco install python --version 3.9.0 --force
-#          choco install python --version 3.8.5 --force
-#          choco install python --version 3.7.9 --force
-#          choco install python --version 3.6.8 --force
+        run: choco install --no-progress -y winflexbison unzip curl
+      -
+        name: Install Python 3.9
+        run: choco install --version 3.9.0 --no-progress -y --allowmultiple python3
+      -
+        name: Install Python 3.8
+        run: choco install --version 3.8.6 --no-progress -y --allowmultiple python3
+      -
+        name: Install Python 3.7
+        run: choco install --version 3.7.9 --no-progress -y --allowmultiple python3
+      -
+        name: Install Python 3.6
+        run: choco install --version 3.6.8 --no-progress -y --allowmultiple python3
       -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v5
         with:
-          vcpkgArguments: --triplet x64-windows libiconv openssl geos libxml2 pcre pcre2 zlib getopt bzip2 curl
+          vcpkgArguments: --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
           vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
           appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
       -
@@ -54,6 +61,7 @@ jobs:
             -DASSERT=OFF `
             -DODBC=false `
             -DPY3INTEGRATION=OFF `
+            -DINT128=OFF `
             ..
           cmake --build . --target ALL_BUILD --parallel 4  --config Release
           cmake --build . --target INSTALL  --config Release
@@ -79,19 +87,35 @@ jobs:
           Copy-Item $Env:VCPKG_ROOT\installed\x64-windows\bin\libcurl.dll monetdbe\.
       -
         name: Upgrade pip and wheel for all pythons
-        run: python.exe -m pip install --upgrade pip wheel
+        run: |
+          C:\hostedtoolcache\windows\Python\3.9.0\x64\python.exe -m pip install --upgrade pip wheel
+          C:\hostedtoolcache\windows\Python\3.8.6\x64\python.exe -m pip install --upgrade pip wheel
+          C:\hostedtoolcache\windows\Python\3.7.9\x64\python.exe -m pip install --upgrade pip wheel
+          C:\hostedtoolcache\windows\Python\3.6.8\x64\python.exe -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
-        run: python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+        run: |
+          C:\hostedtoolcache\windows\Python\3.9.0\x64\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+          C:\hostedtoolcache\windows\Python\3.8.6\x64\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+          C:\hostedtoolcache\windows\Python\3.7.9\x64\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
+          C:\hostedtoolcache\windows\Python\3.6.8\x64\python.exe setup.py build_ext --include-dirs=C:\monetdb\include --library-dirs=C:\monetdb\lib
       -
         name: Install python libraries
-        run: python.exe -m pip install .[test]
-      -
-        name: Run tests
-        run: pytest.exe
+        run: |
+          C:\hostedtoolcache\windows\Python\3.9.0\x64\python.exe -m pip install -e .[test]
+          C:\hostedtoolcache\windows\Python\3.8.6\x64\python.exe -m pip install -e .[test]
+          C:\hostedtoolcache\windows\Python\3.7.9\x64\python.exe -m pip install -e .[test]
+          C:\hostedtoolcache\windows\Python\3.6.8\x64\python.exe -m pip install -e .[test]
+      #-
+      #  name: Run tests
+      #  run: C:\hostedtoolcache\windows\Python\3.9.0\x64\Scripts\pytest.exe
       -
         name: Make wheel
-        run: python.exe setup.py bdist_wheel
+        run: |
+          C:\hostedtoolcache\windows\Python\3.9.0\x64\python.exe setup.py bdist_wheel
+          C:\hostedtoolcache\windows\Python\3.8.6\x64\python.exe setup.py bdist_wheel
+          C:\hostedtoolcache\windows\Python\3.7.9\x64\python.exe setup.py bdist_wheel
+          C:\hostedtoolcache\windows\Python\3.6.8\x64\python.exe setup.py bdist_wheel
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels

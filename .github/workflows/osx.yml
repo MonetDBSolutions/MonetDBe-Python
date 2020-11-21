@@ -1,8 +1,9 @@
-name: OS X Test & Wheels
+name: OS X
 
 on:
   push:
     branches: [ master ]
+    tags: [ "*" ]
   pull_request:
     branches: [ master ]
 
