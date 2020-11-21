@@ -102,13 +102,13 @@ jobs:
       -
         name: Install python libraries
         run: |
-          C:\hostedtoolcache\windows\Python\3.9.0\x64\python.exe -m pip install .[test]
-          C:\hostedtoolcache\windows\Python\3.8.6\x64\python.exe -m pip install .[test]
-          C:\hostedtoolcache\windows\Python\3.7.9\x64\python.exe -m pip install .[test]
-          C:\hostedtoolcache\windows\Python\3.6.8\x64\python.exe -m pip install .[test]
-      -
-        name: Run tests
-        run: C:\hostedtoolcache\windows\Python\3.9.0\x64\Scripts\pytest.exe
+          C:\hostedtoolcache\windows\Python\3.9.0\x64\python.exe -m pip install -e .[test]
+          C:\hostedtoolcache\windows\Python\3.8.6\x64\python.exe -m pip install -e .[test]
+          C:\hostedtoolcache\windows\Python\3.7.9\x64\python.exe -m pip install -e .[test]
+          C:\hostedtoolcache\windows\Python\3.6.8\x64\python.exe -m pip install -e .[test]
+      #-
+      #  name: Run tests
+      #  run: C:\hostedtoolcache\windows\Python\3.9.0\x64\Scripts\pytest.exe
       -
         name: Make wheel
         run: |
