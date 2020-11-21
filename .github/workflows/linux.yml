@@ -1,8 +1,9 @@
-name: Linux Test & Wheels
+name: Linux
 
 on:
   push:
     branches: [ master ]
+    tags: [ * ]
   pull_request:
     branches: [ master ]
 
