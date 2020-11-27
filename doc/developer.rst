@@ -24,7 +24,7 @@ Now install the MonetDBe-Python project in developing mode (hence the -e):
 
 .. code-block::
 
-    $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib64/" pip install -e ".[test,doc]
+    $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib64/" pip install -e ".[test,doc]"
 
 The CFLAGS above are required to make sure pip can find MonetDB. Using developer mode, any changes to
 the Python code will be directly reflected without re-installation. The only exception is code related
