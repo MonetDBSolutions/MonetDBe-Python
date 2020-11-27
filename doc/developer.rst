@@ -11,7 +11,7 @@ For development it is recommended to set up a virtual environment inside the sou
 .. code-block::
 
     $ python3 -m venv venv
-    $ source python3/bin/activate
+    $ source venv/bin/activate
 
 The last command will active the virtual environment, and will replace the python3 and pip commands
 in your shell. Now make sure you have the latest pip installed:
