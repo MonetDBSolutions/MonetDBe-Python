@@ -21,3 +21,13 @@ class TestCsv(TestCase):
         con = connect()
         t = TemporaryDirectory()
         con.write_csv(table='tables', path_or_buf=Path(t.name) / 'output.csv')
+
+    def test_copy_into_windows(self):
+        con = connect()
+        s = """COPY OFFSET 2 INTO t FROM 'C:\\does\\not\\exist.csv' delimiters ',','"""
+        con.execute(s)
+
+    def test_copy_into_windows_double_escape(self):
+        con = connect()
+        s = """COPY OFFSET 2 INTO t FROM 'C:\\\\does\\not\\\\exist.csv' delimiters ',','"""
+        con.execute(s)
