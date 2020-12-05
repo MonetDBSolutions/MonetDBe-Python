@@ -200,6 +200,7 @@ class Internal:
             result, affected_rows
 
         """
+        self._switch()
         if make_result:
             p_result = ffi.new("monetdbe_result **")
         else:
@@ -216,15 +217,18 @@ class Internal:
         return result, affected_rows[0]
 
     def set_autocommit(self, value: bool) -> None:
+        self._switch()
         check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
 
     def in_transaction(self) -> bool:
+        self._switch()
         return bool(lib.monetdbe_in_transaction(self._connection))
 
     def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
         """
         Directly append an array structure
         """
+        self._switch()
         n_columns = len(data)
         existing_columns = list(self.get_columns(schema=schema, table=table))
         existing_names, existing_types = zip(*existing_columns)
@@ -253,11 +257,13 @@ class Internal:
         check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query: str) -> monetdbe_statement:
+        self._switch()
         stmt = ffi.new("monetdbe_statement **")
         check_error(lib.monetdbe_prepare(self._connection, query.encode(), stmt))
         return stmt[0]
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:
+        self._switch()
         lib.monetdbe_cleanup_statement(self._connection, statement)
 
     def dump_database(self, backupfile: Path):
@@ -269,6 +275,7 @@ class Internal:
         lib.monetdbe_dump_table(self._connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
 
     def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
+        self._switch()
         count_p = ffi.new('size_t *')
         names_p = ffi.new('char ***')
         types_p = ffi.new('int **')

@@ -39,3 +39,13 @@ class TransactionTests(unittest.TestCase):
         """parameters must be sequence or mapping"""
         with self.assertRaises(ValueError):
             self.con.execute("insert into test(i, s) values (?)", 5)
+
+    def test_qmark_multiple_cons(self):
+        con1 = monetdbe.connect()
+        con1.execute("create table test(i int, s text)")
+        con1.execute("insert into test(i, s) values (?, ?)", (5, "bla"))
+        con2 = monetdbe.connect()
+        con2.execute("create table test(i int, s text)")
+        con2.execute("insert into test(i, s) values (?, ?)", (5, "bla"))
+        con1.execute("create table test(i int, s text)")
+        con1.execute("insert into test(i, s) values (?, ?)", (5, "bla"))
