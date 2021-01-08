@@ -140,3 +140,5 @@ tests/@test_*_tmp/
 doc/_build
 
 monetdbe/*.dll
+/monetdbe/_cffi/monetdbe/_lowlevel.c
+/monetdbe/_cffi/monetdbe/_lowlevel.o

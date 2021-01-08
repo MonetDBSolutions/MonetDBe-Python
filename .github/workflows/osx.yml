@@ -1,21 +1,46 @@
-name: OS X Test & Wheels
+name: OS X
 
 on:
   push:
     branches: [ master ]
+    tags: [ "*" ]
   pull_request:
     branches: [ master ]
 
 jobs:
   osx_wheel:
     runs-on: macos-10.15
-    continue-on-error: true
+    strategy:
+      matrix:
+        python-version: [3.6.12, 3.7.9, 3.8.6, 3.9.0]
     steps:
-      - uses: actions/checkout@v2
-      - name: OS X binary wheel
-        run: scripts/osx_wheel.sh
-      - uses: actions/upload-artifact@v2
-        name: Publish OS X binary wheels
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: brew packages
+        run: brew install pyenv monetdb
+
+      - name: Install Python version
+        run:  |
+          pyenv install -s ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/pip install --upgrade pip wheel delocate pytest
+
+      - name: Compile and install MonetDBe-python
+        run: CFLAGS="-I/usr/local/include -L/usr/local/lib" ~/.pyenv/versions/${{ matrix.python-version }}/bin/pip install -e ".[test]"
+
+      - name: Run pytest
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/pytest
+
+      - name: make binary wheel
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/python setup.py bdist_wheel
+
+      - name: Delocate binary wheel
+        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/delocate-wheel -v dist/*.whl
+
+      - name: Publish OS X binary wheels
+        uses: actions/upload-artifact@v2
         with:
           path: dist/*.whl
 

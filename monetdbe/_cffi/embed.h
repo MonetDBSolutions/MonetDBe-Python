@@ -23,14 +23,6 @@ typedef struct {
  char* data;
 } monetdbe_data_blob;
 
-typedef enum {
- monetdbe_bool, monetdbe_int8_t, monetdbe_int16_t, monetdbe_int32_t, monetdbe_int64_t,
- monetdbe_size_t, monetdbe_float, monetdbe_double,
- monetdbe_str, monetdbe_blob,
- monetdbe_date, monetdbe_time, monetdbe_timestamp,
- monetdbe_type_unknown
-} monetdbe_types;
-
 typedef struct {
  monetdbe_types type;
  void *data;
