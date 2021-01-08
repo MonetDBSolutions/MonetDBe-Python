@@ -48,7 +48,7 @@ class Cursor:
         from monetdbe._cffi.convert import make_string, monet_numpy_map
 
         name = (make_string(rcol.name) for rcol in self._columns)
-        type_code = (monet_numpy_map[rcol.type][2] for rcol in self._columns)
+        type_code = (monet_numpy_map[rcol.type][0] for rcol in self._columns)
 
         display_size = repeat(None)
         internal_size = repeat(None)

@@ -160,7 +160,7 @@ class Frontend:
         for c in range(monetdbe_result.ncols):
             rcol = Frontend.result_fetch(monetdbe_result, c)
             name = make_string(rcol.name)
-            cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
+            _, numpy_type, _, _, monetdbe_null = monet_numpy_map[rcol.type]
 
             # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
             if numpy_type.type == np.object_:
@@ -219,7 +219,7 @@ class Frontend:
             work_column = ffi.new('monetdbe_column *')
             work_type_string, work_type = numpy_monetdb_map(column_values.dtype)
             if not work_type == existing_type:
-                existing_type_string = monet_numpy_map[existing_type][0]
+                existing_type_string = monet_numpy_map[existing_type][2]
                 error = f"Type '{work_type_string}' for appended column '{column_name}' " \
                         f"does not match table type '{existing_type_string}'"
                 raise exceptions.ProgrammingError(error)
