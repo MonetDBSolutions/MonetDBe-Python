@@ -51,8 +51,8 @@ mappings: List[Tuple[int, Optional[str], np.dtype, str, Optional[Callable], Opti
     (lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
 ]
 numpy2monet_map = {numpy_type: (c_string, monet_type) for monet_type, _, numpy_type, c_string, _, _ in mappings}
-monet_numpy_map = {monet_type: (c_string, converter, numpy_type, null_value) for
-                   monet_type, _, numpy_type, c_string, converter, null_value in mappings}
+monet_numpy_map = {monet_type: (sql_type, numpy_type, c_string, converter, null_value) for
+                   monet_type, sql_type, numpy_type, c_string, converter, null_value in mappings}
 
 
 def numpy_monetdb_map(numpy_type: np.dtype):
@@ -67,13 +67,13 @@ def extract(rcol: ffi.CData, r: int, text_factory: Optional[Callable[[str], Any]
 
     The text_factory is optional, and wraps the value with a custom user supplied text function.
     """
-    cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
-    col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
+    _, _, c_string, converter, _ = monet_numpy_map[rcol.type]
+    col = ffi.cast(f"monetdbe_column_{c_string} *", rcol)
     if col.is_null(col.data + r):
         return None
     else:
-        if cast_function:
-            result = cast_function(col.data[r])
+        if converter:
+            result = converter(col.data[r])
             if rcol.type == lib.monetdbe_str and text_factory:
                 return text_factory(result)
             else:
