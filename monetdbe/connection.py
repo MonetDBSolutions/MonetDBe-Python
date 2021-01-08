@@ -1,16 +1,31 @@
 """
 This module contains the monetdbe connection class.
 """
+from collections import namedtuple
 from pathlib import Path
-from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any, Iterator
+from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any, Iterator, Tuple, Mapping
+from itertools import repeat
+import numpy as np
 
 from monetdbe import exceptions
 from monetdbe.formatting import parameters_type
-from monetdbe._cffi.types import monetdbe_column
+from monetdbe._cffi.internal import result_fetch, result_fetch_numpy, bind, execute
+
+from monetdbe._cffi.types import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
     from monetdbe.cursor import Cursor
+
+Description = namedtuple('Description', (
+    'name',
+    'type_code',
+    'display_size',
+    'internal_size',
+    'precision',
+    'scale',
+    'null_ok'
+))
 
 
 class Connection:
@@ -75,14 +90,12 @@ class Connection:
         else:
             raise TypeError
 
-        self.result = None
+        self.result: Optional[monetdbe_result] = None
         self.row_factory: Optional[Type[Row]] = None
         self.text_factory: Optional[Callable[[str], Any]] = None
         self.total_changes = 0
         self.isolation_level = None
         self.consistent = True
-
-        self.invalid = False  # Workaround to prevent reuse of resultset after switching to new DB
 
         self._internal: Optional[Internal] = Internal(
             connection=self,
@@ -110,6 +123,25 @@ class Connection:
     def _check(self):
         if not self._internal:
             raise exceptions.ProgrammingError
+
+    def get_description(self):
+        # we import this late, otherwise the whole monetdbe project is unimportable
+        # if we don't have access to monetdbe shared library
+        from monetdbe._cffi.convert import make_string, monet_numpy_map
+
+        if not self.result:
+            return
+
+        columns = list(map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
+        name = (make_string(rcol.name) for rcol in columns)
+        type_code = (monet_numpy_map[rcol.type][2] for rcol in columns)
+        display_size = repeat(None)
+        internal_size = repeat(None)
+        precision = repeat(None)
+        scale = repeat(None)
+        null_ok = repeat(None)
+        descriptions = list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok))
+        return [Description(*i) for i in descriptions]
 
     def execute(self, query: str, args: parameters_type = None) -> 'Cursor':
         """
@@ -258,14 +290,17 @@ class Connection:
             self._internal.cleanup_result(self.result)
             self.result = None
 
-    def invalidate(self):
-        """
-        Marks this connection invalid. Results aready fetched are still available,
-        but no new queries or row fetches should be possible.
-        """
-        self.cleanup_results()
-        self.invalid = True
+    def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
+        return self._internal.query(query, make_result)
 
+    def prepare(self, operation: str):
+        return self._internal.prepare(operation)
+
+    def cleanup_statement(self, statement: str):
+        return self._internal.cleanup_statement(statement)
+
+    def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
+        return self._internal.append(table, data, schema)
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

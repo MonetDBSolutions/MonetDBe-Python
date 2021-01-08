@@ -1,15 +1,18 @@
 import logging
 from _warnings import warn
 from pathlib import Path
-from typing import Optional, Tuple, Any, Mapping, Iterator, Dict
+from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
 
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
-from monetdbe.cursor import Connection
+
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
+
+if TYPE_CHECKING:
+    from monetdbe.cursor import Connection
 
 _logger = logging.getLogger(__name__)
 
@@ -88,7 +91,7 @@ class Internal:
 
     def __init__(
             self,
-            connection: Connection,
+            connection: "Connection",
             dbdir: Optional[Path] = None,
             memorylimit: int = 0,
             querytimeout: int = 0,
