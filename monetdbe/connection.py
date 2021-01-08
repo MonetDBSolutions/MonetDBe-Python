@@ -50,6 +50,11 @@ class Connection:
             port: TCP/IP port to listen for connections (not used yet)
 
         """
+        from monetdbe._cffi import check_if_we_can_import_lowlevel
+        from monetdbe._cffi.internal import Internal
+
+        check_if_we_can_import_lowlevel()
+
         if uri or port or username or password or logging:
             raise NotImplemented  # todo
 
@@ -70,26 +75,23 @@ class Connection:
         else:
             raise TypeError
 
-        from monetdbe._cffi import check_if_we_can_import_lowlevel
-
-        check_if_we_can_import_lowlevel()
-
-        from monetdbe._cffi.internal import Internal
-
-        self._internal: Optional[Internal] = Internal(
-            dbdir=database,
-            memorylimit=memorylimit,
-            nr_threads=nr_threads,
-            querytimeout=querytimeout,
-            sessiontimeout=timeout
-        )
-
         self.result = None
         self.row_factory: Optional[Type[Row]] = None
         self.text_factory: Optional[Callable[[str], Any]] = None
         self.total_changes = 0
         self.isolation_level = None
         self.consistent = True
+
+        self.invalid = False  # Workaround to prevent reuse of resultset after switching to new DB
+
+        self._internal: Optional[Internal] = Internal(
+            connection=self,
+            dbdir=database,
+            memorylimit=memorylimit,
+            nr_threads=nr_threads,
+            querytimeout=querytimeout,
+            sessiontimeout=timeout
+        )
 
         self.set_autocommit(autocommit)
 
@@ -101,6 +103,9 @@ class Connection:
 
     def __call__(self):
         raise exceptions.ProgrammingError
+
+    def __del__(self):
+        self.close()
 
     def _check(self):
         if not self._internal:
@@ -176,6 +181,7 @@ class Connection:
             raise TypeError
         if not hasattr(self, '_internal') or not self._internal:
             raise exceptions.ProgrammingError
+
         return cursor
 
     def executescript(self, sql_script: str):
@@ -246,6 +252,20 @@ class Connection:
     def write_csv(self, table, *args, **kwargs):
         from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
         return Cursor(con=self).write_csv(table, *args, **kwargs)
+
+    def cleanup_results(self):
+        if self.result:
+            self._internal.cleanup_result(self.result)
+            self.result = None
+
+    def invalidate(self):
+        """
+        Marks this connection invalid. Results aready fetched are still available,
+        but no new queries or row fetches should be possible.
+        """
+        self.cleanup_results()
+        self.invalid = True
+
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

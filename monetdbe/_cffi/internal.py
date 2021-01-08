@@ -5,7 +5,7 @@ from typing import Optional, Tuple, Any, Mapping, Iterator, Dict
 
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
-
+from monetdbe.cursor import Connection
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
 from monetdbe._cffi.errors import check_error
@@ -84,10 +84,11 @@ def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[m
 class Internal:
     _active_context: Optional['Internal'] = None
     in_memory_active: bool = False
-    _connection: Optional[monetdbe_database] = None
+    _monetdbe_database: Optional[monetdbe_database] = None
 
     def __init__(
             self,
+            connection: Connection,
             dbdir: Optional[Path] = None,
             memorylimit: int = 0,
             querytimeout: int = 0,
@@ -95,6 +96,7 @@ class Internal:
             nr_threads: int = 0,
             have_hge: bool = False
     ):
+        self._connection = connection
         self.dbdir = dbdir
         self.memorylimit = memorylimit
         self.querytimeout = querytimeout
@@ -112,8 +114,8 @@ class Internal:
         cls.in_memory_active = value
 
     @classmethod
-    def set_connection(cls, connection: Optional[monetdbe_database]):
-        cls._connection = connection
+    def set_monetdbe_database(cls, connection: Optional[monetdbe_database]):
+        cls._monetdbe_database = connection
 
     def __del__(self):
         if self._active_context == self:
@@ -129,8 +131,9 @@ class Internal:
         if self._active_context == self:
             return
 
+        self._connection.invalidate()
         self.close()
-        self.set_connection(self.open())
+        self.set_monetdbe_database(self.open())
         self.set_active_context(self)
 
         if not self.dbdir:
@@ -138,8 +141,8 @@ class Internal:
 
     def cleanup_result(self, result: monetdbe_result):
         _logger.info("cleanup_result called")
-        if result and self._connection:
-            check_error(lib.monetdbe_cleanup_result(self._connection, result))
+        if result and self._monetdbe_database:
+            check_error(lib.monetdbe_cleanup_result(self._monetdbe_database, result))
 
     def open(self) -> monetdbe_database:
 
@@ -148,7 +151,7 @@ class Internal:
         else:
             url = str(self.dbdir.resolve().absolute()).encode()
 
-        p_connection = ffi.new("monetdbe_database *")
+        p_monetdbe_database = ffi.new("monetdbe_database *")
 
         p_options = ffi.new("monetdbe_options *")
         p_options.memorylimit = self.memorylimit
@@ -156,8 +159,8 @@ class Internal:
         p_options.sessiontimeout = self.sessiontimeout
         p_options.nr_threads = self.nr_threads
 
-        result_code = lib.monetdbe_open(p_connection, url, p_options)
-        connection = p_connection[0]
+        result_code = lib.monetdbe_open(p_monetdbe_database, url, p_options)
+        connection = p_monetdbe_database[0]
 
         errors = {
             0: "OK",
@@ -176,10 +179,10 @@ class Internal:
         return connection
 
     def close(self) -> None:
-        if self._connection:
-            if lib.monetdbe_close(self._connection):
+        if self._monetdbe_database:
+            if lib.monetdbe_close(self._monetdbe_database):
                 raise exceptions.OperationalError("Failed to close database")
-            self.set_connection(None)
+            self.set_monetdbe_database(None)
 
         if self._active_context:
             self.set_active_context(None)
@@ -207,7 +210,7 @@ class Internal:
             p_result = ffi.NULL
 
         affected_rows = ffi.new("monetdbe_cnt *")
-        check_error(lib.monetdbe_query(self._connection, query.encode(), p_result, affected_rows))
+        check_error(lib.monetdbe_query(self._monetdbe_database, query.encode(), p_result, affected_rows))
 
         if make_result:
             result = p_result[0]
@@ -218,11 +221,11 @@ class Internal:
 
     def set_autocommit(self, value: bool) -> None:
         self._switch()
-        check_error(lib.monetdbe_set_autocommit(self._connection, int(value)))
+        check_error(lib.monetdbe_set_autocommit(self._monetdbe_database, int(value)))
 
     def in_transaction(self) -> bool:
         self._switch()
-        return bool(lib.monetdbe_in_transaction(self._connection))
+        return bool(lib.monetdbe_in_transaction(self._monetdbe_database))
 
     def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
         """
@@ -254,25 +257,25 @@ class Internal:
             work_column.data = ffi.cast(f"{work_type_string} *", ffi.from_buffer(column_values))
             work_columns[column_num] = work_column
             work_objs.append(work_column)
-        check_error(lib.monetdbe_append(self._connection, schema.encode(), table.encode(), work_columns, n_columns))
+        check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
         stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._connection, query.encode(), stmt))
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, query.encode(), stmt))
         return stmt[0]
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:
         self._switch()
-        lib.monetdbe_cleanup_statement(self._connection, statement)
+        lib.monetdbe_cleanup_statement(self._monetdbe_database, statement)
 
     def dump_database(self, backupfile: Path):
         # todo (gijs): use :)
-        lib.monetdbe_dump_database(self._connection, str(backupfile).encode())
+        lib.monetdbe_dump_database(self._monetdbe_database, str(backupfile).encode())
 
     def dump_table(self, schema_name: str, table_name: str, backupfile: Path):
         # todo (gijs): use :)
-        lib.monetdbe_dump_table(self._connection, schema_name.encode(), table_name.encode(), str(backupfile).encode())
+        lib.monetdbe_dump_table(self._monetdbe_database, schema_name.encode(), table_name.encode(), str(backupfile).encode())
 
     def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
         self._switch()
@@ -280,7 +283,7 @@ class Internal:
         names_p = ffi.new('char ***')
         types_p = ffi.new('int **')
 
-        lib.monetdbe_get_columns(self._connection, schema.encode(), table.encode(), count_p, names_p, types_p)
+        lib.monetdbe_get_columns(self._monetdbe_database, schema.encode(), table.encode(), count_p, names_p, types_p)
 
         for i in range(count_p[0]):
             name = ffi.string(names_p[0][i]).decode()

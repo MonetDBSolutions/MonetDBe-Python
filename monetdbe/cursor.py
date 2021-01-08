@@ -36,7 +36,7 @@ class Cursor:
         self.arraysize = 1
 
         self.connection: Optional[Connection] = con
-        self.result: Optional[Any] = None  # todo: maybe make a result python wrapper?
+        self.connection.result: Optional[Any] = None  # todo: maybe make a result python wrapper?
         self.rowcount = -1
         self.prepare_id: Optional[int] = None
         self._fetch_generator: Optional[Generator] = None
@@ -47,11 +47,11 @@ class Cursor:
         self.close()
 
     def _set_description(self):
-        if not self.result:
+        if not self.connection.result:
             return
 
         self._columns = list(
-            map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
+            map(lambda x: result_fetch(self.connection.result, x), range(self.connection.result.ncols)))
 
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
@@ -77,11 +77,11 @@ class Cursor:
         if not hasattr(self, 'connection') or not self.connection or not self.connection._internal:
             raise ProgrammingError("no connection to lower level database available")
 
-        if not self.result:
+        if not self.connection.result:
             raise StopIteration
 
-        columns = list(map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
-        for r in range(self.result.nrows):
+        columns = list(map(lambda x: result_fetch(self.connection.result, x), range(self.connection.result.ncols)))
+        for r in range(self.connection.result.nrows):
             row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
             if self.connection.row_factory:
                 yield self.connection.row_factory(cur=self, row=row)
@@ -98,7 +98,7 @@ class Cursor:
         """
         self._check_connection()
         self._check_result()
-        return result_fetch_numpy(self.result)
+        return result_fetch_numpy(self.connection.result)
 
     def fetchdf(self) -> pd.DataFrame:
         """
@@ -127,7 +127,7 @@ class Cursor:
         Raises:
             ProgrammingError: if no result is available.
         """
-        if not self.result:
+        if not self.connection.result:
             raise ProgrammingError("fetching data but no query executed")
 
     def execute_python(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
@@ -150,9 +150,7 @@ class Cursor:
         self.description = None  # which will be set later in fetchall
         self._fetch_generator = None
 
-        if self.result:
-            self.connection._internal.cleanup_result(self.result)
-            self.result = None
+        self.connection.cleanup_results()
 
         splitted = strip_split_and_clean(operation)
         if len(splitted) == 0:
@@ -161,7 +159,7 @@ class Cursor:
             raise ProgrammingError("Multiple queries in one execute() call")
 
         formatted = format_query(operation, parameters)
-        self.result, self.rowcount = self.connection._internal.query(formatted, make_result=True)
+        self.connection.result, self.rowcount = self.connection._internal.query(formatted, make_result=True)
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
@@ -176,7 +174,7 @@ class Cursor:
         statement = self.connection._internal.prepare(operation)  # type: ignore[union-attr]
         for index, parameter in enumerate(parameters):
             bind(statement, convert(parameter), index)
-        self.result, self.rowcount = execute(statement, make_result=True)
+        self.connection.result, self.rowcount = execute(statement, make_result=True)
         self.connection._internal.cleanup_statement(statement)  # type: ignore[union-attr]
         self.connection.total_changes += self.rowcount
         self._set_description()
@@ -196,9 +194,9 @@ class Cursor:
 
         self.description = None  # which will be set later in fetchall
 
-        if self.result:
-            self.connection._internal.cleanup_result(self.result)
-            self.result = None
+        if self.connection.result:
+            self.connection._internal.cleanup_result(self.connection.result)
+            self.connection.result = None
 
         total_affected_rows = 0
 
@@ -217,7 +215,7 @@ class Cursor:
                 break
 
             formatted = format_query(operation, parameters)
-            self.result, affected_rows = self.connection._internal.query(formatted, make_result=True)
+            self.connection.result, affected_rows = self.connection._internal.query(formatted, make_result=True)
             total_affected_rows += affected_rows
 
         self.rowcount = total_affected_rows
@@ -229,9 +227,10 @@ class Cursor:
         """
         Shut down the connection.
         """
-        if self.connection and self.result and self.connection._internal:
-            self.connection._internal.cleanup_result(self.result)
-            self.result = None
+        if self.connection and self.connection.result and self.connection._internal:
+            self.connection._internal.cleanup_result(self.connection.result)
+            self.connection._cursors -= self
+            self.connection.result = None
         self.connection = None
 
     def fetchall(self) -> List[Union['Row', Sequence]]:
@@ -253,11 +252,11 @@ class Cursor:
         if not self.connection.consistent:
             raise InterfaceError("Tranaction rolled back, state inconsistent")
 
-        if not self.result:
+        if not self.connection.result:
             return []
 
         rows = [i for i in self]
-        self.result = None
+        self.connection.result = None
         return rows
 
     def fetchmany(self, size=None):
@@ -277,7 +276,7 @@ class Cursor:
         self._check_connection()
         # self._check_result() sqlite test suite doesn't want us to bail out
 
-        if not self.result:
+        if not self.connection.result:
             return []
 
         if not size:
@@ -307,7 +306,7 @@ class Cursor:
         self._check_connection()
         # self._check_result() sqlite test suite doesn't want us to bail out
 
-        if not self.result:
+        if not self.connection.result:
             return None
 
         if not self._fetch_generator:
