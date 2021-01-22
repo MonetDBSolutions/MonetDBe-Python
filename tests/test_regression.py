@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 import monetdbe as monetdbe
+from monetdbe.cursors import FastCursor
 
 
 class RegressionTests(unittest.TestCase):
@@ -236,10 +237,10 @@ class RegressionTests(unittest.TestCase):
         """
 
         class Connection(monetdbe.Connection):
-            def cursor(self):
+            def cursor(self, *args, **kwargs):
                 return Cursor(self)
 
-        class Cursor(monetdbe.Cursor):
+        class Cursor(monetdbe.IterCursor):
             def __init__(self, con):
                 monetdbe.Cursor.__init__(self, con)
 
@@ -388,7 +389,7 @@ class RegressionTests(unittest.TestCase):
             pass
 
         con = monetdbe.connect(":memory:")
-        cur = monetdbe.Cursor(con)
+        cur = monetdbe.IterCursor(con)
         ref = weakref.ref(cur, callback)
         cur.__init__(con)
         del cur
@@ -443,7 +444,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
     def test_real_issue83(self):
         conn = monetdbe.connect(':memory:')
-        cursor = conn.cursor()
+        cursor = conn.cursor(factory=FastCursor)
         cursor.execute('CREATE TABLE "test"("a" REAL);')
 
         df = pd.DataFrame({'a': [1, 2, 3, 4]}, dtype=np.float32)

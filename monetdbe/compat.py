@@ -2,11 +2,10 @@
 compatibility with MonetDBLite
 """
 from warnings import warn
-from typing import List, Tuple
 from pandas import DataFrame
 
 from monetdbe.dbapi2 import connect
-from monetdbe.cursor import Cursor
+from monetdbe.cursors import Cursor, FastCursor
 from monetdbe.connection import Connection
 
 
@@ -31,9 +30,9 @@ def sql(query: str, client=None) -> DataFrame:
     if client:
         if not isinstance(client, Connection):
             raise TypeError
-        return client.execute(query).fetchdf()
+        return client.execute(query, cursor=FastCursor).fetchdf()
     else:
-        return connect().execute(query).fetchdf()
+        return connect().execute(query, cursor=FastCursor).fetchdf()
 
 
 def create(table, values, schema=None, conn=None) -> Cursor:

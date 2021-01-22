@@ -2,7 +2,6 @@ import numpy
 import pandas
 import pytest
 
-
 class TestSimpleDBAPI:
     def test_regular_selection(self, monetdbe_cursor):
         monetdbe_cursor.execute('SELECT * FROM integers')

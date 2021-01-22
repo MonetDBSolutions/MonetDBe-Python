@@ -1,25 +1,20 @@
-from typing import Tuple, Optional, Iterable, Union, Any, Generator, Iterator, Mapping, Dict, Sequence, cast, List, \
-    TYPE_CHECKING
+from typing import Optional, Iterable, Union, cast, Iterator, Dict
 from warnings import warn
 import numpy as np
 import pandas as pd
-
+from abc import ABC, abstractmethod
 from monetdbe.connection import Connection, Description
-
-from monetdbe.exceptions import ProgrammingError, InterfaceError
+from monetdbe.exceptions import ProgrammingError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape, convert
-from monetdbe._cffi.internal import result_fetch, result_fetch_numpy, bind, execute
-
-if TYPE_CHECKING:
-    from monetdbe.row import Row
+from monetdbe._cffi.internal import bind, execute
 
 
 def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
     return {label: np.array(column) for label, column in df.iteritems()}  # type: ignore
 
 
-class Cursor:
+class Cursor(ABC):
     lastrowid = 0
 
     def __init__(self, con: 'Connection'):
@@ -33,7 +28,6 @@ class Cursor:
         self.connection: Optional[Connection] = con
         self.rowcount = -1
         self.prepare_id: Optional[int] = None
-        self._fetch_generator: Optional[Generator] = None
         self.description: Optional[Description] = None
         self.row_factory = None
 
@@ -42,46 +36,6 @@ class Cursor:
 
     def _set_description(self):
         self.description = self.connection.get_description()
-
-    def __iter__(self) -> Generator[Union['Row', Sequence[Any]], None, None]:
-        # we import this late, otherwise the whole monetdbe project is unimportable
-        # if we don't have access to monetdbe shared library
-        from monetdbe._cffi.convert import extract
-
-        self._check_connection()
-
-        if not self.connection.result:
-            raise StopIteration
-
-        columns = list(map(lambda x: result_fetch(self.connection.result, x), range(self.connection.result.ncols)))
-        for r in range(self.connection.result.nrows):
-            row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
-            if self.connection.row_factory:
-                yield self.connection.row_factory(cur=self, row=row)
-            elif self.row_factory:  # Sqlite backwards compatibly
-                yield self.row_factory(self, row)
-            else:
-                yield row
-
-    def fetchnumpy(self) -> Mapping[str, np.ndarray]:
-        """
-        Fetch all results and return a numpy array.
-
-        like .fetchall(), but returns a numpy array.
-        """
-        self._check_connection()
-        self._check_result()
-        return result_fetch_numpy(self.connection.result)
-
-    def fetchdf(self) -> pd.DataFrame:
-        """
-        Fetch all results and return a Pandas DataFrame.
-
-        like .fetchall(), but returns a Pandas DataFrame.
-        """
-        self._check_connection()
-        self._check_result()
-        return pd.DataFrame(cast(pd.DataFrame, self.fetchnumpy()))  # cast to make mypy happy
 
     def _check_connection(self):
         """
@@ -122,7 +76,7 @@ class Cursor:
         self.description = None  # which will be set later in fetchall
         self._fetch_generator = None
 
-        self.connection.cleanup_results()
+        self.connection.cleanup_result()
 
         splitted = strip_split_and_clean(operation)
         if len(splitted) == 0:
@@ -137,8 +91,8 @@ class Cursor:
         return self
 
     def execute(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
-        if not isinstance(parameters, Sequence):
-            return self.execute_python(operation, parameters)
+        # if not isinstance(parameters, Sequence):
+        return self.execute_python(operation, parameters)
 
         self._check_connection()
 
@@ -162,7 +116,7 @@ class Cursor:
         """
         self._check_connection()
         self.description = None  # which will be set later in fetchall
-        self.connection.cleanup_results()
+        self.connection.cleanup_result()
         total_affected_rows = 0
 
         if operation[:6].lower().strip() == 'select':
@@ -196,88 +150,6 @@ class Cursor:
             self.connection.cleanup_result()
             self.connection.result = None
         self.connection = None
-
-    def fetchall(self) -> List[Union['Row', Sequence]]:
-        """
-        Fetch all (remaining) rows of a query result, returning them as a list of tuples).
-
-        Returns:
-            all (remaining) rows of a query result as a list of tuples
-
-        Raises:
-            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
-        """
-        self._check_connection()
-
-        # note (gijs): sqlite test suite doesn't want us to raise exception here, so for now I disable this
-        # self._check_result()
-
-        if not self.connection.consistent:
-            raise InterfaceError("Tranaction rolled back, state inconsistent")
-
-        if not self.connection.result:
-            return []
-
-        rows = [i for i in self]
-        self.connection.result = None
-        return rows
-
-    def fetchmany(self, size=None):
-        """
-        Fetch the next set of rows of a query result, returning a list of tuples). An empty sequence is returned when
-        no more rows are available.
-
-        args:
-            size: The number of rows to fetch. Fewer rows may be returned.
-
-        Returns: A number of rows from a query result as a list of tuples
-
-        Raises:
-            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
-
-        """
-        self._check_connection()
-        # self._check_result() sqlite test suite doesn't want us to bail out
-
-        if not self.connection.result:
-            return []
-
-        if not size:
-            size = self.arraysize
-        if not self._fetch_generator:
-            self._fetch_generator = self.__iter__()
-
-        rows = []
-        for i in range(size):
-            try:
-                rows.append(next(self._fetch_generator))
-            except StopIteration:
-                break
-        return rows
-
-    def fetchone(self) -> Optional[Tuple]:
-        """
-        Fetch the next row of a query result set, returning a single tuple, or None when no more data is available.
-
-        Returns:
-            One row from a result set.
-
-        Raises:
-            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
-
-        """
-        self._check_connection()
-        # self._check_result() sqlite test suite doesn't want us to bail out
-
-        if not self.connection.result:
-            return None
-
-        if not self._fetch_generator:
-            self._fetch_generator = self.__iter__()
-        try:
-            return next(self._fetch_generator)
-        except StopIteration:
-            return None
 
     def executescript(self, sql_script: str) -> None:
         """
@@ -391,7 +263,7 @@ class Cursor:
 
     def setoutputsize(self, *args, **kwargs) -> None:
         """
-        This method would normally set a column buffer size for fetchion of large columns.
+        This method would normally set a column buffer size for fetching of large columns.
 
         MonetDBe-Python does not require this, so calling this function has no effect.
         """
@@ -440,5 +312,20 @@ class Cursor:
         values = pd.read_csv(*args, **kwargs)
         return self.create(table=table, values=values)
 
-    def write_csv(self, table, *args, **kwargs):
-        return self.execute(f"select * from {table}").fetchdf().to_csv(*args, **kwargs)
+    @abstractmethod
+    def fetchall(self):
+        ...
+
+    @abstractmethod
+    def fetchnumpy(self):
+        ...
+
+    def fetchdf(self) -> pd.DataFrame:
+        """
+        Fetch all results and return a Pandas DataFrame.
+
+        like .fetchall(), but returns a Pandas DataFrame.
+        """
+        self._check_connection()
+        self._check_result()
+        return pd.DataFrame(cast(pd.DataFrame, self.fetchnumpy()))  # cast to make mypy happy

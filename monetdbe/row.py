@@ -4,7 +4,7 @@
 import collections.abc
 from typing import Union, Generator, Optional, Any, Tuple
 
-from monetdbe.cursor import Cursor
+from monetdbe.cursors import Cursor
 
 
 class Row:
@@ -17,8 +17,8 @@ class Row:
     """
 
     def __init__(self, cur: Cursor, row: Union[tuple, Generator[Optional[Any], Any, None]]):
-        if type(cur) != Cursor:
-            raise TypeError
+        if not isinstance(cur, Cursor) or cur.__class__ == Cursor:
+            raise TypeError("You need to supply a subclass of Cursor as a cursor.")
 
         self._cur = cur
         self._row = tuple(row)

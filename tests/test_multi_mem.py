@@ -5,7 +5,8 @@ tries to open multiple in memory databases.
 from tempfile import TemporaryDirectory
 from unittest import TestCase, skip
 
-from monetdbe import connect, OperationalError
+from monetdbe import connect
+from monetdbe.exceptions import OperationalError
 
 
 @skip("If enabled makes the whole test suite fail. ")

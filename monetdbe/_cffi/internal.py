@@ -12,7 +12,7 @@ from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
 if TYPE_CHECKING:
-    from monetdbe.cursor import Connection
+    from monetdbe.connection import Connection
 
 _logger = logging.getLogger(__name__)
 

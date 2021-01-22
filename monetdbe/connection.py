@@ -9,13 +9,13 @@ import numpy as np
 
 from monetdbe import exceptions
 from monetdbe.formatting import parameters_type
-from monetdbe._cffi.internal import result_fetch, result_fetch_numpy, bind, execute
+from monetdbe._cffi.internal import result_fetch
 
 from monetdbe._cffi.types import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
-    from monetdbe.cursor import Cursor
+    from monetdbe.cursors import Cursor, FastCursor
 
 Description = namedtuple('Description', (
     'name',
@@ -121,7 +121,7 @@ class Connection:
         self.close()
 
     def _check(self):
-        if not self._internal:
+        if not hasattr(self, '_internal') or not self._internal:
             raise exceptions.ProgrammingError
 
     def get_description(self):
@@ -143,7 +143,7 @@ class Connection:
         descriptions = list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok))
         return [Description(*i) for i in descriptions]
 
-    def execute(self, query: str, args: parameters_type = None) -> 'Cursor':
+    def execute(self, query: str, args: parameters_type = None, cursor: Optional[Type['Cursor']] = None) -> 'Cursor':
         """
         Execute a SQL query
 
@@ -153,16 +153,16 @@ class Connection:
         Args:
             query: The SQL query to execute
             args:  The optional SQL query arguments
+            cursor: An optional Cursor object
 
         Returns:
             A new cursor.
         """
-        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
-        cur = Cursor(con=self).execute(query, args)
+        cur = self.cursor(factory=cursor).execute(query, args)
         self.consistent = True
         return cur
 
-    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[parameters_type]]) -> 'Cursor':
+    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[parameters_type]], cursor: Optional['Cursor'] = None) -> 'Cursor':
         """
         Prepare a database query and then execute it against all parameter sequences or mappings found in the
         sequence seq_of_parameters.
@@ -177,8 +177,7 @@ class Connection:
         Returns:
             A new cursor.
         """
-        from monetdbe.cursor import Cursor
-        cur = Cursor(con=self)
+        cur = self.cursor(factory=cursor)
         for args in args_seq:
             cur.execute(query, args)
         return cur
@@ -203,16 +202,15 @@ class Connection:
         Returns:
             a new cursor.
         """
+        self._check()
 
         if not factory:
-            from monetdbe.cursor import Cursor
-            factory = Cursor
+            from monetdbe.cursors import IterCursor
+            factory = IterCursor
 
         cursor = factory(con=self)
         if not cursor:
             raise TypeError
-        if not hasattr(self, '_internal') or not self._internal:
-            raise exceptions.ProgrammingError
 
         return cursor
 
@@ -265,6 +263,7 @@ class Connection:
 
     @property
     def in_transaction(self):
+        self._check()
         return self._internal.in_transaction()
 
     def set_autocommit(self, value: bool) -> None:
@@ -278,28 +277,36 @@ class Connection:
         return self._internal.set_autocommit(value)  # type: ignore
 
     def read_csv(self, table, *args, **kwargs):
-        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
-        return Cursor(con=self).read_csv(table, *args, **kwargs)
+        return self.cursor().read_csv(table, *args, **kwargs)
 
     def write_csv(self, table, *args, **kwargs):
-        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
-        return Cursor(con=self).write_csv(table, *args, **kwargs)
+        from monetdbe.cursors import FastCursor
+        return self.cursor(factory=FastCursor).write_csv(table, *args, **kwargs)
 
-    def cleanup_results(self):
-        if self.result:
+    def cleanup_result(self):
+        if self.result and self._internal:
             self._internal.cleanup_result(self.result)
             self.result = None
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
+        """
+        Execute a query directly on the connection.
+
+        You probably don't want to use this. usually you use a cursor to execute queries.
+        """
+        self._check()
         return self._internal.query(query, make_result)
 
     def prepare(self, operation: str):
+        self._check()
         return self._internal.prepare(operation)
 
     def cleanup_statement(self, statement: str):
+        self._check()
         return self._internal.cleanup_statement(statement)
 
     def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
+        self._check()
         return self._internal.append(table, data, schema)
 
     # these are required by the python DBAPI

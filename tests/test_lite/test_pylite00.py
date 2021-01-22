@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 import monetdbe
+from monetdbe.cursors import FastCursor
 
 
 class TestmonetdbeBase(TestCase):
@@ -113,7 +114,7 @@ class TestmonetdbeBase(TestCase):
     def test_many_sql_statements(self):
         for i in range(5):  # FIXME 1000
             conn = monetdbe.connect()
-            cur = conn.execute('CREATE TABLE pylite11 (i INTEGER)')
+            cur = conn.execute('CREATE TABLE pylite11 (i INTEGER)', cursor=FastCursor)
             cur.insert('pylite11', {'i': numpy.arange(10).astype(numpy.int32)})
             result = cur.execute('SELECT * FROM pylite11').fetchdf()
             assert result['i'][0] == 0, "Invalid result"

@@ -24,12 +24,6 @@ from time import localtime
 
 from monetdbe.connection import Connection
 
-from monetdbe.cursor import Cursor
-from monetdbe.exceptions import (
-    IntegrityError, DatabaseError, StandardError, Error, DataError, InterfaceError, InternalError, NotSupportedError,
-    OperationalError, ProgrammingError, Warning
-)
-
 OptimizedUnicode = str
 
 paramstyle = "qmark"
