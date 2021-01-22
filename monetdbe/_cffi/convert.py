@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional, Callable, Union, Any
+from typing import List, Tuple, Optional, Callable, Union, Any, Mapping
 
 import numpy as np
 from monetdbe._lowlevel import lib, ffi
@@ -35,30 +35,42 @@ def py_float(data: char_p) -> float:
         return data
 
 
+from typing import NamedTuple
+
+
+class MonetdbTypeInfo(NamedTuple):
+    c_type: int
+    sql_type: Optional[str]
+    numpy_type: np.dtype
+    c_string_type: str
+    py_converter: Optional[Callable]
+    null_value: Optional[Union[int, float]]
+
+
 #  monetdb C type, SQL type, numpy type, Cstringtype, pyconverter, null value, comment
-mappings: List[Tuple[int, Optional[str], np.dtype, str, Optional[Callable], Optional[Union[int, float]]]] = [
-    (lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
-    (lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
-    (lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
-    (lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
-    (lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None, np.iinfo(np.int64).min),  # type: ignore
-    (lib.monetdbe_size_t, None, np.dtype(np.uint64), "size_t", None, None),  # used by monetdb internally
-    (lib.monetdbe_float, "real", np.dtype(np.float32), "float", py_float, np.finfo(np.float32).min),
-    (lib.monetdbe_double, "float", np.dtype(np.float64), "double", py_float, np.finfo(np.float64).min),
-    (lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string, None),
-    (lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob, None),
-    (lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date, None),
-    (lib.monetdbe_time, "time", np.dtype('=O'), "time", py_time, None),
-    (lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
+type_infos: List[MonetdbTypeInfo] = [
+    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
+    MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None, np.iinfo(np.int64).min),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_size_t, None, np.dtype(np.uint64), "size_t", None, None),  # used by monetdb internally
+    MonetdbTypeInfo(lib.monetdbe_float, "real", np.dtype(np.float32), "float", py_float, np.finfo(np.float32).min),
+    MonetdbTypeInfo(lib.monetdbe_double, "float", np.dtype(np.float64), "double", py_float, np.finfo(np.float64).min),
+    MonetdbTypeInfo(lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string, None),
+    MonetdbTypeInfo(lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob, None),
+    MonetdbTypeInfo(lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date, None),
+    MonetdbTypeInfo(lib.monetdbe_time, "time", np.dtype('=O'), "time", py_time, None),
+    MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
 ]
-numpy2monet_map = {numpy_type: (c_string, monet_type) for monet_type, _, numpy_type, c_string, _, _ in mappings}
-monet_numpy_map = {monet_type: (c_string, converter, numpy_type, null_value) for
-                   monet_type, _, numpy_type, c_string, converter, null_value in mappings}
+
+numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type:  i for i in type_infos}
+monet_c_type_map: Mapping[int, MonetdbTypeInfo] = {i.c_type: i for i in type_infos}
 
 
 def numpy_monetdb_map(numpy_type: np.dtype):
     if numpy_type.kind in ('i', 'f'):  # type: ignore
-        return numpy2monet_map[numpy_type]
+        return numpy_type_map[numpy_type]
     raise ProgrammingError("append() only support int and float family types")
 
 
@@ -68,13 +80,13 @@ def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str]
 
     The text_factory is optional, and wraps the value with a custom user supplied text function.
     """
-    cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
-    col = ffi.cast(f"monetdbe_column_{cast_string} *", rcol)
+    type_info = monet_c_type_map[rcol.type]
+    col = ffi.cast(f"monetdbe_column_{type_info.c_string_type} *", rcol)
     if col.is_null(col.data + r):
         return None
     else:
-        if cast_function:
-            result = cast_function(col.data[r])
+        if type_info.py_converter:
+            result = type_info.py_converter(col.data[r])
             if rcol.type == lib.monetdbe_str and text_factory:
                 return text_factory(result)
             else:

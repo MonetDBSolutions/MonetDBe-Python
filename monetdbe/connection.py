@@ -127,14 +127,14 @@ class Connection:
     def get_description(self):
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
-        from monetdbe._cffi.convert import make_string, monet_numpy_map
+        from monetdbe._cffi.convert import make_string, monet_c_type_map
 
         if not self.result:
             return
 
         columns = list(map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
         name = (make_string(rcol.name) for rcol in columns)
-        type_code = (monet_numpy_map[rcol.type][2] for rcol in columns)
+        type_code = (monet_c_type_map[rcol.type].sql_type for rcol in columns)
         display_size = repeat(None)
         internal_size = repeat(None)
         precision = repeat(None)

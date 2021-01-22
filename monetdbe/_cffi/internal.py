@@ -7,7 +7,7 @@ import numpy as np
 from monetdbe._lowlevel import ffi, lib
 
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_numpy_map, extract, numpy_monetdb_map
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
@@ -28,10 +28,10 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
     for c in range(result.ncols):
         rcol = result_fetch(result, c)
         name = make_string(rcol.name)
-        cast_string, cast_function, numpy_type, monetdbe_null = monet_numpy_map[rcol.type]
+        type_info = monet_c_type_map[rcol.type]
 
         # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
-        if numpy_type.type == np.object_:
+        if type_info.numpy_type.type == np.object_:
             np_col: np.ndarray = np.array([extract(rcol, r) for r in range(result.nrows)])
             if rcol.type == lib.monetdbe_str:
                 np_col = np_col.astype(str)
@@ -42,12 +42,12 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
             elif rcol.type == lib.monetdbe_timestamp:
                 np_col = np_col.astype('datetime64[ns]')  # type: ignore
         else:
-            buffer_size = result.nrows * numpy_type.itemsize  # type: ignore
+            buffer_size = result.nrows * type_info.numpy_type.itemsize  # type: ignore
             c_buffer = ffi.buffer(rcol.data, buffer_size)
-            np_col = np.frombuffer(c_buffer, dtype=numpy_type)  # type: ignore
+            np_col = np.frombuffer(c_buffer, dtype=type_info.numpy_type)  # type: ignore
 
-        if monetdbe_null:
-            mask = np_col == monetdbe_null
+        if type_info.null_value:
+            mask = np_col == type_info.null_value
         else:
             mask = np.ma.nomask  # type: ignore[attr-defined]
 
@@ -134,7 +134,6 @@ class Internal:
         if self._active_context == self:
             return
 
-        self._connection.invalidate()
         self.close()
         self.set_monetdbe_database(self.open())
         self.set_active_context(self)
@@ -248,16 +247,16 @@ class Internal:
         for column_num, (column_name, existing_type) in enumerate(existing_columns):
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
-            work_type_string, work_type = numpy_monetdb_map(column_values.dtype)
-            if not work_type == existing_type:
-                existing_type_string = monet_numpy_map[existing_type][0]
-                error = f"Type '{work_type_string}' for appended column '{column_name}' " \
+            type_info = numpy_monetdb_map(column_values.dtype)
+            if not type_info.c_type == existing_type:
+                existing_type_string = monet_c_type_map[existing_type].c_string_type
+                error = f"Type '{type_info.c_string_type}' for appended column '{column_name}' " \
                         f"does not match table type '{existing_type_string}'"
                 raise exceptions.ProgrammingError(error)
-            work_column.type = work_type
+            work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
-            work_column.data = ffi.cast(f"{work_type_string} *", ffi.from_buffer(column_values))
+            work_column.data = ffi.cast(f"{type_info.c_string_type} *", ffi.from_buffer(column_values))
             work_columns[column_num] = work_column
             work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
