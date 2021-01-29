@@ -1,5 +1,5 @@
 # type: ignore[union-attr]
-from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, Generator
+from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, TYPE_CHECKING
 from warnings import warn
 import numpy as np
 import pandas as pd
@@ -8,8 +8,11 @@ from monetdbe.connection import Connection, Description
 from monetdbe.exceptions import ProgrammingError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape, convert
-from monetdbe.row import Row
+
 from monetdbe._cffi.internal import bind, execute
+
+if TYPE_CHECKING:
+    from monetdbe.row import Row
 
 
 def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
@@ -33,7 +36,7 @@ class Cursor(ABC):
         self.description: Optional[Description] = None
         self.row_factory = None
 
-        self._fetch_generator: Optional[Iterator[Row]] = None
+        self._fetch_generator: Optional[Iterator['Row']] = None
 
     def __del__(self):
         self.close()
@@ -370,7 +373,7 @@ class Cursor(ABC):
                 break
         return rows
 
-    def fetchone(self) -> Optional[Union[Row, Sequence]]:
+    def fetchone(self) -> Optional[Union['Row', Sequence]]:
         """
         Fetch the next row of a query result set, returning a single tuple, or None when no more data is available.
 

@@ -1,12 +1,15 @@
 """
 compatibility with MonetDBLite
 """
+from typing import TYPE_CHECKING
 from warnings import warn
 from pandas import DataFrame
 
 from monetdbe.dbapi2 import connect
-from monetdbe.cursors import Cursor, NumpyCursor
 from monetdbe.connection import Connection
+
+if TYPE_CHECKING:
+    from monetdbe.cursors.cursor import Cursor  # type: ignore[attr-defined]
 
 
 def make_connection(*args, **kwargs):
@@ -30,19 +33,19 @@ def sql(query: str, client=None) -> DataFrame:
     if client:
         if not isinstance(client, Connection):
             raise TypeError
-        return client.execute(query, cursor=NumpyCursor).fetchdf()
+        return client.execute(query).fetchdf()
     else:
-        return connect().execute(query, cursor=NumpyCursor).fetchdf()
+        return connect().execute(query).fetchdf()
 
 
-def create(table, values, schema=None, conn=None) -> Cursor:
+def create(table, values, schema=None, conn=None) -> 'Cursor':
     warn("create() is deprecated and will be removed from future versions")
     if not conn:
         conn = connect()
     return conn.cursor().create(table=table, values=values, schema=schema)
 
 
-def insert(*args, **kwargs) -> Cursor:
+def insert(*args, **kwargs) -> 'Cursor':
     warn("insert() is deprecated and will be removed from future versions")
     if 'client' in kwargs:
         client = kwargs.pop('client')

@@ -4,7 +4,7 @@
 import collections.abc
 from typing import Union, Generator, Optional, Any, Tuple
 
-from monetdbe.cursors import Cursor
+from monetdbe.cursors.cursor import Cursor  # type: ignore[attr-defined]
 
 
 class Row:
@@ -51,17 +51,15 @@ class Row:
     def __getitem__(self, item):
         if isinstance(item, (int, slice)):
             return self._row.__getitem__(item)
-        elif isinstance(item, str):
+        if isinstance(item, str):
             try:
                 return self._row.__getitem__(self._key_map[item])
             except KeyError:
                 raise IndexError from None
-        else:
-            raise TypeError(f"type {type(item)} not supported")
+        raise TypeError(f"type {type(item)} not supported")
 
-    def keys(self) -> Tuple[Any]:
-        # todo (gijs): type
-        return self._keys  # type: ignore
+    def keys(self) -> Tuple[Any, ...]:
+        return self._keys
 
 
 collections.abc.Sequence.register(Row)

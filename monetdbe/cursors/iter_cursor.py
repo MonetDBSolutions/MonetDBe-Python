@@ -56,7 +56,7 @@ class IterCursor(Cursor):
     def fetchnumpy(self) -> Mapping[str, np.ndarray]:
         self._check_connection()
         self._check_result()
-        all = self.fetchall()
+        all_ = self.fetchall()
         names = (d.name for d in self.description)
-        flipped = zip(*all)
+        flipped = zip(*all_)
         return {k: v for k, v in zip(names, flipped)}

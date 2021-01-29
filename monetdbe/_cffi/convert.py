@@ -89,7 +89,5 @@ def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str]
             result = type_info.py_converter(col.data[r])
             if rcol.type == lib.monetdbe_str and text_factory:
                 return text_factory(result)
-            else:
-                return result
-        else:
-            return col.data[r]
+            return result
+        return col.data[r]

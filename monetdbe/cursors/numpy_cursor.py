@@ -32,9 +32,8 @@ class NumpyCursor(Cursor):
     def fetchall(self):
         result = self.fetchnumpy()
         if result:
-            return np.vstack(list(result.values())).T
-        else:
-            return []
+            return list(np.vstack(list(result.values())).T)
+        return []
 
     def write_csv(self, table, *args, **kwargs):
         return self.execute(f"select * from {table}").fetchdf().to_csv(*args, **kwargs)
