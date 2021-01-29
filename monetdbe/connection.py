@@ -162,7 +162,12 @@ class Connection:
         self.consistent = True
         return cur
 
-    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[parameters_type]], cursor: Optional['Cursor'] = None) -> 'Cursor':
+    def executemany(
+            self,
+            query: str,
+            args_seq: Union[Iterator, Iterable[parameters_type]],
+            cursor: Optional[Type['Cursor']] = None
+    ) -> 'Cursor':
         """
         Prepare a database query and then execute it against all parameter sequences or mappings found in the
         sequence seq_of_parameters.
@@ -173,9 +178,10 @@ class Connection:
         Args:
             query: The SQL query to execute
             args_seq:  The optional SQL query arguments
+            cursor: A Cursor class
 
         Returns:
-            A new cursor.
+            A new cursor instance of the supplied cursor class
         """
         cur = self.cursor(factory=cursor)
         for args in args_seq:
@@ -212,7 +218,7 @@ class Connection:
             from monetdbe.cursors import IterCursor, NumpyCursor
             factory = IterCursor
 
-        cursor = factory(con=self)
+        cursor = factory(con=self)  # type: ignore[misc]
         if not cursor:
             raise TypeError
 
@@ -299,19 +305,19 @@ class Connection:
         You probably don't want to use this. usually you use a cursor to execute queries.
         """
         self._check()
-        return self._internal.query(query, make_result)
+        return self._internal.query(query, make_result)  # type: ignore[union-attr]
 
     def prepare(self, operation: str):
         self._check()
-        return self._internal.prepare(operation)
+        return self._internal.prepare(operation)  # type: ignore[union-attr]
 
-    def cleanup_statement(self, statement: str):
+    def cleanup_statement(self, statement: str) -> None:
         self._check()
-        return self._internal.cleanup_statement(statement)
+        self._internal.cleanup_statement(statement)  # type: ignore[union-attr]
 
     def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
         self._check()
-        return self._internal.append(table, data, schema)
+        self._internal.append(table, data, schema)  # type: ignore[union-attr]
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning
