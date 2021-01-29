@@ -1,3 +1,3 @@
 from .cursor import Cursor
-from .fast_cursor import FastCursor
+from .numpy_cursor import NumpyCursor
 from .iter_cursor import IterCursor

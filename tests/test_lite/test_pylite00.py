@@ -1,11 +1,11 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy
 import pandas as pd
 import pytest
 
 import monetdbe
-from monetdbe.cursors import FastCursor
+from monetdbe.cursors import NumpyCursor
 
 
 class TestmonetdbeBase(TestCase):
@@ -50,6 +50,7 @@ class TestmonetdbeBase(TestCase):
         result = cur.execute('SELECT d FROM pylite04_date').fetchdf()
         assert result['d'][0] == pd.Timestamp('2000-01-01'), "Incorrect result"
 
+    @skip("we don't support multiple open  connections yet")
     def test_connections(self):
         # create two clients
         conn = monetdbe.connect(autocommit=True)
@@ -65,12 +66,11 @@ class TestmonetdbeBase(TestCase):
         with pytest.raises(monetdbe.DatabaseError):
             monetdbe.sql('SELECT * FROM pylite05', client=conn2)
 
-        # todo (gijs): we don't support multiple open in-memory connections yet
         # now commit the table
-        #monetdbe.sql('COMMIT', client=conn)
+        monetdbe.sql('COMMIT', client=conn)
         # query the table again from the other client, this time it should be there
-        #result = monetdbe.sql('SELECT MIN(i) AS minimum FROM pylite05', client=conn2)
-        #assert result['minimum'][0] == 0, "Incorrect result"
+        result = monetdbe.sql('SELECT MIN(i) AS minimum FROM pylite05', client=conn2)
+        assert result['minimum'][0] == 0, "Incorrect result"
 
     def test_non_existent_table(self, ):
         # select from non-existent table
@@ -114,7 +114,7 @@ class TestmonetdbeBase(TestCase):
     def test_many_sql_statements(self):
         for i in range(5):  # FIXME 1000
             conn = monetdbe.connect()
-            cur = conn.execute('CREATE TABLE pylite11 (i INTEGER)', cursor=FastCursor)
+            cur = conn.execute('CREATE TABLE pylite11 (i INTEGER)', cursor=NumpyCursor)
             cur.insert('pylite11', {'i': numpy.arange(10).astype(numpy.int32)})
             result = cur.execute('SELECT * FROM pylite11').fetchdf()
             assert result['i'][0] == 0, "Invalid result"

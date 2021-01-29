@@ -14,7 +14,7 @@ from monetdbe.version import monetdbe_version_info
 
 from monetdbe.cursors import (
     Cursor,
-    FastCursor,
+    NumpyCursor,
     IterCursor
 )
 

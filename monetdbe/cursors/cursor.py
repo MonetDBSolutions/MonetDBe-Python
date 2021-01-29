@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Union, cast, Iterator, Dict
+from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, Generator
 from warnings import warn
 import numpy as np
 import pandas as pd
@@ -30,6 +30,8 @@ class Cursor(ABC):
         self.prepare_id: Optional[int] = None
         self.description: Optional[Description] = None
         self.row_factory = None
+
+        self._fetch_generator: Optional[Generator] = None
 
     def __del__(self):
         self.close()
@@ -74,7 +76,6 @@ class Cursor(ABC):
         self._check_connection()
 
         self.description = None  # which will be set later in fetchall
-        self._fetch_generator = None
 
         self.connection.cleanup_result()
 
@@ -329,3 +330,64 @@ class Cursor(ABC):
         self._check_connection()
         self._check_result()
         return pd.DataFrame(cast(pd.DataFrame, self.fetchnumpy()))  # cast to make mypy happy
+
+    @abstractmethod
+    def __iter__(self):
+        ...
+
+    def fetchmany(self, size=None):
+        """
+        Fetch the next set of rows of a query result, returning a list of tuples). An empty sequence is returned when
+        no more rows are available.
+
+        args:
+            size: The number of rows to fetch. Fewer rows may be returned.
+
+        Returns: A number of rows from a query result as a list of tuples
+
+        Raises:
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
+
+        """
+        self._check_connection()
+        # self._check_result() sqlite test suite doesn't want us to bail out
+
+        if not self.connection.result:
+            return []
+
+        if not size:
+            size = self.arraysize
+        if not self._fetch_generator:
+            self._fetch_generator = self.__iter__()
+
+        rows = []
+        for i in range(size):
+            try:
+                rows.append(next(self._fetch_generator))
+            except StopIteration:
+                break
+        return rows
+
+    def fetchone(self) -> Optional[Union['Row', Sequence]]:
+        """
+        Fetch the next row of a query result set, returning a single tuple, or None when no more data is available.
+
+        Returns:
+            One row from a result set.
+
+        Raises:
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
+
+        """
+        self._check_connection()
+        # self._check_result() sqlite test suite doesn't want us to bail out
+
+        if not self.connection.result:
+            return None
+
+        if not self._fetch_generator:
+            self._fetch_generator = self.__iter__()
+        try:
+            return next(self._fetch_generator)
+        except StopIteration:
+            return None

@@ -1,5 +1,5 @@
 from monetdbe import connect
-from monetdbe.cursors import FastCursor
+from monetdbe.cursors import NumpyCursor
 from unittest import TestCase
 from pathlib import Path
 from tempfile import TemporaryDirectory

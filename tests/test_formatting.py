@@ -40,6 +40,7 @@ class TransactionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.con.execute("insert into test(i, s) values (?)", 5)
 
+    @unittest.skip("we don't support multiple open connections yet")
     def test_qmark_multiple_cons(self):
         con1 = monetdbe.connect()
         con1.execute("create table test(i int, s text)")

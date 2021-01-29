@@ -64,7 +64,7 @@ type_infos: List[MonetdbTypeInfo] = [
     MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
 ]
 
-numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type:  i for i in type_infos}
+numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type: i for i in type_infos}
 monet_c_type_map: Mapping[int, MonetdbTypeInfo] = {i.c_type: i for i in type_infos}
 
 

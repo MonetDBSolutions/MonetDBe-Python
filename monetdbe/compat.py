@@ -5,7 +5,7 @@ from warnings import warn
 from pandas import DataFrame
 
 from monetdbe.dbapi2 import connect
-from monetdbe.cursors import Cursor, FastCursor
+from monetdbe.cursors import Cursor, NumpyCursor
 from monetdbe.connection import Connection
 
 
@@ -30,9 +30,9 @@ def sql(query: str, client=None) -> DataFrame:
     if client:
         if not isinstance(client, Connection):
             raise TypeError
-        return client.execute(query, cursor=FastCursor).fetchdf()
+        return client.execute(query, cursor=NumpyCursor).fetchdf()
     else:
-        return connect().execute(query, cursor=FastCursor).fetchdf()
+        return connect().execute(query, cursor=NumpyCursor).fetchdf()
 
 
 def create(table, values, schema=None, conn=None) -> Cursor:

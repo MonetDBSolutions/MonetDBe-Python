@@ -15,7 +15,7 @@ from monetdbe._cffi.types import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
-    from monetdbe.cursors import Cursor, FastCursor
+    from monetdbe.cursors import Cursor, NumpyCursor
 
 Description = namedtuple('Description', (
     'name',
@@ -122,7 +122,7 @@ class Connection:
 
     def _check(self):
         if not hasattr(self, '_internal') or not self._internal:
-            raise exceptions.ProgrammingError
+            raise exceptions.ProgrammingError("The connection has been closed")
 
     def get_description(self):
         # we import this late, otherwise the whole monetdbe project is unimportable
@@ -209,7 +209,7 @@ class Connection:
         self._check()
 
         if not factory:
-            from monetdbe.cursors import IterCursor
+            from monetdbe.cursors import IterCursor, NumpyCursor
             factory = IterCursor
 
         cursor = factory(con=self)
@@ -284,8 +284,8 @@ class Connection:
         return self.cursor().read_csv(table, *args, **kwargs)
 
     def write_csv(self, table, *args, **kwargs):
-        from monetdbe.cursors import FastCursor
-        return self.cursor(factory=FastCursor).write_csv(table, *args, **kwargs)
+        from monetdbe.cursors import NumpyCursor
+        return self.cursor(factory=NumpyCursor).write_csv(table, *args, **kwargs)
 
     def cleanup_result(self):
         if self.result and self._internal:

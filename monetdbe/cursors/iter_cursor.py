@@ -9,10 +9,6 @@ if TYPE_CHECKING:
 
 
 class IterCursor(Cursor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._fetch_generator: Optional[Generator] = None
-
     def __iter__(self) -> Generator[Union['Row', Sequence[Any]], None, None]:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
@@ -57,63 +53,6 @@ class IterCursor(Cursor):
         rows = [i for i in self]
         self.connection.result = None
         return rows
-
-    def fetchmany(self, size=None):
-        """
-        Fetch the next set of rows of a query result, returning a list of tuples). An empty sequence is returned when
-        no more rows are available.
-
-        args:
-            size: The number of rows to fetch. Fewer rows may be returned.
-
-        Returns: A number of rows from a query result as a list of tuples
-
-        Raises:
-            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
-
-        """
-        self._check_connection()
-        # self._check_result() sqlite test suite doesn't want us to bail out
-
-        if not self.connection.result:
-            return []
-
-        if not size:
-            size = self.arraysize
-        if not self._fetch_generator:
-            self._fetch_generator = self.__iter__()
-
-        rows = []
-        for i in range(size):
-            try:
-                rows.append(next(self._fetch_generator))
-            except StopIteration:
-                break
-        return rows
-
-    def fetchone(self) -> Optional[Union['Row', Sequence]]:
-        """
-        Fetch the next row of a query result set, returning a single tuple, or None when no more data is available.
-
-        Returns:
-            One row from a result set.
-
-        Raises:
-            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
-
-        """
-        self._check_connection()
-        # self._check_result() sqlite test suite doesn't want us to bail out
-
-        if not self.connection.result:
-            return None
-
-        if not self._fetch_generator:
-            self._fetch_generator = self.__iter__()
-        try:
-            return next(self._fetch_generator)
-        except StopIteration:
-            return None
 
     def fetchnumpy(self) -> Mapping[str, np.ndarray]:
         self._check_connection()

@@ -87,7 +87,6 @@ def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[m
 class Internal:
     _active_context: Optional['Internal'] = None
     _active_connection: Optional['Connection'] = None
-    in_memory_active: bool = False
     _monetdbe_database: Optional[monetdbe_database] = None
 
     def __init__(
@@ -118,10 +117,6 @@ class Internal:
         cls._active_connection = active_connection
 
     @classmethod
-    def set_in_memory_active(cls, value: bool):
-        cls.in_memory_active = value
-
-    @classmethod
     def set_monetdbe_database(cls, connection: Optional[monetdbe_database]):
         cls._monetdbe_database = connection
 
@@ -131,14 +126,11 @@ class Internal:
             self.close()
 
     def _switch(self):
-        # todo (gijs): see issue #5
-        # if not self.dbdir and self.in_memory_active:
-        #    raise exceptions.NotSupportedError(
-        #        "You can't open a new in-memory MonetDBe database while an old one is still open.")
-
         if self._active_context == self:
             return
 
+        # this is a bit scary but just to make sure the previous connection
+        # can't touch us anymore
         if self._active_connection:
             self._active_connection._internal = None
 
@@ -146,9 +138,6 @@ class Internal:
         self.set_monetdbe_database(self.open())
         self.set_active_context(self)
         self.set_active_connection(self._connection)
-
-        if not self.dbdir:
-            self.set_in_memory_active(True)
 
     def cleanup_result(self, result: monetdbe_result):
         _logger.info("cleanup_result called")
@@ -198,7 +187,6 @@ class Internal:
         if self._active_context:
             self.set_active_context(None)
 
-        self.set_in_memory_active(False)
         self.set_active_connection(None)
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:

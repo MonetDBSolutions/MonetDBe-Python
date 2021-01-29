@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 import monetdbe as monetdbe
-from monetdbe.cursors import FastCursor
+from monetdbe.cursors import NumpyCursor
 
 
 class RegressionTests(unittest.TestCase):
@@ -444,7 +444,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
     def test_real_issue83(self):
         conn = monetdbe.connect(':memory:')
-        cursor = conn.cursor(factory=FastCursor)
+        cursor = conn.cursor(factory=NumpyCursor)
         cursor.execute('CREATE TABLE "test"("a" REAL);')
 
         df = pd.DataFrame({'a': [1, 2, 3, 4]}, dtype=np.float32)
@@ -486,6 +486,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         path = str((Path(__file__).parent / "example.csv").resolve().absolute())
         cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")
 
+    @unittest.skip("Disabled since takes quite long")
     def test_crash_loop(self):
         for i in range(1000):
             cx = monetdbe.connect(":memory:")
