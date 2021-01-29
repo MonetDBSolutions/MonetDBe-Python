@@ -485,3 +485,10 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         path = str((Path(__file__).parent / "example.csv").resolve().absolute())
         cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")
+
+    def test_crash_loop(self):
+        for i in range(1000):
+            cx = monetdbe.connect(":memory:")
+            cu = cx.cursor()
+            cu.execute("create table test(id integer auto_increment primary key, name text)")
+            cu.execute("insert into test(name) values (?)", ("foo",))

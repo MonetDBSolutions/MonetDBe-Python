@@ -86,6 +86,7 @@ def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[m
 
 class Internal:
     _active_context: Optional['Internal'] = None
+    _active_connection: Optional['Connection'] = None
     in_memory_active: bool = False
     _monetdbe_database: Optional[monetdbe_database] = None
 
@@ -113,6 +114,10 @@ class Internal:
         cls._active_context = active_context
 
     @classmethod
+    def set_active_connection(cls, active_connection: Optional['Connection']):
+        cls._active_connection = active_connection
+
+    @classmethod
     def set_in_memory_active(cls, value: bool):
         cls.in_memory_active = value
 
@@ -134,9 +139,13 @@ class Internal:
         if self._active_context == self:
             return
 
+        if self._active_connection:
+            self._active_connection._internal = None
+
         self.close()
         self.set_monetdbe_database(self.open())
         self.set_active_context(self)
+        self.set_active_connection(self._connection)
 
         if not self.dbdir:
             self.set_in_memory_active(True)
@@ -189,8 +198,8 @@ class Internal:
         if self._active_context:
             self.set_active_context(None)
 
-        if not self.dbdir:
-            self.set_in_memory_active(True)
+        self.set_in_memory_active(False)
+        self.set_active_connection(None)
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """

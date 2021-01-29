@@ -187,6 +187,10 @@ class Connection:
         return self.execute("COMMIT")
 
     def close(self, *args, **kwargs) -> None:
+        # todo: this is weird, but sometimes there is no _internal
+        if not hasattr(self, '_internal'):
+            return
+
         if self._internal:
             self._internal.close()
         self._internal = None
