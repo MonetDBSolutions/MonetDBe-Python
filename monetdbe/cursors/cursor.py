@@ -264,8 +264,7 @@ class Cursor(ABC):
             warn(
                 "One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
             return self._insert_slow(table, prepared, schema)
-        else:
-            return self.connection.append(schema=schema, table=table, data=prepared)
+        return self.connection.append(schema=schema, table=table, data=prepared)
 
     def setoutputsize(self, *args, **kwargs) -> None:
         """

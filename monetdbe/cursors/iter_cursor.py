@@ -1,14 +1,16 @@
 # type: ignore[union-attr]
 from .cursor import Cursor
-from typing import Union, Any, Iterator, Sequence, List, Mapping
+from typing import Union, Any, Iterator, Sequence, List, Mapping, TYPE_CHECKING
 from monetdbe.exceptions import InterfaceError
-from monetdbe.row import Row
 from monetdbe._cffi.internal import result_fetch
 import numpy as np
 
+if TYPE_CHECKING:
+    from monetdbe.row import Row
+
 
 class IterCursor(Cursor):
-    def __iter__(self) -> Iterator[Union[Row, Sequence[Any]]]:
+    def __iter__(self) -> Iterator[Union['Row', Sequence[Any]]]:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import extract
@@ -28,7 +30,7 @@ class IterCursor(Cursor):
             else:
                 yield row
 
-    def fetchall(self) -> List[Union[Row, Sequence]]:
+    def fetchall(self) -> List[Union['Row', Sequence]]:
         """
         Fetch all (remaining) rows of a query result, returning them as a list of tuples).
 

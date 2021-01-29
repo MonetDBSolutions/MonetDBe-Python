@@ -71,19 +71,19 @@ class Connection:
         check_if_we_can_import_lowlevel()
 
         if uri or port or username or password or logging:
-            raise NotImplemented  # todo
+            raise NotImplemented
 
         if not check_same_thread:
-            raise NotImplemented  # todo
+            raise NotImplemented
 
         if detect_types != 0:
-            raise NotImplemented  # todo
+            raise NotImplemented
 
         if not database:
             database = None
         elif database == ':memory:':  # sqlite compatibility
             database = None
-        elif type(database) == str:
+        elif isinstance(database, str):
             database = Path(database).resolve()
         elif hasattr(database, '__fspath__'):  # Deal with Path like objects
             database = Path(database.__fspath__()).resolve()  # type: ignore
@@ -91,7 +91,7 @@ class Connection:
             raise TypeError
 
         self.result: Optional[monetdbe_result] = None
-        self.row_factory: Optional[Type[Row]] = None
+        self.row_factory: Optional[Type['Row']] = None
         self.text_factory: Optional[Callable[[str], Any]] = None
         self.total_changes = 0
         self.isolation_level = None
@@ -193,7 +193,6 @@ class Connection:
         return self.execute("COMMIT")
 
     def close(self, *args, **kwargs) -> None:
-        # todo: this is weird, but sometimes there is no _internal
         if not hasattr(self, '_internal'):
             return
 
