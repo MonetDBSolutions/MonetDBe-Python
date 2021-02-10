@@ -23,8 +23,8 @@ in MonetDBe and  C to learn the API by example.
 
 If the application program uses multiple concurrent client-side threads to interact with the embedded database,
 each concurrent API consuming thread must use a non-shared `monetdbe_database` handle for its API calls.
-In other words `monetdbe_database` handles are not thread-safe. See the above mentioned example repository
-for correct examples on how to implement concurrent access to an embedded database.
+In other words `monetdbe_database` handles are not thread-safe. See the `concurrent.c` source file in the MonetDBe example repository
+for an example of a correct implementation of concurrent access to an embedded database.
 
 Porting SQLite3 programs
 ------------------------
