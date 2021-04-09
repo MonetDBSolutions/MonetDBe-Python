@@ -27,7 +27,7 @@ jobs:
         run: brew install monetdb
       -
         name: Install Python dependencies
-        run: /pip install --upgrade pip wheel delocate pytest
+        run: pip install --upgrade pip wheel delocate pytest
       -
         name: Compile and install MonetDBe-python
         run: CFLAGS="-I/usr/local/include -L/usr/local/lib" pip install -e ".[test]"

@@ -22,37 +22,6 @@ jobs:
         name: run tests
         run: py.test -vv
 
-
-  linux-mypy:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
-      -
-        name: Run mypy static code checks
-        run: mypy monetdbe tests
-
-
-  linux-pycodestyle:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
-      -
-        name: Check the python coding style
-        run: pycodestyle monetdbe tests
-
-
   linux-wheel:
     runs-on: ubuntu-18.04
     container: monetdb/dev-builds:Oct2020_manylinux

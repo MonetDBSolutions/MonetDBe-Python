@@ -20,6 +20,13 @@ jobs:
         name: Install choco packages
         run: choco install --no-progress -y winflexbison unzip curl
       -
+        name: Restore from cache and install vcpkg
+        uses: lukka/run-vcpkg@v6
+        with:
+          setupOnly: true
+          vcpkgGitCommitId: 9f34e3d24c219574ac8cea583fcf170ffedd7f6a
+        run: $VCPKG_ROOT/vcpkg install --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
+      -
         name: Install vcpkg packages
         uses: lukka/run-vcpkg@v5
         with:
@@ -32,7 +39,6 @@ jobs:
           Set-Location c:\
           curl.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip -O
           unzip.exe ${{ env.branch }}.zip
-
       -
         name: Compile and install MonetDB
         run: |
@@ -60,7 +66,7 @@ jobs:
 
 
   windows-wheel:
-    needs: [ windows-monetdb-build ]
+    needs: windows-monetdb-build
     runs-on: windows-2019
     strategy:
       matrix:
@@ -77,6 +83,10 @@ jobs:
       - name: Install pytest
         run: |
           python3 -m pip install --upgrade pip
+      - uses: actions/download-artifact@v2
+        with:
+          name: monetdb
+          path: c:\monetdb
       -
         name: Collect DLLs
         run: |
@@ -117,9 +127,3 @@ jobs:
         name: Publish Windows binary wheels
         with:
           path: dist/*.whl
-      - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.MONETDBE_PYPI }}
