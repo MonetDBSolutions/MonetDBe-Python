@@ -8,45 +8,41 @@ on:
     branches: [ master ]
 
 jobs:
-  osx_wheel:
+  osx-wheel:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: [3.6.12, 3.7.9, 3.8.6, 3.9.0]
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
     steps:
-      - name: checkout
+      -
+        name: Checkout
         uses: actions/checkout@v2
-
-      - name: brew packages
-        run: brew install pyenv monetdb
-
-      - name: Install Python version
-        run:  |
-          pyenv install -s ${{ matrix.python-version }}
-
-      - name: Install Python dependencies
-        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/pip install --upgrade pip wheel delocate pytest
-
-      - name: Compile and install MonetDBe-python
-        run: CFLAGS="-I/usr/local/include -L/usr/local/lib" ~/.pyenv/versions/${{ matrix.python-version }}/bin/pip install -e ".[test]"
-
-      - name: Run pytest
-        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/pytest
-
-      - name: make binary wheel
-        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/python setup.py bdist_wheel
-
-      - name: Delocate binary wheel
-        run: ~/.pyenv/versions/${{ matrix.python-version }}/bin/delocate-wheel -v dist/*.whl
-
-      - name: Publish OS X binary wheels
+      -
+        name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      -
+        name: brew packages
+        run: brew install monetdb
+      -
+        name: Install Python dependencies
+        run: /pip install --upgrade pip wheel delocate pytest
+      -
+        name: Compile and install MonetDBe-python
+        run: CFLAGS="-I/usr/local/include -L/usr/local/lib" pip install -e ".[test]"
+      -
+        name: Run pytest
+        run: pytest
+      -
+        name: make binary wheel
+        run: python setup.py bdist_wheel
+      -
+        name: Delocate binary wheel
+        run: delocate-wheel -v dist/*.whl
+      -
+        name: Publish OS X binary wheels
         uses: actions/upload-artifact@v2
         with:
           path: dist/*.whl
 
-      - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.MONETDBE_PYPI }}
