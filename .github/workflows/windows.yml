@@ -1,4 +1,4 @@
-name: Windows
+name: Windows wheels
 
 on:
   push:
@@ -25,6 +25,8 @@ jobs:
         with:
           setupOnly: true
           vcpkgGitCommitId: 9f34e3d24c219574ac8cea583fcf170ffedd7f6a
+      -
+        name: install vcpkg packages
         run: $VCPKG_ROOT/vcpkg install --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
       -
         name: Install vcpkg packages
@@ -48,7 +50,7 @@ jobs:
           dir $Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
           cmake -G "Visual Studio 16 2019" `
             -A x64 `
-            -DCMAKE_TOOLCHAIN_FILE=D:\a\MonetDBe-Python\MonetDBe-Python\vcpkg\scripts\buildsystems\vcpkg.cmake `
+            -DCMAKE_TOOLCHAIN_FILE=$Env:VCPKG_ROOTscripts\buildsystems\vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=C:\monetdb `
             -DTESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `

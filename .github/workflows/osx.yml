@@ -1,4 +1,4 @@
-name: OS X
+name: OS X wheels
 
 on:
   push:
