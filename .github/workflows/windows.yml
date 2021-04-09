@@ -27,14 +27,9 @@ jobs:
           vcpkgGitCommitId: 9f34e3d24c219574ac8cea583fcf170ffedd7f6a
       -
         name: install vcpkg packages
-        run: $Env:VCPKG_ROOT\vcpkg install --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
-      -
-        name: Install vcpkg packages
-        uses: lukka/run-vcpkg@v5
-        with:
-          vcpkgArguments: --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
-          vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
-          appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
+        run:  |
+          $VCPKG_ROOT/vcpkg install --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
+        shell: bash
       -
         name: Get monetdb
         run: |
