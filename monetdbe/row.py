@@ -2,9 +2,10 @@
 
 """
 import collections.abc
-from typing import Union, Generator, Optional, Any, Tuple
+from typing import Union, Generator, Optional, Any, Tuple, TYPE_CHECKING
 
-from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
+if TYPE_CHECKING:
+    from monetdbe import Cursor  # type: ignore[attr-defined]
 
 
 class Row:
@@ -16,14 +17,15 @@ class Row:
     If two Row objects have exactly the same columns and their members are equal, they compare equal.
     """
 
-    def __init__(self, cur: Cursor, row: Union[tuple, Generator[Optional[Any], Any, None]]):
-        if not isinstance(cur, Cursor) or cur.__class__ == Cursor:
+    def __init__(self, cur: 'Cursor', row: Union[tuple, Generator[Optional[Any], Any, None]]):
+        from monetdbe import Cursor
+        if not isinstance(cur, Cursor) and cur.__class__ == Cursor:
             raise TypeError("You need to supply a subclass of Cursor as a cursor.")
 
         self._cur = cur
         self._row = tuple(row)
 
-        if self._cur.description:
+        if hasattr(self._cur, "description") and self._cur.description:
             self._keys = tuple(i.name for i in self._cur.description)
         else:
             self._keys = tuple()

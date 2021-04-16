@@ -23,7 +23,7 @@
 
 import unittest
 from monetdbe.connection import Connection
-from monetdbe.cursors import IterCursor, Cursor
+from monetdbe.cursors import Cursor
 from monetdbe.row import Row
 from monetdbe import connect, OptimizedUnicode
 from collections.abc import Sequence
@@ -41,9 +41,9 @@ def dict_factory(cursor, row):
     return d
 
 
-class MyCursor(IterCursor):
+class MyCursor(Cursor):
     def __init__(self, *args, **kwargs):
-        IterCursor.__init__(self, *args, **kwargs)
+        Cursor.__init__(self, *args, **kwargs)
         self.row_factory = dict_factory
 
 

@@ -12,11 +12,7 @@ from monetdbe.monetize import PrepareProtocol
 from monetdbe.row import Row
 from monetdbe.version import monetdbe_version_info
 
-from monetdbe.cursors import (
-    BaseCursor,
-    Cursor,
-    IterCursor
-)
+from monetdbe.cursors import Cursor
 
 from monetdbe.connection import Connection
 

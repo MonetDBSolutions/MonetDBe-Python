@@ -1,11 +1,11 @@
 # type: ignore[union-attr]
-from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, TYPE_CHECKING
+from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, TYPE_CHECKING, Any, List, Mapping
 from warnings import warn
 import numpy as np
 import pandas as pd
-from abc import ABC, abstractmethod
+from monetdbe._cffi.internal import result_fetch, result_fetch_numpy
 from monetdbe.connection import Connection, Description
-from monetdbe.exceptions import ProgrammingError
+from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape, convert
 
@@ -19,7 +19,7 @@ def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
     return {label: np.array(column) for label, column in df.iteritems()}  # type: ignore
 
 
-class BaseCursor(ABC):
+class Cursor:
     lastrowid = 0
 
     def __init__(self, con: 'Connection'):
@@ -43,6 +43,27 @@ class BaseCursor(ABC):
 
     def _set_description(self):
         self.description = self.connection.get_description()
+
+    def __iter__(self) -> Iterator[Union['Row', Sequence[Any]]]:
+        # we import this late, otherwise the whole monetdbe project is unimportable
+        # if we don't have access to monetdbe shared library
+        from monetdbe._cffi.convert import extract
+
+        self._check_connection()
+
+        if not self.connection.result:
+            raise StopIteration
+
+        columns = list(map(lambda x: result_fetch(self.connection.result, x),
+                           range(self.connection.result.ncols)))  # type: ignore[union-attr]
+        for r in range(self.connection.result.nrows):
+            row = tuple(extract(rcol, r, self.connection.text_factory) for rcol in columns)
+            if self.connection.row_factory:
+                yield self.connection.row_factory(cur=self, row=row)
+            elif self.row_factory:  # Sqlite backwards compatibly
+                yield self.row_factory(self, row)
+            else:
+                yield row
 
     def _check_connection(self):
         """
@@ -97,8 +118,8 @@ class BaseCursor(ABC):
         return self
 
     def execute(self, operation: str, parameters: parameters_type = None) -> 'BaseCursor':
-        # if not isinstance(parameters, Sequence):
-        return self.execute_python(operation, parameters)
+        if not isinstance(parameters, Sequence):
+            return self.execute_python(operation, parameters)
 
         self._check_connection()
 
@@ -317,14 +338,6 @@ class BaseCursor(ABC):
         values = pd.read_csv(*args, **kwargs)
         return self.create(table=table, values=values)
 
-    @abstractmethod
-    def fetchall(self):
-        ...
-
-    @abstractmethod
-    def fetchnumpy(self):
-        ...
-
     def fetchdf(self) -> pd.DataFrame:
         """
         Fetch all results and return a Pandas DataFrame.
@@ -334,10 +347,6 @@ class BaseCursor(ABC):
         self._check_connection()
         self._check_result()
         return pd.DataFrame(cast(pd.DataFrame, self.fetchnumpy()))  # cast to make mypy happy
-
-    @abstractmethod
-    def __iter__(self):
-        ...
 
     def fetchmany(self, size=None):
         """
@@ -395,3 +404,66 @@ class BaseCursor(ABC):
             return next(self._fetch_generator)  # type: ignore[arg-type]
         except StopIteration:
             return None
+
+    def write_csv(self, table, *args, **kwargs):
+        return self.execute(f"select * from {table}").fetchdf().to_csv(*args, **kwargs)
+
+    def __iter_numpy__(self) -> Iterator[Union['Row', Sequence[Any]]]:
+        result = self.fetchall()
+
+        for row in result:
+            if self.connection.row_factory:  # type: ignore[union-attr]
+                yield self.connection.row_factory(cur=self, row=tuple(row))  # type: ignore[union-attr]
+            elif self.row_factory:  # Sqlite backwards compatibly
+                yield self.row_factory(self, tuple(row))
+            else:
+                yield tuple(row)
+
+    def fetchall(self) -> List[Union['Row', Sequence]]:
+        """
+        Fetch all (remaining) rows of a query result, returning them as a list of tuples).
+
+        Returns:
+            all (remaining) rows of a query result as a list of tuples
+
+        Raises:
+            Error: If the previous call to .execute*() did not produce any result set or no call was issued yet.
+        """
+        self._check_connection()
+
+        # note (gijs): sqlite test suite doesn't want us to raise exception here, so for now I disable this
+        # self._check_result()
+
+        if not self.connection.consistent:
+            raise InterfaceError("Tranaction rolled back, state inconsistent")
+
+        if not self.connection.result:
+            return []
+
+        rows = [i for i in self]
+        self.connection.result = None
+        return rows
+
+    def _fetchnumpy_slow(self) -> Mapping[str, np.ndarray]:
+        self._check_connection()
+        self._check_result()
+        all_ = self.fetchall()
+        names = (d.name for d in self.description)
+        flipped = zip(*all_)
+        return {k: v for k, v in zip(names, flipped)}
+
+    def _fetchall_numpy(self):
+        result = self.fetchnumpy()
+        if result:
+            return list(np.vstack(list(result.values())).T)
+        return []
+
+    def fetchnumpy(self) -> Mapping[str, np.ndarray]:
+        """
+        Fetch all results and return a numpy array.
+
+        like .fetchall(), but returns a numpy array.
+        """
+        self._check_connection()
+        self._check_result()
+        return result_fetch_numpy(self.connection.result)  # type: ignore[union-attr]
