@@ -3,14 +3,12 @@ from typing import List, Any
 from unittest import TestCase
 from math import isnan
 from pandas import DataFrame
-
-from monetdbe.cursors import NumpyCursor
 from monetdbe import connect, Timestamp
 
 
 def _connect(values: List[Any], type: str) -> DataFrame:
     con = connect(autocommit=True)
-    cur = con.execute(f"create table example(d {type})", cursor=NumpyCursor)
+    cur = con.execute(f"create table example(d {type})")
     cur.executemany("insert into example(d) values (?)", ((v,) for v in values))
     cur.execute("select * from example")
     return cur.fetchdf()

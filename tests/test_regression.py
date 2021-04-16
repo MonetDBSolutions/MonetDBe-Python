@@ -33,7 +33,6 @@ import numpy as np
 import pandas as pd
 
 import monetdbe as monetdbe
-from monetdbe.cursors import NumpyCursor
 
 
 class RegressionTests(unittest.TestCase):

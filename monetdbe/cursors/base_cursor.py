@@ -19,7 +19,7 @@ def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
     return {label: np.array(column) for label, column in df.iteritems()}  # type: ignore
 
 
-class Cursor(ABC):
+class BaseCursor(ABC):
     lastrowid = 0
 
     def __init__(self, con: 'Connection'):
@@ -64,7 +64,7 @@ class Cursor(ABC):
         if not self.connection.result:
             raise ProgrammingError("fetching data but no query executed")
 
-    def execute_python(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
+    def execute_python(self, operation: str, parameters: parameters_type = None) -> 'BaseCursor':
         """
         Execute operation
 
@@ -96,7 +96,7 @@ class Cursor(ABC):
         self._set_description()
         return self
 
-    def execute(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
+    def execute(self, operation: str, parameters: parameters_type = None) -> 'BaseCursor':
         # if not isinstance(parameters, Sequence):
         return self.execute_python(operation, parameters)
 
@@ -111,7 +111,7 @@ class Cursor(ABC):
         self._set_description()
         return self
 
-    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
+    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'BaseCursor':
         """
         Prepare a database operation (query or command) and then execute it against all parameter sequences or
         mappings found in the sequence seq_of_parameters.
@@ -283,7 +283,7 @@ class Cursor(ABC):
         """
         ...
 
-    def commit(self) -> 'Cursor':
+    def commit(self) -> 'BaseCursor':
         """
         Commit the current pending transaction.
 

@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 from monetdbe._lowlevel import lib
 from monetdbe import connect
-from monetdbe.cursors import NumpyCursor
 from monetdbe.exceptions import ProgrammingError
 
 
@@ -50,7 +49,7 @@ class TestCffi(unittest.TestCase):
                                     (-2^8, -2^16, -2^32, -2^64, -0.12345, -0.123456789)
             """
         )
-        data = con.execute("select * from test", cursor=NumpyCursor).fetchnumpy()
+        data = con.execute("select * from test").fetchnumpy()
         con._internal.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)
 
@@ -64,7 +63,7 @@ class TestCffi(unittest.TestCase):
             """
         )
 
-        data = con.execute("select * from test", cursor=NumpyCursor).fetchnumpy()
+        data = con.execute("select * from test").fetchnumpy()
         with self.assertRaises(con.ProgrammingError):
             con._internal.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)
@@ -79,7 +78,7 @@ class TestCffi(unittest.TestCase):
             """
         )
 
-        data = con.execute("select * from test", cursor=NumpyCursor).fetchnumpy()
+        data = con.execute("select * from test").fetchnumpy()
         with self.assertRaises(con.ProgrammingError):
             con._internal.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)

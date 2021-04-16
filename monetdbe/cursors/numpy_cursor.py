@@ -1,4 +1,4 @@
-from monetdbe.cursors.cursor import Cursor  # type: ignore[attr-defined]
+from monetdbe.cursors.base_cursor import BaseCursor  # type: ignore[attr-defined]
 from typing import Union, Any, Iterator, Sequence, Mapping, TYPE_CHECKING
 import numpy as np
 from monetdbe._cffi.internal import result_fetch_numpy
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from monetdbe.row import Row
 
 
-class NumpyCursor(Cursor):
+class Cursor(BaseCursor):
     def __iter__(self) -> Iterator[Union['Row', Sequence[Any]]]:
         result = self.fetchall()
 

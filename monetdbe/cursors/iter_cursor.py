@@ -1,5 +1,5 @@
 # type: ignore[union-attr]
-from .cursor import Cursor
+from .base_cursor import BaseCursor
 from typing import Union, Any, Iterator, Sequence, List, Mapping, TYPE_CHECKING
 from monetdbe.exceptions import InterfaceError
 from monetdbe._cffi.internal import result_fetch
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from monetdbe.row import Row
 
 
-class IterCursor(Cursor):
+class IterCursor(BaseCursor):
     def __iter__(self) -> Iterator[Union['Row', Sequence[Any]]]:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library

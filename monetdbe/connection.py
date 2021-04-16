@@ -214,8 +214,8 @@ class Connection:
         self._check()
 
         if not factory:
-            from monetdbe.cursors import IterCursor, NumpyCursor
-            factory = IterCursor
+            from monetdbe.cursors import Cursor
+            factory = Cursor
 
         cursor = factory(con=self)  # type: ignore[misc]
         if not cursor:
@@ -289,8 +289,7 @@ class Connection:
         return self.cursor().read_csv(table, *args, **kwargs)
 
     def write_csv(self, table, *args, **kwargs):
-        from monetdbe.cursors import NumpyCursor
-        return self.cursor(factory=NumpyCursor).write_csv(table, *args, **kwargs)
+        return self.cursor().write_csv(table, *args, **kwargs)
 
     def cleanup_result(self):
         if self.result and self._internal:

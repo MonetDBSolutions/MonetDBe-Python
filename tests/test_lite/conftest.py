@@ -2,7 +2,6 @@ import numpy
 import pytest
 from shutil import rmtree
 import monetdbe
-from monetdbe.cursors.numpy_cursor import NumpyCursor
 
 
 @pytest.fixture(scope="function")

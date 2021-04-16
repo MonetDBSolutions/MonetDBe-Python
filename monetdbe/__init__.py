@@ -13,8 +13,8 @@ from monetdbe.row import Row
 from monetdbe.version import monetdbe_version_info
 
 from monetdbe.cursors import (
+    BaseCursor,
     Cursor,
-    NumpyCursor,
     IterCursor
 )
 

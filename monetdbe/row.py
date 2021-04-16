@@ -4,7 +4,7 @@
 import collections.abc
 from typing import Union, Generator, Optional, Any, Tuple
 
-from monetdbe.cursors.cursor import Cursor  # type: ignore[attr-defined]
+from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
 
 
 class Row:
