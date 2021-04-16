@@ -20,18 +20,11 @@ jobs:
         name: Install choco packages
         run: choco install --no-progress -y winflexbison unzip curl
       -
-        name: Restore from cache and install vcpkg
-        uses: lukka/run-vcpkg@v6
+        name: Install vcpkg packages
+        uses: lukka/run-vcpkg@v5
         with:
-          setupOnly: true
-          vcpkgGitCommitId: a267ab118c09f56f3dae96c9a4b3410820ad2f0b
-      -
-        name: install vcpkg packages
-        run:  |
-          $VCPKG_ROOT/vcpkg update
-          git pull
-          $VCPKG_ROOT/vcpkg install --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
-        shell: bash
+          vcpkgArguments: --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
+          vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
       -
         name: Get monetdb
         run: |
