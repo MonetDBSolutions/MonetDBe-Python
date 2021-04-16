@@ -28,6 +28,8 @@ jobs:
       -
         name: install vcpkg packages
         run:  |
+          $VCPKG_ROOT/vcpkg update
+          git pull
           $VCPKG_ROOT/vcpkg install --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
         shell: bash
       -
