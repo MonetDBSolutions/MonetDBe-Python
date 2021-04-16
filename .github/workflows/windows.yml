@@ -24,7 +24,7 @@ jobs:
         uses: lukka/run-vcpkg@v6
         with:
           setupOnly: true
-          vcpkgGitCommitId: 9f34e3d24c219574ac8cea583fcf170ffedd7f6a
+          vcpkgGitCommitId: a267ab118c09f56f3dae96c9a4b3410820ad2f0b
       -
         name: install vcpkg packages
         run:  |
