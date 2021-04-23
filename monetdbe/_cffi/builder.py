@@ -9,7 +9,7 @@ from cffi import FFI
 from jinja2 import Template
 
 win32 = platform == 'win32'
-default = True
+default = True  # set to False if you are using Oct2020
 
 source = """
 #include "monetdb/monetdbe.h"
@@ -26,6 +26,7 @@ with open(embed_path, 'r') as f:
     template = Template(content)
     cdef = template.render(win32=win32, default=default)
     ffibuilder.cdef(cdef)
+
 
 def build():
     ffibuilder.compile(verbose=True)
