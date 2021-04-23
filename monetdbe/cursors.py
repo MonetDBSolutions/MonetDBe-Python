@@ -125,7 +125,7 @@ class Cursor:
 
         statement = self.connection.prepare(operation)
         for index, parameter in enumerate(parameters):
-            bind(statement, convert(parameter), index)
+            bind(statement, parameter, index)
         self.connection.result, self.rowcount = execute(statement, make_result=True)
         self.connection.cleanup_statement(statement)
         self.connection.total_changes += self.rowcount
