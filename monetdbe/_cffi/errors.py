@@ -34,10 +34,7 @@ def check_error(msg: char_p) -> None:
         if not match:
             raise exceptions.OperationalError(decoded)
 
-        _, _, error, msg = match.groups()
+        _, _, code, msg = match.groups()
 
-        if error not in errors:
-            ...
-
-        exception = errors.get(error, exceptions.DatabaseError)
+        exception = errors.get(code, exceptions.DatabaseError)
         raise exception(msg)
