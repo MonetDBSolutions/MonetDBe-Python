@@ -11,7 +11,7 @@ from monetdbe import exceptions
 from monetdbe.formatting import parameters_type
 from monetdbe._cffi.internal import result_fetch
 
-from monetdbe._cffi.types import monetdbe_result
+from monetdbe._cffi.types_ import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row

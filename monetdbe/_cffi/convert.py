@@ -2,7 +2,7 @@ from typing import List, Tuple, Optional, Callable, Union, Any, Mapping
 
 import numpy as np
 from monetdbe._lowlevel import lib, ffi
-from monetdbe._cffi.types import monetdbe_column, char_p
+from monetdbe._cffi.types_ import monetdbe_column, char_p
 
 from monetdbe.converters import converters
 from monetdbe.exceptions import ProgrammingError

@@ -9,7 +9,7 @@ from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
 from monetdbe._cffi.errors import check_error
-from monetdbe._cffi.types import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
+from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
 if TYPE_CHECKING:
     from monetdbe.connection import Connection

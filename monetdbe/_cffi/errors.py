@@ -2,7 +2,7 @@ import logging
 from re import compile, DOTALL
 
 from monetdbe._lowlevel import ffi
-from monetdbe._cffi.types import char_p
+from monetdbe._cffi.types_ import char_p
 
 from monetdbe import exceptions
 

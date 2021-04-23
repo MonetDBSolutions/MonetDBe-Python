@@ -6,38 +6,30 @@ from pathlib import Path
 from sys import platform
 
 from cffi import FFI
+from jinja2 import Template
 
-ffibuilder = FFI()
+win32 = platform == 'win32'
+default = True
 
-# not all platforms support 128 bit (windows). Since CFFI cdefs dont support conditionals
-# we need to do this a bit awkward:
-monetdbe_types_template = """
-typedef enum {{
- monetdbe_bool, monetdbe_int8_t, monetdbe_int16_t, monetdbe_int32_t, monetdbe_int64_t,
- {placeholder}
- monetdbe_size_t, monetdbe_float, monetdbe_double,
- monetdbe_str, monetdbe_blob,
- monetdbe_date, monetdbe_time, monetdbe_timestamp,
- monetdbe_type_unknown
-}} monetdbe_types;
-"""
-
-if platform == 'win32':
-    monetdbe_types = monetdbe_types_template.format(placeholder="")
-else:
-    monetdbe_types = monetdbe_types_template.format(placeholder="monetdbe_int128_t,")
-
-
-lowlevel_source = """
+source = """
 #include "monetdb/monetdbe.h"
 """
 
-ffibuilder.set_source("monetdbe._lowlevel", lowlevel_source, libraries=['monetdbe'])
-path = str(Path(__file__).parent / 'embed.h')
+# the ffibuilder object needs to exist and be configured in the module namespace so setup.py can reach it
+ffibuilder = FFI()
+ffibuilder.set_source("monetdbe._lowlevel", source, libraries=['monetdbe'])
+embed_path = str(Path(__file__).parent / 'embed.h.j2')
 
-with open(path, 'r') as f:
-    cdef = monetdbe_types + f.read()
+with open(embed_path, 'r') as f:
+    content = f.read()
+    print(content)
+    template = Template(content)
+    cdef = template.render(win32=win32, default=default)
     ffibuilder.cdef(cdef)
 
-if __name__ == "__main__":
+def build():
     ffibuilder.compile(verbose=True)
+
+
+if __name__ == "__main__":
+    build()
