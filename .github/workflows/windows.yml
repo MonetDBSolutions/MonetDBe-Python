@@ -63,11 +63,11 @@ jobs:
           Set-Location $GITHUB_WORKSPACE
           ls 'C:\Program Files\MonetDB\MonetDB5\bin'
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\bat.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\mapi.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\monetdb5.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\monetdbe.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\monetdbsql.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\stream.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\mapi.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdb5.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdbe.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdbsql.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\stream.dll' monetdbe\.
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libcrypto-1_1-x64.dll' monetdbe\.
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\iconv-2.dll' monetdbe\.
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libxml2.dll' monetdbe\.
