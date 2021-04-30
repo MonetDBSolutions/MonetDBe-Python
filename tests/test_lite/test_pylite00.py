@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy
 import pandas as pd
@@ -49,6 +49,7 @@ class TestmonetdbeBase(TestCase):
         result = cur.execute('SELECT d FROM pylite04_date').fetchdf()
         assert result['d'][0] == pd.Timestamp('2000-01-01'), "Incorrect result"
 
+    @skip("we don't support multiple open  connections yet")
     def test_connections(self):
         # create two clients
         conn = monetdbe.connect(autocommit=True)
@@ -61,8 +62,8 @@ class TestmonetdbeBase(TestCase):
         result = monetdbe.sql('SELECT MIN(i) AS minimum FROM pylite05', client=conn)
         assert result['minimum'][0] == 0, "Incorrect result"
         # attempt to query the table from another client
-        # with pytest.raises(monetdbe.DatabaseError):
-        monetdbe.sql('SELECT * FROM pylite05', client=conn2)
+        with pytest.raises(monetdbe.DatabaseError):
+            monetdbe.sql('SELECT * FROM pylite05', client=conn2)
 
         # now commit the table
         monetdbe.sql('COMMIT', client=conn)

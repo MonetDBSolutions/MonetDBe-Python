@@ -10,6 +10,7 @@ on:
 jobs:
   windows_wheel:
     runs-on: windows-2019
+    continue-on-error: true
     env:
       branch: Oct2020
     steps:
@@ -21,7 +22,7 @@ jobs:
         run: choco install --no-progress -y winflexbison unzip curl
       -
         name: Install Python 3.9
-        run: choco install --version 3.9.0 --no-progress -y --allowmultiple python3
+        run: choco install --version 3.9.1 --no-progress -y --allowmultiple python3
       -
         name: Install Python 3.8
         run: choco install --version 3.8.6 --no-progress -y --allowmultiple python3

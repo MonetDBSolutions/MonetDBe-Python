@@ -1,14 +1,31 @@
 """
 This module contains the monetdbe connection class.
 """
+from collections import namedtuple
 from pathlib import Path
-from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any, Iterator
+from typing import Optional, Type, Iterable, Union, TYPE_CHECKING, Callable, Any, Iterator, Tuple, Mapping
+from itertools import repeat
+import numpy as np
 
 from monetdbe import exceptions
+from monetdbe.formatting import parameters_type
+from monetdbe._cffi.internal import result_fetch
+
+from monetdbe._cffi.types_ import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
-    from monetdbe.cursor import Cursor
+    from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
+
+Description = namedtuple('Description', (
+    'name',
+    'type_code',
+    'display_size',
+    'internal_size',
+    'precision',
+    'scale',
+    'null_ok'
+))
 
 
 class Connection:
@@ -48,46 +65,46 @@ class Connection:
             port: TCP/IP port to listen for connections (not used yet)
 
         """
+        from monetdbe._cffi import check_if_we_can_import_lowlevel
+        from monetdbe._cffi.internal import Internal
+
+        check_if_we_can_import_lowlevel()
+
         if uri or port or username or password or logging:
-            raise NotImplemented  # todo
+            raise NotImplemented
 
         if not check_same_thread:
-            raise NotImplemented  # todo
+            raise NotImplemented
 
         if detect_types != 0:
-            raise NotImplemented  # todo
+            raise NotImplemented
 
         if not database:
             database = None
         elif database == ':memory:':  # sqlite compatibility
             database = None
-        elif type(database) == str:
+        elif isinstance(database, str):
             database = Path(database).resolve()
         elif hasattr(database, '__fspath__'):  # Deal with Path like objects
             database = Path(database.__fspath__()).resolve()  # type: ignore
         else:
             raise TypeError
 
-        from monetdbe._cffi import check_if_we_can_import_lowlevel
+        self.result: Optional[monetdbe_result] = None
+        self.row_factory: Optional[Type['Row']] = None
+        self.text_factory: Optional[Callable[[str], Any]] = None
+        self.total_changes = 0
+        self.isolation_level = None
+        self.consistent = True
 
-        check_if_we_can_import_lowlevel()
-
-        from monetdbe._cffi.frontend import Frontend
-
-        self.lowlevel: Optional[Frontend] = Frontend(
+        self._internal: Optional[Internal] = Internal(
+            connection=self,
             dbdir=database,
             memorylimit=memorylimit,
             nr_threads=nr_threads,
             querytimeout=querytimeout,
             sessiontimeout=timeout
         )
-
-        self.result = None
-        self.row_factory: Optional[Type[Row]] = None
-        self.text_factory: Optional[Callable[[str], Any]] = None
-        self.total_changes = 0
-        self.isolation_level = None
-        self.consistent = True
 
         self.set_autocommit(autocommit)
 
@@ -100,11 +117,33 @@ class Connection:
     def __call__(self):
         raise exceptions.ProgrammingError
 
-    def _check(self):
-        if not self.lowlevel:
-            raise exceptions.ProgrammingError
+    def __del__(self):
+        self.close()
 
-    def execute(self, query: str, args: Optional[Iterable] = None) -> 'Cursor':
+    def _check(self):
+        if not hasattr(self, '_internal') or not self._internal:
+            raise exceptions.ProgrammingError("The connection has been closed")
+
+    def get_description(self):
+        # we import this late, otherwise the whole monetdbe project is unimportable
+        # if we don't have access to monetdbe shared library
+        from monetdbe._cffi.convert import make_string, monet_c_type_map
+
+        if not self.result:
+            return
+
+        columns = list(map(lambda x: result_fetch(self.result, x), range(self.result.ncols)))
+        name = (make_string(rcol.name) for rcol in columns)
+        type_code = (monet_c_type_map[rcol.type].sql_type for rcol in columns)
+        display_size = repeat(None)
+        internal_size = repeat(None)
+        precision = repeat(None)
+        scale = repeat(None)
+        null_ok = repeat(None)
+        descriptions = list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok))
+        return [Description(*i) for i in descriptions]
+
+    def execute(self, query: str, args: parameters_type = None, cursor: Optional[Type['Cursor']] = None) -> 'Cursor':
         """
         Execute a SQL query
 
@@ -114,16 +153,21 @@ class Connection:
         Args:
             query: The SQL query to execute
             args:  The optional SQL query arguments
+            cursor: An optional Cursor object
 
         Returns:
             A new cursor.
         """
-        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
-        cur = Cursor(con=self).execute(query, args)
+        cur = self.cursor(factory=cursor).execute(query, args)
         self.consistent = True
         return cur
 
-    def executemany(self, query: str, args_seq: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
+    def executemany(
+            self,
+            query: str,
+            args_seq: Union[Iterator, Iterable[parameters_type]],
+            cursor: Optional[Type['Cursor']] = None
+    ) -> 'Cursor':
         """
         Prepare a database query and then execute it against all parameter sequences or mappings found in the
         sequence seq_of_parameters.
@@ -133,13 +177,13 @@ class Connection:
 
         Args:
             query: The SQL query to execute
-            args:  The optional SQL query arguments
+            args_seq:  The optional SQL query arguments
+            cursor: A Cursor class
 
         Returns:
-            A new cursor.
+            A new cursor instance of the supplied cursor class
         """
-        from monetdbe.cursor import Cursor
-        cur = Cursor(con=self)
+        cur = self.cursor(factory=cursor)
         for args in args_seq:
             cur.execute(query, args)
         return cur
@@ -149,9 +193,12 @@ class Connection:
         return self.execute("COMMIT")
 
     def close(self, *args, **kwargs) -> None:
-        if self.lowlevel:
-            self.lowlevel.close()
-        self.lowlevel = None
+        if not hasattr(self, '_internal'):
+            return
+
+        if self._internal:
+            self._internal.close()
+        self._internal = None
 
     def cursor(self, factory: Optional[Type['Cursor']] = None) -> 'Cursor':
         """
@@ -164,16 +211,16 @@ class Connection:
         Returns:
             a new cursor.
         """
+        self._check()
 
         if not factory:
-            from monetdbe.cursor import Cursor
+            from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
             factory = Cursor
 
-        cursor = factory(con=self)
+        cursor = factory(con=self)  # type: ignore[misc]
         if not cursor:
             raise TypeError
-        if not hasattr(self, 'lowlevel') or not self.lowlevel:
-            raise exceptions.ProgrammingError
+
         return cursor
 
     def executescript(self, sql_script: str):
@@ -225,7 +272,8 @@ class Connection:
 
     @property
     def in_transaction(self):
-        return self.lowlevel.in_transaction()
+        self._check()
+        return self._internal.in_transaction()
 
     def set_autocommit(self, value: bool) -> None:
         """
@@ -235,15 +283,39 @@ class Connection:
             value: a boolean value
         """
         self._check()
-        return self.lowlevel.set_autocommit(value)  # type: ignore
+        return self._internal.set_autocommit(value)  # type: ignore
 
     def read_csv(self, table, *args, **kwargs):
-        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
-        cur = Cursor(con=self).read_csv(table, *args, **kwargs)
+        return self.cursor().read_csv(table, *args, **kwargs)
 
     def write_csv(self, table, *args, **kwargs):
-        from monetdbe.cursor import Cursor  # we need to import here, otherwise circular import
-        cur = Cursor(con=self).write_csv(table, *args, **kwargs)
+        return self.cursor().write_csv(table, *args, **kwargs)
+
+    def cleanup_result(self):
+        if self.result and self._internal:
+            self._internal.cleanup_result(self.result)
+            self.result = None
+
+    def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
+        """
+        Execute a query directly on the connection.
+
+        You probably don't want to use this. usually you use a cursor to execute queries.
+        """
+        self._check()
+        return self._internal.query(query, make_result)  # type: ignore[union-attr]
+
+    def prepare(self, operation: str):
+        self._check()
+        return self._internal.prepare(operation)  # type: ignore[union-attr]
+
+    def cleanup_statement(self, statement: str) -> None:
+        self._check()
+        self._internal.cleanup_statement(statement)  # type: ignore[union-attr]
+
+    def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
+        self._check()
+        self._internal.append(table, data, schema)  # type: ignore[union-attr]
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning

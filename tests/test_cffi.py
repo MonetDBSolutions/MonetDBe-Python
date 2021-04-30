@@ -15,28 +15,28 @@ class TestCffi(unittest.TestCase):
         con.execute("CREATE TABLE test (i int)")
         data = {'i': np.array([1, 2, 3]), 'j': np.array([1, 2, 3])}
         with self.assertRaises(ProgrammingError):
-            con.lowlevel.append(table='test', data=data)
+            con._internal.append(table='test', data=data)
 
     def test_append_too_little_columns(self):
         con = connect()
         con.execute("CREATE TABLE test (i int, j int)")
         data = {'i': np.array([1, 2, 3])}
         with self.assertRaises(ProgrammingError):
-            con.lowlevel.append(table='test', data=data)
+            con._internal.append(table='test', data=data)
 
     def test_append_wrong_type(self):
         con = connect()
         con.execute("CREATE TABLE test (i int)")
         data = {'i': np.array([0.1, 0.2, 0.3], dtype=np.float32)}
         with self.assertRaises(ProgrammingError):
-            con.lowlevel.append(table='test', data=data)
+            con._internal.append(table='test', data=data)
 
     def test_append_wrong_size(self):
         con = connect()
         con.execute("CREATE TABLE test (i int)")  # SQL int is 32 bit
         data = {'i': np.array([1, 2, 3], dtype=np.int64)}
         with self.assertRaises(ProgrammingError):
-            con.lowlevel.append(table='test', data=data)
+            con._internal.append(table='test', data=data)
 
     def test_append_supported_types(self):
         con = connect()
@@ -50,7 +50,7 @@ class TestCffi(unittest.TestCase):
             """
         )
         data = con.execute("select * from test").fetchnumpy()
-        con.lowlevel.append(schema='sys', table='test', data=data)
+        con._internal.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)
 
     def test_append_unsupported_types(self):
@@ -65,7 +65,7 @@ class TestCffi(unittest.TestCase):
 
         data = con.execute("select * from test").fetchnumpy()
         with self.assertRaises(con.ProgrammingError):
-            con.lowlevel.append(schema='sys', table='test', data=data)
+            con._internal.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)
 
     def test_append_blend(self):
@@ -80,12 +80,12 @@ class TestCffi(unittest.TestCase):
 
         data = con.execute("select * from test").fetchnumpy()
         with self.assertRaises(con.ProgrammingError):
-            con.lowlevel.append(schema='sys', table='test', data=data)
+            con._internal.append(schema='sys', table='test', data=data)
         con.cursor().insert(table='test', values=data)
 
     def test_get_columns(self):
         con = connect()
         con.execute("CREATE TABLE test (i int)")
         con.execute("INSERT INTO test VALUES (1)")
-        result = list(con.lowlevel.get_columns(table='test'))
+        result = list(con._internal.get_columns(table='test'))
         self.assertEqual(result, [('i', 3)])

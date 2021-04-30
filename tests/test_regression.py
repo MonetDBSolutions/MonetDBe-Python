@@ -236,7 +236,7 @@ class RegressionTests(unittest.TestCase):
         """
 
         class Connection(monetdbe.Connection):
-            def cursor(self):
+            def cursor(self, *args, **kwargs):
                 return Cursor(self)
 
         class Cursor(monetdbe.Cursor):
@@ -427,7 +427,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         m = monetdbe.connect()
         c = m.cursor()
         c.execute(q)
-        del m.lowlevel
+        del m._internal
         del m
         m = monetdbe.connect()
         c = m.cursor()
@@ -484,3 +484,11 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         path = str((Path(__file__).parent / "example.csv").resolve().absolute())
         cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")
+
+    @unittest.skip("Disabled since takes quite long")
+    def test_crash_loop(self):
+        for i in range(1000):
+            cx = monetdbe.connect(":memory:")
+            cu = cx.cursor()
+            cu.execute("create table test(id integer auto_increment primary key, name text)")
+            cu.execute("insert into test(name) values (?)", ("foo",))

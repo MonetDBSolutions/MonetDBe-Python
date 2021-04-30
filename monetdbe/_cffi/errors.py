@@ -2,11 +2,17 @@ import logging
 from re import compile, DOTALL
 
 from monetdbe._lowlevel import ffi
+from monetdbe._cffi.types_ import char_p
 
 from monetdbe import exceptions
 
 _logger = logging.getLogger(__name__)
-_error_match = compile(pattern=r"^(?P<exception_type>.*):(?P<namespace>.*):(?P<code>.*)!(?P<msg>.*)$", flags=DOTALL)
+
+error_matcher = compile(pattern=r"^(?P<exception_type>.*):(?P<namespace>.*):(?P<code>.*)!(?P<msg>.*)$", flags=DOTALL)
+
+other_matchers = {
+    '07001': compile(pattern=r"^MALException:monetdbe.monetdbe_bind:(?P<msg>.*)", flags=DOTALL)
+}
 
 # MonetDB error codes
 errors = {
@@ -15,28 +21,37 @@ errors = {
     '40002': exceptions.IntegrityError,  # INSERT INTO: UNIQUE constraint violated
     '42000': exceptions.OperationalError,  # SELECT: identifier 'asdf' unknown
     '42S02': exceptions.OperationalError,  # no such table
-    'M0M29': exceptions.IntegrityError,  # The code monetdb emmitted before Jun2020
+    'M0M29': exceptions.IntegrityError,  # The code monetdb emitted before Jun2020
     '25001': exceptions.OperationalError,  # START TRANSACTION: cannot start a transaction within a transaction
+    '07001': exceptions.ProgrammingError,  # Parameter .* not bound to a value
 }
 
 
-def check_error(msg: 'ffi.CData') -> None:
+def check_error(raw: char_p) -> None:
     """
     Raises:
          exceptions.Error: or subclass in case of error, which exception depends on the error type.
     """
-    if msg:
-        decoded = ffi.string(msg).decode()
-        _logger.error(decoded)
-        match = _error_match.match(decoded)
+    if not raw:
+        return
 
-        if not match:
-            raise exceptions.OperationalError(decoded)
+    decoded = ffi.string(raw).decode()
+    _logger.error(decoded)
+    match = error_matcher.match(decoded)
 
-        _, _, error, msg = match.groups()
+    if not match:
+        for error_code, other_matcher in other_matchers.items():
+            other_match = other_matcher.match(decoded)
+            if other_match:
+                exception = errors[error_code]
+                msg = other_match.groups()[0]
+                break
+        else:
+            # the error string is in an unknown format
+            exception = exceptions.DatabaseError
+            msg = decoded
+    else:
+        _, _, code, msg = match.groups()
+        exception = errors.get(code, exceptions.DatabaseError)
 
-        if error not in errors:
-            ...
-
-        exception = errors.get(error, exceptions.DatabaseError)
-        raise exception(msg)
+    raise exception(msg)
