@@ -2,6 +2,7 @@ import logging
 from _warnings import warn
 from pathlib import Path
 from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
+import datetime
 
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
@@ -64,7 +65,23 @@ def get_autocommit() -> bool:
 
 
 def bind(statement: monetdbe_statement, data, parameter_nr: int) -> None:
-    check_error(lib.monetdbe_bind(statement, str(data).encode(), parameter_nr))
+    if isinstance(data, (str, datetime.datetime, datetime.time, datetime.date, datetime.timedelta)):
+        prepared = str(data).encode()
+    elif isinstance(data, int):
+        if data > 2**32:
+            prepared = ffi.new("int64_t *", data)
+        else:
+            prepared = ffi.new("int *", data)
+    elif isinstance(data, float):
+        prepared = ffi.new("float *", data)
+    elif isinstance(data, bytes):
+        prepared = f"{data.hex()}".encode()
+    elif isinstance(data, memoryview):
+        prepared = f"{data.tobytes().hex()}".encode()
+    else:
+        raise NotImplementedError(f"bind converting for type {type(data)}")
+
+    check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
 
 
 def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[monetdbe_result, int]:

@@ -85,9 +85,9 @@ class Cursor:
         if not self.connection.result:
             raise ProgrammingError("fetching data but no query executed")
 
-    def execute_python(self, operation: str, parameters: parameters_type = None) -> 'BaseCursor':
+    def _execute_python(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
         """
-        Execute operation
+        Execute operation with Python based statement preparation.
 
         Args:
             operation: the query you want to execute
@@ -117,12 +117,8 @@ class Cursor:
         self._set_description()
         return self
 
-    def execute(self, operation: str, parameters: parameters_type = None) -> 'BaseCursor':
-        if not isinstance(parameters, Sequence):
-            return self.execute_python(operation, parameters)
-
+    def _execute_monetdbe(self, operation: str, parameters: parameters_type = None):
         self._check_connection()
-
         statement = self.connection.prepare(operation)
         for index, parameter in enumerate(parameters):
             bind(statement, parameter, index)
@@ -132,7 +128,12 @@ class Cursor:
         self._set_description()
         return self
 
-    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'BaseCursor':
+    def execute(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
+        if not isinstance(parameters, Sequence):
+            return self._execute_python(operation, parameters)
+        return self._execute_monetdbe(operation, parameters)
+
+    def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
         """
         Prepare a database operation (query or command) and then execute it against all parameter sequences or
         mappings found in the sequence seq_of_parameters.
@@ -221,7 +222,7 @@ class Cursor:
             schema = "sys"
         for key, value in values.items():
             arr = np.array(value)
-            if arr.dtype == np.bool:
+            if arr.dtype == np.bool_:
                 column_type = "BOOLEAN"
             elif arr.dtype == np.int8:
                 column_type = 'TINYINT'
@@ -304,7 +305,7 @@ class Cursor:
         """
         ...
 
-    def commit(self) -> 'BaseCursor':
+    def commit(self) -> 'Cursor':
         """
         Commit the current pending transaction.
 
