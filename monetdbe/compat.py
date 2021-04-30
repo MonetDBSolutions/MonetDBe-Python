@@ -9,7 +9,7 @@ from monetdbe.dbapi2 import connect
 from monetdbe.connection import Connection
 
 if TYPE_CHECKING:
-    from monetdbe.cursors import Cursor# type: ignore[attr-defined]
+    from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
 
 
 def make_connection(*args, **kwargs):
