@@ -66,7 +66,7 @@ def get_autocommit() -> bool:
 
 def bind(statement: monetdbe_statement, data, parameter_nr: int) -> None:
     if isinstance(data, (str, datetime.datetime, datetime.time, datetime.date, datetime.timedelta)):
-        prepared = str(data) #.encode()
+        prepared = str(data).encode()
     elif isinstance(data, int):
         if data > 2**32:
             prepared = ffi.new("int64_t *", data)

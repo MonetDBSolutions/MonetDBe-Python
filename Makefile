@@ -47,6 +47,7 @@ dockers: docker-wheels docker-test docker-mypy docker-pycodestyle docker-doc
 clean: venv/
 	venv/bin/python3 setup.py clean
 	rm -rf build dist *.egg-info .eggs monetdbe/*.so monetdbe/*.dylib .*_cache venv/
+	find . -name __pycache__ | xargs rm -rf
 
 venv/bin/mypy: venv/
 	venv/bin/pip install mypy

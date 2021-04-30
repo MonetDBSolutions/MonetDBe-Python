@@ -15,7 +15,7 @@ from monetdbe._cffi.types_ import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
-    from monetdbe.cursors import Cursor, NumpyCursor
+    from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
 
 Description = namedtuple('Description', (
     'name',
@@ -214,7 +214,7 @@ class Connection:
         self._check()
 
         if not factory:
-            from monetdbe.cursors import Cursor
+            from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
             factory = Cursor
 
         cursor = factory(con=self)  # type: ignore[misc]

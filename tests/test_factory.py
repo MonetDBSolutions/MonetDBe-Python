@@ -23,7 +23,7 @@
 
 import unittest
 from monetdbe.connection import Connection
-from monetdbe.cursors import Cursor
+from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
 from monetdbe.row import Row
 from monetdbe import connect, OptimizedUnicode
 from collections.abc import Sequence
