@@ -15,9 +15,10 @@ class TestCsv(TestCase):
             names=['i', 's', 'i2', 'f'],
             dtype={"i1": int, 's': str, 'i2': int, 'f': float},
         )
-        x = con.execute(f'select * from {table}').fetchdf()
+        x = con.execute(f'select * from {table}').fetchall()
 
     def test_write_csv(self):
         con = connect()
         t = TemporaryDirectory()
+
         con.write_csv(table='tables', path_or_buf=Path(t.name) / 'output.csv')

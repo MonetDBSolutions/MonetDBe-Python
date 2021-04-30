@@ -285,7 +285,7 @@ class CursorTests(unittest.TestCase):
         self.assertEqual(row[0], "foo")
 
     def test_ExecuteParamSequence(self):
-        class L(object):
+        class L:
             def __len__(self):
                 return 1
 
