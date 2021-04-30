@@ -129,9 +129,9 @@ class Cursor:
         return self
 
     def execute(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
-        if not isinstance(parameters, Sequence):
-            return self._execute_python(operation, parameters)
-        return self._execute_monetdbe(operation, parameters)
+        #if isinstance(parameters, Sequence):
+        #    return self._execute_monetdbe(operation, parameters)
+        return self._execute_python(operation, parameters)
 
     def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':
         """
