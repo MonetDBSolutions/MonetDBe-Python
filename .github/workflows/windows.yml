@@ -18,42 +18,55 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Install choco packages
-        run: choco install --no-progress -y winflexbison unzip curl
-      -
-        name: Install vcpkg packages
-        uses: lukka/run-vcpkg@v5
-        with:
-          vcpkgArguments: --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
-          vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
+        run: choco install --no-progress -y curl
       -
         name: Get monetdb
         run: |
           Set-Location c:\
-          curl.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip -O
-          unzip.exe ${{ env.branch }}.zip
+          curl.exe http://monetdb.cwi.nl/testweb/web/81165:3583536f2a3d/MonetDB5-SQL-Installer-x86_64-3583536f2a3d.msi -O
       -
-        name: Compile and install MonetDB
+        name: Install monetdb
         run: |
-          mkdir c:\MonetDB-${{ env.branch }}\build
-          Set-Location c:\MonetDB-${{ env.branch }}\build
-          dir $Env:VCPKG_ROOT\scripts\buildsystems
-          cmake -G "Visual Studio 16 2019" `
-            -A x64 `
-            -DCMAKE_TOOLCHAIN_FILE= c:\MonetDB-${{ env.branch }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-            -DCMAKE_INSTALL_PREFIX=C:\monetdb `
-            -DTESTING=OFF `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DASSERT=OFF `
-            -DODBC=false `
-            -DPY3INTEGRATION=OFF `
-            -DINT128=OFF `
-            ..
-          cmake --build . --target ALL_BUILD --parallel 4  --config Release
-          cmake --build . --target INSTALL  --config Release
-      - uses: actions/upload-artifact@v2
-        with:
-          name: monetdb
-          path: c:\monetdb
+          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-3583536f2a3d.msi /?'
+
+#      -
+#        name: Install choco packages
+#        run: choco install --no-progress -y winflexbison unzip curl
+#      -
+#        name: Install vcpkg packages
+#        uses: lukka/run-vcpkg@v5
+#        with:
+#          vcpkgArguments: --triplet x64-windows libiconv openssl libxml2 pcre zlib getopt bzip2 curl
+#          vcpkgGitCommitId: e803bf11296d8e7900dafb41e7b1224778d33dc6
+#      -
+#        name: Get monetdb
+#        run: |
+#          Set-Location c:\
+#          curl.exe https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.zip -O
+#          unzip.exe ${{ env.branch }}.zip
+#      -
+#        name: Compile and install MonetDB
+#        run: |
+#          mkdir c:\MonetDB-${{ env.branch }}\build
+#          Set-Location c:\MonetDB-${{ env.branch }}\build
+#          dir $Env:VCPKG_ROOT\scripts\buildsystems
+#          cmake -G "Visual Studio 16 2019" `
+#            -A x64 `
+#            -DCMAKE_TOOLCHAIN_FILE= c:\MonetDB-${{ env.branch }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
+#            -DCMAKE_INSTALL_PREFIX=C:\monetdb `
+#            -DTESTING=OFF `
+#            -DCMAKE_BUILD_TYPE=Release `
+#            -DASSERT=OFF `
+#            -DODBC=false `
+#            -DPY3INTEGRATION=OFF `
+#            -DINT128=OFF `
+#            ..
+#          cmake --build . --target ALL_BUILD --parallel 4  --config Release
+#          cmake --build . --target INSTALL  --config Release
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          name: monetdb
+#          path: c:\monetdb
 
 
   windows-wheel:
