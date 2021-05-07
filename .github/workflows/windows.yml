@@ -39,6 +39,8 @@ jobs:
   windows-wheel:
     needs: windows-monetdb-build
     runs-on: windows-2019
+    env:
+      MONETDB_BRANCH: Oct2020
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
@@ -83,10 +85,10 @@ jobs:
         run: python3 -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
-        run: MONETDB_BRANCH=Oct2020 python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
+        run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
       -
         name: Install python libraries
-        run: MONETDB_BRANCH=Oct2020 python3 -m pip install -e .[test]
+        run: python3 -m pip install -e .[test]
       -
         name: Run tests
         run: pytest
