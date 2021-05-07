@@ -13,6 +13,7 @@ jobs:
     continue-on-error: true
     env:
       branch: Oct2020
+      MONETDB_BRANCH: Oct2020
     steps:
       -
         name: Checkout
@@ -82,10 +83,10 @@ jobs:
         run: python3 -m pip install --upgrade pip wheel
       -
         name: Build binary python extension
-        run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
+        run: MONETDB_BRANCH=Oct2020 python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
       -
         name: Install python libraries
-        run: python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=Oct2020 python3 -m pip install -e .[test]
       -
         name: Run tests
         run: pytest
