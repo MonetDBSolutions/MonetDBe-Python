@@ -16,7 +16,7 @@ Connection
 Cursor
 ======
 
-.. automodule:: monetdbe.cursor
+.. automodule:: monetdbe.cursors
     :members:
     :undoc-members:
     :show-inheritance:

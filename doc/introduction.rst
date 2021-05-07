@@ -62,7 +62,7 @@ Capitalizing the MonetDB server code base makes amongst others the following fea
 - Seamless integration with the programming language, e,g, dataframes/numpy.
 - Simple user control over the resources.
 - Working with :memory: databases with controlled RAM footprint.
-- Hybrid set up with concurrent :memory:, local storage  and server-based storage.
+- Hybrid set up with concurrent ``:memory:``, local storage  and server-based storage.
 - Boosting your data analytics programs with stateful User Defined Functions.
 - Extended base types, DECIMAL, JSON, blob, uuid, boolean
 - Statistics, windowing functions, grouped sets, cube, and rollup.
@@ -74,10 +74,10 @@ Capitalizing the MonetDB server code base makes amongst others the following fea
 Storage options
 ===============
 One of the key factors in an embedded database system is the location of the persistent data, if it needs to persist at all.  In
-MonetDB/e we opted for a simple interface based on URLs, :memory:, /OSpath/directory, file://filename?withoptions, monetdb://mapi_host:port/db?withoptions. 
-The benefit of this approach is that one can start developing the application with an in memory only, ':memory:', storage and switch to
+MonetDB/e we opted for a simple interface based on URLs, ``:memory:``, ``/OSpath/directory``, ``file://filename?withoptions``, ``monetdb://mapi_host:port/db?withoptions``. 
+The benefit of this approach is that one can start developing the application with an in memory only, ``:memory:``, storage and switch to
 the local directory or server version by simply changing the connection point.
-The first released implementation of MonetDB/e is limited to a single ':memory:' or a local directory.
+The first released implementation of MonetDB/e is limited to a single ``:memory:`` or a local directory.
 
 
 Debugging and stability
@@ -133,6 +133,6 @@ MonetDB/e roadmap
 - Java jar drop=in
 - Embedded version for R
 - Import of (mini)parquet and Arrow files
-- Remote query processing over multiple :memory: instances
+- Remote query processing over multiple ``:memory:`` instances
 - Using MonetDB/e as a JDBC/ODBC endpoint
 
