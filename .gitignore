@@ -133,8 +133,9 @@ monetdbe/util/*.c
 
 tests/@test_*_tmp/
 
-# pycharm
+# editors
 .idea/
+.vscode/
 
 
 doc/_build

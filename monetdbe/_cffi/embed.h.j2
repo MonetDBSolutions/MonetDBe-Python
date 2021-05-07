@@ -84,6 +84,9 @@ typedef struct {
 
 } monetdbe_options;
 
+
+
+
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_bool;
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_int8_t;
 typedef struct { monetdbe_types type; int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t *value); } monetdbe_column_int16_t;
