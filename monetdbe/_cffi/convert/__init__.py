@@ -1,9 +1,10 @@
-from typing import List, Tuple, Optional, Callable, Union, Any, Mapping
+from typing import List, Optional, Callable, Union, Any, Mapping
+from typing import NamedTuple
 
 import numpy as np
+
 from monetdbe._lowlevel import lib, ffi
 from monetdbe._cffi.types_ import monetdbe_column, char_p
-
 from monetdbe.converters import converters
 from monetdbe.exceptions import ProgrammingError
 from monetdbe.pythonize import py_date, py_time, py_timestamp
@@ -33,9 +34,6 @@ def py_float(data: char_p) -> float:
         return converters['DOUBLE'](data)
     else:
         return data
-
-
-from typing import NamedTuple
 
 
 class MonetdbTypeInfo(NamedTuple):

@@ -14,6 +14,8 @@ from monetdbe._cffi.internal import bind, execute
 if TYPE_CHECKING:
     from monetdbe.row import Row
 
+paramstyles = {"qmark", "numeric", "named", "format", "pyformat"}
+
 
 def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
     return {label: np.array(column) for label, column in df.iteritems()}  # type: ignore
@@ -120,17 +122,25 @@ class Cursor:
     def _execute_monetdbe(self, operation: str, parameters: parameters_type = None):
         self._check_connection()
         statement = self.connection.prepare(operation)
-        for index, parameter in enumerate(parameters):
-            bind(statement, parameter, index)
+        if parameters:
+            for index, parameter in enumerate(parameters):
+                bind(statement, parameter, index)
         self.connection.result, self.rowcount = execute(statement, make_result=True)
         self.connection.cleanup_statement(statement)
         self.connection.total_changes += self.rowcount
         self._set_description()
         return self
 
-    def execute(self, operation: str, parameters: parameters_type = None) -> 'Cursor':
-        # if isinstance(parameters, Sequence):
-        #     return self._execute_monetdbe(operation, parameters)
+    def execute(
+            self,
+            operation: str,
+            parameters: parameters_type = None,
+            paramstyle: str = "qmark"
+    ) -> 'Cursor':
+        if paramstyle not in paramstyles:
+            raise ValueError(f"Unknown paramstyle {paramstyle}")
+        if (not parameters or isinstance(parameters, Sequence)) and paramstyle == "qmark":
+            return self._execute_monetdbe(operation, parameters)
         return self._execute_python(operation, parameters)
 
     def executemany(self, operation: str, seq_of_parameters: Union[Iterator, Iterable[Iterable]]) -> 'Cursor':

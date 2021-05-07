@@ -143,7 +143,12 @@ class Connection:
         descriptions = list(zip(name, type_code, display_size, internal_size, precision, scale, null_ok))
         return [Description(*i) for i in descriptions]
 
-    def execute(self, query: str, args: parameters_type = None, cursor: Optional[Type['Cursor']] = None) -> 'Cursor':
+    def execute(
+            self, query: str,
+            args: parameters_type = None,
+            cursor: Optional[Type['Cursor']] = None,
+            paramstyle: str = "qmark"
+    ) -> 'Cursor':
         """
         Execute a SQL query
 
@@ -154,11 +159,12 @@ class Connection:
             query: The SQL query to execute
             args:  The optional SQL query arguments
             cursor: An optional Cursor object
+            paramstyle: The style of the args, can be qmark, numeric, format or pyformat
 
         Returns:
             A new cursor.
         """
-        cur = self.cursor(factory=cursor).execute(query, args)
+        cur = self.cursor(factory=cursor).execute(query, args, paramstyle)
         self.consistent = True
         return cur
 
