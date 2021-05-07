@@ -1,4 +1,4 @@
-name: Linux
+name: linux test and wheels
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     branches: [ master ]
 
 jobs:
-  linux_test:
+  linux-test:
     runs-on: ubuntu-18.04
     container: monetdb/dev-builds:Oct2020
     steps:
@@ -22,38 +22,7 @@ jobs:
         name: run tests
         run: py.test -vv
 
-
-  linux_mypy:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
-      -
-        name: Run mypy static code checks
-        run: mypy monetdbe tests
-
-
-  linux_pycodestyle:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
-      -
-        name: Check the python coding style
-        run: pycodestyle monetdbe tests
-
-
-  linux_wheel:
+  linux-wheel:
     runs-on: ubuntu-18.04
     container: monetdb/dev-builds:Oct2020_manylinux
     strategy:
@@ -71,10 +40,3 @@ jobs:
         name: Publish Linux binary wheels
         with:
           path: dist/*.whl
-
-      - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.MONETDBE_PYPI }}
