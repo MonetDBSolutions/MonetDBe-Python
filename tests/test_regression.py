@@ -124,7 +124,7 @@ class RegressionTests(unittest.TestCase):
         pymonetdbe used to segfault with monetdbe versions 3.5.x. These return NULL
         for "no-operation" statements
         """
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             self.con.execute("")
 
     @unittest.skip("not supported (yet)")
@@ -435,10 +435,10 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
     def test_proper_error_on_empty_query_issue63(self):
         conn = monetdbe.connect(':memory:')
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             conn.execute("")
 
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             conn.execute(";")
 
     def test_real_issue83(self):
@@ -492,3 +492,11 @@ class TestMonetDBeRegressions(unittest.TestCase):
             cu = cx.cursor()
             cu.execute("create table test(id integer auto_increment primary key, name text)")
             cu.execute("insert into test(name) values (?)", ("foo",))
+
+    def test_issue127(self):
+        conn = monetdbe.connect(':memory:')
+        cur = conn.cursor()
+        res = cur.execute("create table tmp(i integer, s string)")
+        res = cur.execute("insert into tmp values(123, 'hello''world'':\n ERROR');")
+        rows = res.fetchall()
+        print(rows)

@@ -14,7 +14,7 @@ from monetdbe._cffi.internal import bind, execute
 if TYPE_CHECKING:
     from monetdbe.row import Row
 
-paramstyles = {"qmark", "numeric", "format", "pyformat"}
+paramstyles = {"qmark", "numeric", "named", "format", "pyformat"}
 
 
 def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
@@ -122,8 +122,9 @@ class Cursor:
     def _execute_monetdbe(self, operation: str, parameters: parameters_type = None):
         self._check_connection()
         statement = self.connection.prepare(operation)
-        for index, parameter in enumerate(parameters):
-            bind(statement, parameter, index)
+        if parameters:
+            for index, parameter in enumerate(parameters):
+                bind(statement, parameter, index)
         self.connection.result, self.rowcount = execute(statement, make_result=True)
         self.connection.cleanup_statement(statement)
         self.connection.total_changes += self.rowcount
@@ -138,7 +139,7 @@ class Cursor:
     ) -> 'Cursor':
         if paramstyle not in paramstyles:
             raise ValueError(f"Unknown paramstyle {paramstyle}")
-        if isinstance(parameters, Sequence) and paramstyle == "qmark":
+        if (not parameters or isinstance(parameters, Sequence)) and paramstyle == "qmark":
             return self._execute_monetdbe(operation, parameters)
         return self._execute_python(operation, parameters)
 

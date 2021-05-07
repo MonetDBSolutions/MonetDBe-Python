@@ -263,7 +263,7 @@ class Internal:
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
         stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._monetdbe_database, query.encode(), stmt))
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
         return stmt[0]
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:

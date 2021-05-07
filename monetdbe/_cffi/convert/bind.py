@@ -15,7 +15,7 @@ def bind_str(data: str):
 
 
 def bind_float(data: float):
-    return ffi.new("float *", data)
+    return ffi.new("double *", data)
 
 
 def bind_bytes(data: bytes):
@@ -23,7 +23,11 @@ def bind_bytes(data: bytes):
 
 
 def bind_memoryview(data: memoryview):
-    return f"{data.tobytes().hex()}".encode()
+    struct = ffi.new("monetdbe_data_blob *")
+    bytes_ = data.tobytes()
+    struct.size = len(bytes_)
+    struct.data = ffi.new("char []", bytes_)
+    return struct
 
 
 def bind_datetime(data: datetime.datetime):

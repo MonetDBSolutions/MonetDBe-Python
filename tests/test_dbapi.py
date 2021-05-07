@@ -214,7 +214,7 @@ class CursorTests(unittest.TestCase):
             self.cu.execute("select asdf")
 
     def test_ExecuteTooMuchSql(self):
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             self.cu.execute("select 5+4; select 4+5")
 
     def test_ExecuteTooMuchSql2(self):
@@ -231,14 +231,14 @@ class CursorTests(unittest.TestCase):
 
     def test_empty_query(self):
         conn = monetdbe.connect(':memory:')
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             conn.execute("")
 
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             conn.execute(";")
 
     def test_ExecuteWrongSqlArg(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(monetdbe.OperationalError):
             self.cu.execute(42)
 
     def test_ExecuteArgInt(self):
@@ -310,7 +310,7 @@ class CursorTests(unittest.TestCase):
                 return "foo"
 
         self.cu.execute("insert into test(name) values ('foo')")
-        self.cu.execute("select name from test where name=:name", D())
+        self.cu.execute("select name from test where name=:name", D(), paramstyle="named")
         row = self.cu.fetchone()
         self.assertEqual(row[0], "foo")
 
@@ -322,7 +322,7 @@ class CursorTests(unittest.TestCase):
     def test_ExecuteDictMappingNoArgs(self):
         self.cu.execute("insert into test(name) values ('foo')")
         with self.assertRaises(monetdbe.ProgrammingError):
-            self.cu.execute("select name from test where name=:name")
+            self.cu.execute("select name from test where name=:name", paramstyle="named")
 
     def test_ExecuteDictMappingUnnamed(self):
         self.cu.execute("insert into test(name) values ('foo')")
