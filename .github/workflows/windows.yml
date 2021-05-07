@@ -28,7 +28,7 @@ jobs:
       -
         name: Install monetdb
         run: |
-          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-3583536f2a3d.msi /qn'
+          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-3583536f2a3d.msi /qn INSTALLLEVEL=1000'
           ls 'C:\Program Files\MonetDB\MonetDB5'
       - uses: actions/upload-artifact@v2
         with:
