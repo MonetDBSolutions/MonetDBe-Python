@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: make linux binary wheels
-        run: scripts/make_wheel.sh ${{ matrix.python-version }}
+        run: MONETDB_BRANCH=Oct2020 scripts/make_wheel.sh ${{ matrix.python-version }}
       -
         uses: actions/upload-artifact@v2
         name: Publish Linux binary wheels
