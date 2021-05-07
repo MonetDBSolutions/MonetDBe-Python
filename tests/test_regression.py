@@ -213,7 +213,7 @@ class RegressionTests(unittest.TestCase):
         class MyStr(str):
             pass
 
-        self.con.execute("select ?", (MyStr("abc"),))
+        self.con.execute("select cast(? as varchar(3))", (MyStr("abc"),))
 
     def test_ConnectionConstructorCallCheck(self):
         """

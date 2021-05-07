@@ -16,12 +16,13 @@ other_matchers = {
 
 # MonetDB error codes
 errors = {
-    '2D000': exceptions.IntegrityError,  # COMMIT: failed
-    '40000': exceptions.IntegrityError,  # DROP TABLE: FOREIGN KEY constraint violated
-    '40002': exceptions.IntegrityError,  # INSERT INTO: UNIQUE constraint violated
+    '2D000': exceptions.IntegrityError,    # COMMIT: failed
+    '40000': exceptions.IntegrityError,    # DROP TABLE: FOREIGN KEY constraint violated
+    '40002': exceptions.IntegrityError,    # INSERT INTO: UNIQUE constraint violated
     '42000': exceptions.OperationalError,  # SELECT: identifier 'asdf' unknown
     '42S02': exceptions.OperationalError,  # no such table
-    'M0M29': exceptions.IntegrityError,  # The code monetdb emitted before Jun2020
+    '45000': exceptions.OperationalError,  # 'Result set construction failed'
+    'M0M29': exceptions.IntegrityError,    # The code monetdb emitted before Jun2020
     '25001': exceptions.OperationalError,  # START TRANSACTION: cannot start a transaction within a transaction
     '07001': exceptions.ProgrammingError,  # Parameter .* not bound to a value
 }

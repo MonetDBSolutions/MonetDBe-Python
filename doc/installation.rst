@@ -30,7 +30,7 @@ Source installation
 
 To compile MonetDBe-Python from source, you need to have MonetDB installed.
 Download the latest MonetDB, or compile from source.
-
+ 
 .. code-block::
 
     $ hg clone https://dev.monetdb.org/hg/MonetDB

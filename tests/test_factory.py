@@ -253,22 +253,23 @@ class TextFactoryTests(unittest.TestCase):
 
     def test_Unicode(self):
         austria = "Österreich"
-        row = self.con.execute("select ?", (austria,)).fetchone()
+        row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), str, "type of row[0] must be unicode")
 
     def test_String(self):
         self.con.text_factory = lambda x: bytes(x.encode('utf-8'))
         austria = "Österreich"
-        row = self.con.execute("select ?", (austria,)).fetchone()
+        row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), bytes, "type of row[0] must be bytes")
         self.assertEqual(row[0], austria.encode("utf-8"), "column must equal original data in UTF-8")
 
     def test_Custom(self):
         self.con.text_factory = lambda x: str(x) + str(x)
         austria = "Österreich"
-        row = self.con.execute("select ?", (austria,)).fetchone()
+        # todo/note (gijs): added (? as varchar(20)) since monetdbe can't infer the type from the query
+        row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), str, "type of row[0] must be unicode")
-        self.assertTrue(row[0].endswith("reich"), "column must contain original data")
+        self.assertTrue(row[0].strip().endswith("reich"), "column must contain original data")
 
     def test_OptimizedUnicode(self):
         # In py3k, str objects are always returned when text_factory
@@ -276,8 +277,8 @@ class TextFactoryTests(unittest.TestCase):
         self.con.text_factory = OptimizedUnicode
         austria = "Österreich"
         germany = "Deutchland"
-        a_row = self.con.execute("select ?", (austria,)).fetchone()
-        d_row = self.con.execute("select ?", (germany,)).fetchone()
+        a_row = self.con.execute("select cast(? as varchar(20))", (austria,)).fetchone()
+        d_row = self.con.execute("select cast(? as varchar(20))", (germany,)).fetchone()
         self.assertEqual(type(a_row[0]), str, "type of non-ASCII row must be str")
         self.assertEqual(type(d_row[0]), str, "type of ASCII-only row must be str")
 

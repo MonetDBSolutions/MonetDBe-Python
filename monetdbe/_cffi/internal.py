@@ -2,13 +2,13 @@ import logging
 from _warnings import warn
 from pathlib import Path
 from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
-import datetime
 
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
 
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
+from monetdbe._cffi.convert.bind import prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
@@ -64,23 +64,8 @@ def get_autocommit() -> bool:
     return bool(value[0])
 
 
-def bind(statement: monetdbe_statement, data, parameter_nr: int) -> None:
-    if isinstance(data, (str, datetime.datetime, datetime.time, datetime.date, datetime.timedelta)):
-        prepared = str(data).encode()
-    elif isinstance(data, int):
-        if data > 2**32:
-            prepared = ffi.new("int64_t *", data)
-        else:
-            prepared = ffi.new("int *", data)
-    elif isinstance(data, float):
-        prepared = ffi.new("float *", data)
-    elif isinstance(data, bytes):
-        prepared = f"{data.hex()}".encode()
-    elif isinstance(data, memoryview):
-        prepared = f"{data.tobytes().hex()}".encode()
-    else:
-        raise NotImplementedError(f"bind converting for type {type(data)}")
-
+def bind(statement: monetdbe_statement, data: Any, parameter_nr: int) -> None:
+    prepared = prepare_bind(data)
     check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
 
 
