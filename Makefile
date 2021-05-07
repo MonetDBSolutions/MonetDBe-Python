@@ -17,6 +17,7 @@ venv/installed: venv/
 	touch venv/installed
 
 setup: venv/installed
+build: venv/installed
 
 test: setup
 	venv/bin/pytest
