@@ -45,18 +45,16 @@ jobs:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
     steps:
-      - name: Checkout
+      - 
+        name: Checkout
         uses: actions/checkout@v2
-
-      - name: Set up Python ${{ matrix.python-version }}
+      - 
+        name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install pytest
-        run: |
-          python3 -m pip install --upgrade pip
-      - uses: actions/download-artifact@v2
+      - 
+        uses: actions/download-artifact@v2
         with:
           name: monetdb
           path: 'C:\Program Files\MonetDB\MonetDB5'
@@ -82,7 +80,7 @@ jobs:
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lz4.dll' monetdbe\.
       -
         name: Upgrade pip and wheel for all pythons
-        run: python3 -m pip install --upgrade pip wheel
+        run: python3 -m pip install --upgrade pip wheel dll-diagnostics
       -
         name: Build binary python extension
         run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
@@ -92,6 +90,9 @@ jobs:
         name: Install python libraries
         run: python3 -m pip install -e .[test]
       -
+        name: Run DLL diagnostics
+        run: dlldiag.exe deps .\monetdbe\_lowlevel.pyd  
+      -  
         name: Run tests
         run: pytest
       -

@@ -144,3 +144,5 @@ monetdbe/*.dll
 /monetdbe/_cffi/monetdbe/_lowlevel.c
 /monetdbe/_cffi/monetdbe/_lowlevel.o
 .vscode/settings.json
+
+this_folder_can_be_removed
