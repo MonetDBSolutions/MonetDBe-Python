@@ -79,7 +79,7 @@ jobs:
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lzma.dll' monetdbe\.
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\charset-1.dll' monetdbe\.
           Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\bz2.dll' monetdbe\.
-#          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libcurl.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lz4.dll' monetdbe\.
       -
         name: Upgrade pip and wheel for all pythons
         run: python3 -m pip install --upgrade pip wheel
