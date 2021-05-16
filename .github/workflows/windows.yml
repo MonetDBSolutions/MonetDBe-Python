@@ -10,7 +10,6 @@ on:
 jobs:
   windows-monetdb-build:
     runs-on: windows-2019
-    continue-on-error: true
     env:
       MONETDB_BRANCH: Jul2021
       MONETDB_VERSION: 0d79e48d96ea
@@ -39,6 +38,7 @@ jobs:
   windows-wheel:
     needs: windows-monetdb-build
     runs-on: windows-2019
+    continue-on-error: true
     env:
       MONETDB_BRANCH: Jul2021
     strategy:
@@ -92,27 +92,7 @@ jobs:
       -
         name: Run DLL diagnostics
         run: |
-          ls monetdbe
           dlldiag.exe deps .\monetdbe\_lowlevel.pyd  
-          dlldiag.exe deps .\monetdbe\bat.dll
-          dlldiag.exe deps .\monetdbe\bz2.dll
-          dlldiag.exe deps .\monetdbe\charset-1.dll
-          dlldiag.exe deps .\monetdbe\iconv-2.dll
-          dlldiag.exe deps .\monetdbe\libcrypto-1_1-x64.dll
-          dlldiag.exe deps .\monetdbe\libxml2.dll
-          dlldiag.exe deps .\monetdbe\lz4.dll
-          dlldiag.exe deps .\monetdbe\lzma.dll
-          dlldiag.exe deps .\monetdbe\mapi.dll
-          dlldiag.exe deps .\monetdbe\monetdb5.dll
-          dlldiag.exe deps .\monetdbe\monetdbe.dll
-          dlldiag.exe deps .\monetdbe\monetdbsql.dll
-          dlldiag.exe deps .\monetdbe\pcre.dll
-          dlldiag.exe deps .\monetdbe\stream.dll
-          dlldiag.exe deps .\monetdbe\zlib1.dll
-          dlldiag.exe trace .\monetdbe\_lowlevel.pyd  
-      -  
-        name: Run tests
-        run: pytest
       -
         name: Make wheel
         run: python setup.py bdist_wheel
@@ -121,3 +101,6 @@ jobs:
         name: Publish Windows binary wheels
         with:
           path: dist/*.whl
+      -  
+        name: Run tests
+        run: pytest
