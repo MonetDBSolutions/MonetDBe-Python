@@ -12,8 +12,8 @@ jobs:
     runs-on: windows-2019
     continue-on-error: true
     env:
-      branch: Oct2020
-      MONETDB_BRANCH: Oct2020
+      MONETDB_BRANCH: Jul2021
+      MONETDB_VERSION: 0d79e48d96ea
     steps:
       -
         name: Checkout
@@ -25,11 +25,11 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          curl.exe http://monetdb.cwi.nl/testweb/web/81165:3583536f2a3d/MonetDB5-SQL-Installer-x86_64-3583536f2a3d.msi -O
+          curl.exe http://monetdb.cwi.nl/testweb/web/81382:${{ env.MONETDB_VERSION }}/MonetDB5-SQL-Installer-x86_64-${{ env.MONETDB_VERSION }}.msi -O
       -
         name: Install monetdb
         run: |
-          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-3583536f2a3d.msi /qn INSTALLLEVEL=1000'
+          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-${{ env.MONETDB_VERSION }}.msi /qn INSTALLLEVEL=1000'
           ls 'C:\Program Files\MonetDB\MonetDB5'
       - uses: actions/upload-artifact@v2
         with:
@@ -40,7 +40,7 @@ jobs:
     needs: windows-monetdb-build
     runs-on: windows-2019
     env:
-      MONETDB_BRANCH: Oct2020
+      MONETDB_BRANCH: Jul2021
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
@@ -86,6 +86,8 @@ jobs:
       -
         name: Build binary python extension
         run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
+        env:
+          MONETDB_BRANCH: Jul2021
       -
         name: Install python libraries
         run: python3 -m pip install -e .[test]

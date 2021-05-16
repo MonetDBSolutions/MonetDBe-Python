@@ -9,32 +9,37 @@ on:
 
 jobs:
   linux-test:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
+    runs-on: ubuntu-20.04
+      strategy:
+      matrix:
+        branch: [Oct2020, Jul2021]
+    container: monetdb/dev-builds:${{ matrix.branch }}
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: Install MonetDBe in developer mode
-        run: MONETDB_BRANCH=Oct2020 python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=${{ matrix.branch }} python3 -m pip install -e .[test]
       -
         name: run tests
         run: py.test -vv
 
   linux-wheel:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020_manylinux
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
+        branch: [Jul2021]
+    container: monetdb/dev-builds:${{ matrix.branch}}_manylinux
+
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: make linux binary wheels
-        run: MONETDB_BRANCH=Oct2020 scripts/make_wheel.sh ${{ matrix.python-version }}
+        run: MONETDB_BRANCH=${{ matrix.branch }} scripts/make_wheel.sh ${{ matrix.python-version }}
       -
         uses: actions/upload-artifact@v2
         name: Publish Linux binary wheels
