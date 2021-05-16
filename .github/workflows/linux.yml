@@ -10,7 +10,7 @@ on:
 jobs:
   linux-test:
     runs-on: ubuntu-20.04
-      strategy:
+    strategy:
       matrix:
         branch: [Oct2020, Jul2021]
     container: monetdb/dev-builds:${{ matrix.branch }}
