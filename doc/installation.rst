@@ -15,7 +15,6 @@ to make sure you have a recent pip first upgrade pip::
 
     $ pip install --upgrade pip
 
-
 now you can install MonetDBe-Python with::
 
     $ pip install monetdbe

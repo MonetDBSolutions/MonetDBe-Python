@@ -13,6 +13,8 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    env:
+      MONETDB_BRANCH: Oct2020
     steps:
       -
         name: Checkout
@@ -26,20 +28,23 @@ jobs:
         name: brew packages
         run: brew install monetdb
       -
+        name: prepare virtuale env
+        run: python3 -m venv venv
+      -
         name: Install Python dependencies
-        run: pip install --upgrade pip wheel delocate pytest
+        run: venv/bin/pip install --upgrade pip wheel delocate pytest
       -
         name: Compile and install MonetDBe-python
-        run: CFLAGS="-I/usr/local/include -L/usr/local/lib" pip install -e ".[test]"
+        run: MONETDB_BRANCH=${{ env.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
         name: Run pytest
-        run: pytest
+        run: venv/bin/pytest
       -
         name: make binary wheel
-        run: python setup.py bdist_wheel
+        run: venv/bin/python setup.py bdist_wheel
       -
         name: Delocate binary wheel
-        run: delocate-wheel -v dist/*.whl
+        run: venv/bin/delocate-wheel -v dist/*.whl
       -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v2
