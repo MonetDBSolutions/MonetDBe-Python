@@ -8,7 +8,7 @@ on:
     branches: [ master ]
 
 jobs:
-  install-Oct2020:
+  osx-monetdb-Oct2020:
     runs-on: macos-10.15
     env:
       MONETDB_BRANCH: Oct2020
@@ -22,7 +22,7 @@ jobs:
           name: monetdb-osx-Oct2020
           path: /usr/local
 
-  install-Jul2021:
+  osx-monetdb-Jul2021:
     runs-on: macos-10.15
     env:
       MONETDB_BRANCH: Jul2021
@@ -54,6 +54,7 @@ jobs:
 
   osx-wheel:
     runs-on: macos-10.15
+    needs: osx-monetdb-${{ matrix.MONETDB_BRANCH }}
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
