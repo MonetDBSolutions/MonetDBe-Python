@@ -35,11 +35,11 @@ jobs:
         run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.tar.bz2 -O
       -
         name: extract MonetDB
-        run: tar jxvf ${{ env.branch }}.tar.bz2
+        run: tar jxvf ${{ env.MONETDB_BRANCH }}.tar.bz2
       -
         name: build monetdb
         run: |
-          mkdir ${{ env.branch }}/build
+          mkdir ${{ env.MONETDB_BRANCH }}/build
           cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
