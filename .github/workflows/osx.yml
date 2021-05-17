@@ -12,6 +12,7 @@ jobs:
     runs-on: macos-10.15
     env:
       MONETDB_BRANCH: Oct2020
+    steps:
       -
         name: brew packages
         run: brew install monetdb
