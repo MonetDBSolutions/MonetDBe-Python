@@ -26,6 +26,7 @@ jobs:
     runs-on: macos-10.15
     env:
       MONETDB_BRANCH: Jul2021
+    steps:
 #      -
 #        name: brew packages
 #        run: brew install bison cmake pkg-config lz4 openssl@1.1 pcre readline xz wget 
