@@ -22,7 +22,7 @@ else:
 
 setup(
     name="monetdbe",
-    version="0.9",
+    version="0.10",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",

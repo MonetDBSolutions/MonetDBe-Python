@@ -8,25 +8,70 @@ on:
     branches: [ master ]
 
 jobs:
+  install-Oct2020:
+    runs-on: macos-10.15
+    env:
+      MONETDB_BRANCH: Oct2020
+      -
+        name: brew packages
+        run: brew install monetdb
+      - 
+        uses: actions/upload-artifact@v2
+        with:
+          name: monetdb-osx-Oct2020
+          path: /usr/local
+
+  install-Jul2021:
+    runs-on: macos-10.15
+    env:
+      MONETDB_BRANCH: Jul2021
+#      -
+#        name: brew packages
+#        run: brew install bison cmake pkg-config lz4 openssl@1.1 pcre readline xz wget 
+      -
+        name: download MonetDB
+        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.tar.bz2 -O
+      -
+        name: extract MonetDB
+        run: tar jxvf ${{ env.branch }}.tar.bz2
+      -
+        name: build monetdb
+        run: |
+          mkdir ${{ env.branch }}/build
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DWITH_CRYPTO=OFF \
+            -DPY3INTEGRATION=OFF \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DASSERT=OFF
+          make install
+      - 
+        uses: actions/upload-artifact@v2
+        with:
+          name: monetdb-osx-${{ env.MONETDB_BRANCH }}
+          path: /usr/local
+
   osx-wheel:
     runs-on: macos-10.15
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        MONETDB_BRANCH: [Oct2020, Jul2021]
     env:
-      MONETDB_BRANCH: Oct2020
+      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
+      - 
+        uses: actions/download-artifact@v2
+        with:
+          name: monetdb-osx-${{ matrix.MONETDB_BRANCH }}
+          path: /usr/local
       -
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      -
-        name: brew packages
-        run: brew install monetdb
       -
         name: prepare virtuale env
         run: python3 -m venv venv
@@ -35,7 +80,7 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ env.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
+        run: MONETDB_BRANCH=${{ matrix.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
         name: Run pytest
         run: venv/bin/pytest
