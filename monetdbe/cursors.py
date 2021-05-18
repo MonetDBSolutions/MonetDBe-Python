@@ -8,8 +8,6 @@ from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape, convert
 
-from monetdbe._cffi.internal import bind, execute
-
 if TYPE_CHECKING:
     from monetdbe.row import Row
 
@@ -120,6 +118,7 @@ class Cursor:
         return self
 
     def _execute_monetdbe(self, operation: str, parameters: parameters_type = None):
+        from monetdbe._cffi.internal import bind, execute
         self._check_connection()
         statement = self.connection.prepare(operation)
         if parameters:

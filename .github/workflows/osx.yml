@@ -45,8 +45,9 @@ jobs:
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
-            -DASSERT=OFF
-          make install
+            -DASSERT=OFF \
+            -DRINTEGRATION=OFF
+          make install -j3
       - 
         uses: actions/upload-artifact@v2
         with:
