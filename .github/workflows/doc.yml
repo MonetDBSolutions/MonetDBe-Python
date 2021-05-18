@@ -1,0 +1,27 @@
+name: Sphix documentation
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ "*" ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  docs:
+    runs-on: ubuntu-20.04
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+       name: Install debian packages
+       run: sudo apt-get install python3-pip make
+      -
+        name: Install dependencies
+        run: |
+          sudo python3 -m pip install --upgrade pip
+          sudo python3 -m pip install -r doc/requirements.txt
+      -
+        name: Generate sphix docs
+        run: cd doc && make html

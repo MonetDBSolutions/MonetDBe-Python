@@ -9,9 +9,6 @@ import numpy as np
 
 from monetdbe import exceptions
 from monetdbe.formatting import parameters_type
-from monetdbe._cffi.internal import result_fetch
-
-from monetdbe._cffi.types_ import monetdbe_result
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -65,8 +62,10 @@ class Connection:
             port: TCP/IP port to listen for connections (not used yet)
 
         """
+        # import these here so we can import this file without having access to _cffi (yet)
         from monetdbe._cffi import check_if_we_can_import_lowlevel
         from monetdbe._cffi.internal import Internal
+        from monetdbe._cffi.types_ import monetdbe_result
 
         check_if_we_can_import_lowlevel()
 
@@ -128,6 +127,7 @@ class Connection:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import make_string, monet_c_type_map
+        from monetdbe._cffi.internal import result_fetch
 
         if not self.result:
             return

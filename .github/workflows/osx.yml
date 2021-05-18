@@ -8,25 +8,80 @@ on:
     branches: [ master ]
 
 jobs:
+  osx-monetdb-Oct2020:
+    runs-on: macos-10.15
+    env:
+      MONETDB_BRANCH: Oct2020
+    steps:
+      -
+        name: brew packages
+        run: brew install monetdb
+      - 
+        uses: actions/upload-artifact@v2
+        with:
+          name: monetdb-osx-Oct2020
+          path: /usr/local/Cellar/monetdb
+
+  osx-monetdb-Jul2021:
+    runs-on: macos-10.15
+    env:
+      MONETDB_BRANCH: Jul2021
+    steps:
+      -
+        name: brew packages
+        run: brew install bison
+# pkg-config lz4 openssl@1.1 pcre readline xz 
+      -
+        name: download MonetDB
+        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.MONETDB_BRANCH }}.tar.bz2 -O
+      -
+        name: extract MonetDB
+        run: tar jxvf ${{ env.MONETDB_BRANCH }}.tar.bz2
+      -
+        name: build monetdb
+        run: |
+          mkdir MonetDB-${{ env.MONETDB_BRANCH }}/build
+          cd MonetDB-${{ env.MONETDB_BRANCH }}/build
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
+            -DWITH_CRYPTO=OFF \
+            -DPY3INTEGRATION=OFF \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DASSERT=OFF \
+            -DRINTEGRATION=OFF \
+            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
+          make install -j3
+      - 
+        uses: actions/upload-artifact@v2
+        with:
+          name: monetdb-osx-${{ env.MONETDB_BRANCH }}
+          path: /usr/local/Cellar/monetdb
+
   osx-wheel:
     runs-on: macos-10.15
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        MONETDB_BRANCH: [Oct2020, Jul2021]
     env:
-      MONETDB_BRANCH: Oct2020
+      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
+    needs: [osx-monetdb-Oct2020, osx-monetdb-Jul2021]
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
+      - 
+        uses: actions/download-artifact@v2
+        with:
+          name: monetdb-osx-${{ matrix.MONETDB_BRANCH }}
+          path: /usr/local/Cellar/monetdb
+      -
+        name: Homebrew link monetdb
+        run: brew link monetdb
       -
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      -
-        name: brew packages
-        run: brew install monetdb
       -
         name: prepare virtuale env
         run: python3 -m venv venv
@@ -35,7 +90,7 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ env.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
+        run: MONETDB_BRANCH=${{ matrix.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
         name: Run pytest
         run: venv/bin/pytest

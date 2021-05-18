@@ -3,13 +3,10 @@ from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, TY
 from warnings import warn
 import numpy as np
 import pandas as pd
-from monetdbe._cffi.internal import result_fetch, result_fetch_numpy
 from monetdbe.connection import Connection, Description
 from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape, convert
-
-from monetdbe._cffi.internal import bind, execute
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -50,6 +47,7 @@ class Cursor:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import extract
+        from monetdbe._cffi.internal import result_fetch
 
         self._check_connection()
 
@@ -120,6 +118,7 @@ class Cursor:
         return self
 
     def _execute_monetdbe(self, operation: str, parameters: parameters_type = None):
+        from monetdbe._cffi.internal import bind, execute
         self._check_connection()
         statement = self.connection.prepare(operation)
         if parameters:
@@ -475,6 +474,8 @@ class Cursor:
 
         like .fetchall(), but returns a numpy array.
         """
+        from monetdbe._cffi.internal import result_fetch_numpy
+
         self._check_connection()
         self._check_result()
         return result_fetch_numpy(self.connection.result)  # type: ignore[union-attr]
