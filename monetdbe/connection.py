@@ -127,6 +127,7 @@ class Connection:
         # we import this late, otherwise the whole monetdbe project is unimportable
         # if we don't have access to monetdbe shared library
         from monetdbe._cffi.convert import make_string, monet_c_type_map
+        from monetdbe._cffi.internal import result_fetch
 
         if not self.result:
             return

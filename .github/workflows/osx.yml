@@ -40,6 +40,7 @@ jobs:
         name: build monetdb
         run: |
           mkdir MonetDB-${{ env.MONETDB_BRANCH }}/build
+          cd MonetDB-${{ env.MONETDB_BRANCH }}/build
           cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb \
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
