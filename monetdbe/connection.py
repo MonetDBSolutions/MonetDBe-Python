@@ -11,8 +11,6 @@ from monetdbe import exceptions
 from monetdbe.formatting import parameters_type
 from monetdbe._cffi.internal import result_fetch
 
-from monetdbe._cffi.types_ import monetdbe_result
-
 if TYPE_CHECKING:
     from monetdbe.row import Row
     from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
@@ -65,8 +63,11 @@ class Connection:
             port: TCP/IP port to listen for connections (not used yet)
 
         """
+        # import these here so we can import this file without having access to _cffi (yet)
         from monetdbe._cffi import check_if_we_can_import_lowlevel
         from monetdbe._cffi.internal import Internal
+        from monetdbe._cffi.types_ import monetdbe_result
+
 
         check_if_we_can_import_lowlevel()
 

@@ -20,7 +20,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: monetdb-osx-Oct2020
-          path: /usr/local
+          path: /usr/local/Cellar/monetdb
 
   osx-monetdb-Jul2021:
     runs-on: macos-10.15
@@ -32,7 +32,7 @@ jobs:
 #        run: brew install bison cmake pkg-config lz4 openssl@1.1 pcre readline xz wget 
       -
         name: download MonetDB
-        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.branch }}.tar.bz2 -O
+        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.MONETDB_BRANCH }}.tar.bz2 -O
       -
         name: extract MonetDB
         run: tar jxvf ${{ env.MONETDB_BRANCH }}.tar.bz2
@@ -40,7 +40,7 @@ jobs:
         name: build monetdb
         run: |
           mkdir ${{ env.MONETDB_BRANCH }}/build
-          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local \
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb \
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: monetdb-osx-${{ env.MONETDB_BRANCH }}
-          path: /usr/local
+          path: /usr/local/Cellar/monetdb
 
   osx-wheel:
     runs-on: macos-10.15
@@ -69,7 +69,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: monetdb-osx-${{ matrix.MONETDB_BRANCH }}
-          path: /usr/local
+          path: /usr/local/Cellar/monetdb
+      -
+        name: Homebrew link monetdb
+        run: brew link monetdb
       -
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
