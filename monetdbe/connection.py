@@ -9,7 +9,6 @@ import numpy as np
 
 from monetdbe import exceptions
 from monetdbe.formatting import parameters_type
-from monetdbe._cffi.internal import result_fetch
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -67,7 +66,6 @@ class Connection:
         from monetdbe._cffi import check_if_we_can_import_lowlevel
         from monetdbe._cffi.internal import Internal
         from monetdbe._cffi.types_ import monetdbe_result
-
 
         check_if_we_can_import_lowlevel()
 
