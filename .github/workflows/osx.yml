@@ -47,7 +47,8 @@ jobs:
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
             -DASSERT=OFF \
-            -DRINTEGRATION=OFF
+            -DRINTEGRATION=OFF \
+            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
           make install -j3
       - 
         uses: actions/upload-artifact@v2
