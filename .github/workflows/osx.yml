@@ -27,9 +27,10 @@ jobs:
     env:
       MONETDB_BRANCH: Jul2021
     steps:
-#      -
-#        name: brew packages
-#        run: brew install bison cmake pkg-config lz4 openssl@1.1 pcre readline xz wget 
+      -
+        name: brew packages
+        run: brew install bison
+# pkg-config lz4 openssl@1.1 pcre readline xz 
       -
         name: download MonetDB
         run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.MONETDB_BRANCH }}.tar.bz2 -O
@@ -41,7 +42,7 @@ jobs:
         run: |
           mkdir MonetDB-${{ env.MONETDB_BRANCH }}/build
           cd MonetDB-${{ env.MONETDB_BRANCH }}/build
-          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb \
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
