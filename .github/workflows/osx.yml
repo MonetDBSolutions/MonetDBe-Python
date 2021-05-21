@@ -30,7 +30,6 @@ jobs:
       -
         name: brew packages
         run: brew install bison
-# pkg-config lz4 openssl@1.1 pcre readline xz 
       -
         name: download MonetDB
         run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.MONETDB_BRANCH }}.tar.bz2 -O
@@ -57,6 +56,7 @@ jobs:
           path: /usr/local/Cellar/monetdb
 
   osx-wheel:
+    continue-on-error: true
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -66,6 +66,9 @@ jobs:
       MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
     needs: [osx-monetdb-Oct2020, osx-monetdb-Jul2021]
     steps:
+      -
+        name: Print MONETDB_BRANCH to make sure it is set
+        run: echo $MONETDB_BRANCH
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -92,9 +95,6 @@ jobs:
         name: Compile and install MonetDBe-python
         run: MONETDB_BRANCH=${{ matrix.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
-        name: Run pytest
-        run: venv/bin/pytest
-      -
         name: make binary wheel
         run: venv/bin/python setup.py bdist_wheel
       -
@@ -105,4 +105,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           path: dist/*.whl
-
+      -
+        name: Print version info
+        run: venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
+      -
+        name: Run pytest
+        run: venv/bin/pytest

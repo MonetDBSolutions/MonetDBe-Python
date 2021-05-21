@@ -48,6 +48,7 @@ dockers: docker-wheels docker-test docker-mypy docker-pycodestyle docker-doc
 clean: venv/
 	venv/bin/python3 setup.py clean
 	rm -rf build dist *.egg-info .eggs monetdbe/*.so monetdbe/*.dylib .*_cache venv/
+	rm monetdbe/_cffi/branch.py
 	find . -name __pycache__ | xargs rm -rf
 
 venv/bin/mypy: venv/
@@ -84,3 +85,6 @@ venv/bin/twine: venv/
 
 twine: venv/bin/twine
 	venv/bin/twine upload dist/*.whl
+
+info: setup
+	venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"

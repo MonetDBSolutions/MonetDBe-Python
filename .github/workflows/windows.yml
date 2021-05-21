@@ -10,9 +10,18 @@ on:
 jobs:
   windows-monetdb-build:
     runs-on: windows-2019
+    strategy:
+      matrix:
+        MONETDB_BRANCH: [ Oct2020, Jul2021 ]
+        include:
+          - MONETDB_BRANCH: Oct2020
+            MONETDB_WIN_PREFIX: 81446
+            MONETDB_WIN_VERSION: e281b27d2d37
+          - MONETDB_BRANCH: Jul2021
+            MONETDB_WIN_PREFIX: 81438
+            MONETDB_WIN_VERSION: f1aa70c36aa7
     env:
-      MONETDB_BRANCH: Jul2021
-      MONETDB_VERSION: 0d79e48d96ea
+      MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
       -
         name: Checkout
@@ -24,27 +33,31 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          curl.exe http://monetdb.cwi.nl/testweb/web/81382:${{ env.MONETDB_VERSION }}/MonetDB5-SQL-Installer-x86_64-${{ env.MONETDB_VERSION }}.msi -O
+          curl.exe http://monetdb.cwi.nl/testweb/web/${{ matrix.MONETDB_WIN_PREFIX }}:${{ matrix.MONETDB_WIN_VERSION }}/${{ env.MSI }} -O
       -
         name: Install monetdb
         run: |
-          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-${{ env.MONETDB_VERSION }}.msi /qn INSTALLLEVEL=1000'
+          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\${{ env.MSI }} /qn INSTALLLEVEL=1000'
           ls 'C:\Program Files\MonetDB\MonetDB5'
       - uses: actions/upload-artifact@v2
         with:
-          name: monetdb
+          name: windows-monetdb-${{ matrix.MONETDB_BRANCH }}
           path: 'C:\Program Files\MonetDB\MonetDB5'
 
   windows-wheel:
     needs: windows-monetdb-build
     runs-on: windows-2019
     continue-on-error: true
-    env:
-      MONETDB_BRANCH: Jul2021
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        MONETDB_BRANCH: [ Oct2020, Jul2021 ]
+    env:
+      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
     steps:
+      -
+        name: Print monetdbe branch variable to make sure it is set properly
+        run: echo $env:MONETDB_BRANCH
       - 
         name: Checkout
         uses: actions/checkout@v2
@@ -56,7 +69,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2
         with:
-          name: monetdb
+          name: windows-monetdb-${{ env.MONETDB_BRANCH }}
           path: 'C:\Program Files\MonetDB\MonetDB5'
       -
         name: Collect DLLs
@@ -85,7 +98,7 @@ jobs:
         name: Build binary python extension
         run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
         env:
-          MONETDB_BRANCH: Jul2021
+          MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
       -
         name: Install MonetDBe in developer mode
         run: python3 -m pip install -e .[test]
@@ -101,6 +114,9 @@ jobs:
         name: Publish Windows binary wheels
         with:
           path: dist/*.whl
+      -
+        name: Print version info
+        run: python3 -c "from monetdbe._cffi.util import print_info; print_info()"
       -  
         name: Run tests
         run: pytest

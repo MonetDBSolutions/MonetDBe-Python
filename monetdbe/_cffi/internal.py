@@ -86,6 +86,10 @@ def execute(statement: monetdbe_statement, make_result: bool = False) -> Tuple[m
     return result, affected_rows[0]
 
 
+def version() -> str:
+    return ffi.string(lib.monetdbe_version()).decode()
+
+
 class Internal:
     _active_context: Optional['Internal'] = None
     _active_connection: Optional['Connection'] = None
