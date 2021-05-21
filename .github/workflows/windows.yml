@@ -21,9 +21,7 @@ jobs:
             MONETDB_WIN_PREFIX: 81438
             MONETDB_VERSION: f1aa70c36aa7
     env:
-      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
-      MONETDB_WIN_PREFIX: ${{ matrix.MONETDB_WIN_PREFIX }}
-      MONETDB_WIN_VERSION: ${{ matrix.MONETDB_WIN_VERSION }}
+      MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
       -
         name: Checkout
@@ -35,15 +33,15 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          curl.exe http://monetdb.cwi.nl/testweb/web/{{ matrix.MONETDB_WIN_PREFIX }}:${{ env.MONETDB_WIN_VERSION }}/MonetDB5-SQL-Installer-x86_64-${{ env.MONETDB_WIN_VERSION }}.msi -O
+          curl.exe http://monetdb.cwi.nl/testweb/web/${{ matrix.MONETDB_WIN_PREFIX }}:${{ matrix.MONETDB_WIN_VERSION }}/${{ env.MSI }} -O
       -
         name: Install monetdb
         run: |
-          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\MonetDB5-SQL-Installer-x86_64-${{ env.MONETDB_WIN_VERSION }}.msi /qn INSTALLLEVEL=1000'
+          Start-Process msiexec.exe -Wait -ArgumentList '/I C:\${{ env.MSI }} /qn INSTALLLEVEL=1000'
           ls 'C:\Program Files\MonetDB\MonetDB5'
       - uses: actions/upload-artifact@v2
         with:
-          name: windows-monetdb-${{ env.MONETDB_BRANCH }}
+          name: windows-monetdb-${{ matrix.MONETDB_BRANCH }}
           path: 'C:\Program Files\MonetDB\MonetDB5'
 
   windows-wheel:
