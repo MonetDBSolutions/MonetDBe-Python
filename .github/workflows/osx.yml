@@ -106,5 +106,8 @@ jobs:
         with:
           path: dist/*.whl
       -
+        name: Print version info
+        run: python3 -c "from monetdbe._cffi.util import print_info; print_info()"
+      -
         name: Run pytest
         run: venv/bin/pytest

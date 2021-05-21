@@ -114,6 +114,9 @@ jobs:
         name: Publish Windows binary wheels
         with:
           path: dist/*.whl
+      -
+        name: Print version info
+        run: python3 -c "from monetdbe._cffi.util import print_info; print_info()"
       -  
         name: Run tests
         run: pytest

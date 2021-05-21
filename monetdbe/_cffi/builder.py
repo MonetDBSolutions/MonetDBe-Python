@@ -13,6 +13,12 @@ monetdb_branch = environ.get("MONETDB_BRANCH", "default")
 print(f"\n**MONETDB**: We are assuming you are building against MonetDB branch {monetdb_branch}")
 print("**MONETDB**: If this is incorrect, set the MONETDB_BRANCH environment variable during monetdbe-python build\n")
 
+branch_file = str(Path(__file__).parent / 'branch.py')
+
+with open(branch_file, 'w') as f:
+    f.write("# this file is created by the cffi interface builder and contains the monetdb branch env variable.\n\n")
+    f.write(f"monetdb_branch = '{monetdb_branch}'\n")
+
 
 default = monetdb_branch.lower() in ("default", "jul2021")
 win32 = platform == 'win32'
