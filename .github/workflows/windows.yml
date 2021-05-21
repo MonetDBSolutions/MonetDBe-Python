@@ -52,12 +52,10 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
         MONETDB_BRANCH: [ Oct2020, Jul2021 ]
     env:
       MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
-    strategy:
-      matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
     steps:
       -
         name: Print monetdbe branch variable to make sure it is set properly
