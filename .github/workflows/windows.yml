@@ -19,7 +19,7 @@ jobs:
             MONETDB_WIN_VERSION: e281b27d2d37
           - MONETDB_BRANCH: Jul2021
             MONETDB_WIN_PREFIX: 81438
-            MONETDB_VERSION: f1aa70c36aa7
+            MONETDB_WIN_VERSION: f1aa70c36aa7
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
