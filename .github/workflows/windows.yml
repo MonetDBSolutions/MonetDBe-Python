@@ -20,8 +20,6 @@ jobs:
           - MONETDB_BRANCH: Jul2021
             MONETDB_WIN_PREFIX: 81516
             MONETDB_WIN_VERSION: ff40ce536e95
-
-            :ff40ce536e95
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
@@ -49,7 +47,6 @@ jobs:
   windows-wheel:
     needs: windows-monetdb-build
     runs-on: windows-2019
-    continue-on-error: true
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
