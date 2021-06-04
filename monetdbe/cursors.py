@@ -183,7 +183,7 @@ class Cursor:
         """
         Shut down the connection.
         """
-        if self.connection and self.connection.result:
+        if hasattr(self, 'connection') and self.connection and self.connection.result:
             self.connection.cleanup_result()
             self.connection.result = None
         self.connection = None

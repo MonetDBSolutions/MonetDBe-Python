@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # monetdbe/test/regression.py: pymonetdbe regression tests
 #
-# Copyright (C) 2006-2010 Gerhard Häring <gh@ghaering.de>
+# Copyright (C) 2006-2010 Gerhard Hï¿½ring <gh@ghaering.de>
 #
 # This file is part of pymonetdbe.
 #
@@ -459,7 +459,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         def clean():
             if path.exists():
-                rmtree(path)
+                rmtree(path, ignore_errors=True)
 
         clean()
         try:
