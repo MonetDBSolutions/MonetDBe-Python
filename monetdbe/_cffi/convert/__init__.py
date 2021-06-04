@@ -62,6 +62,11 @@ type_infos: List[MonetdbTypeInfo] = [
     MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
 ]
 
+if hasattr(lib, "monetdbe_int128_t"):
+    type_infos.append(
+        MonetdbTypeInfo(lib.monetdbe_int128_t, "bigint", np.dtype(np.int64), "int128_t", None, np.iinfo(np.int).min),
+    )
+
 numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type: i for i in type_infos}
 monet_c_type_map: Mapping[int, MonetdbTypeInfo] = {i.c_type: i for i in type_infos}
 
