@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # monetdbe/test/transactions.py: tests transactions
 #
-# Copyright (C) 2005-2007 Gerhard Häring <gh@ghaering.de>
+# Copyright (C) 2005-2007 Gerhard Hï¿½ring <gh@ghaering.de>
 #
 # This file is part of pymonetdbe.
 #
@@ -37,10 +37,10 @@ class TransactionTests(unittest.TestCase):
         except OSError:
             pass
 
-        self.con1 = monetdbe.connect(self.db_path, timeout=1)
+        self.con1 = monetdbe.connect(self.db_path, timeout=10)
         self.cur1 = self.con1.cursor()
 
-        self.con2 = monetdbe.connect(self.db_path, timeout=1)
+        self.con2 = monetdbe.connect(self.db_path, timeout=10)
         self.cur2 = self.con2.cursor()
 
     def tearDown(self):

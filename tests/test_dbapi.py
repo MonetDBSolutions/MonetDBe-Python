@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # monetdbe/test/test_dbapi.py: tests for DB-API compliance
 #
-# Copyright (C) 2004-2010 Gerhard Häring <gh@ghaering.de>
+# Copyright (C) 2004-2010 Gerhard Hï¿½ring <gh@ghaering.de>
 #
 # This file is part of pymonetdbe.
 #
@@ -168,7 +168,7 @@ class ConnectionTests(unittest.TestCase):
     def test_OpenWithPathLikeObject(self):
         """ Checks that we can successfully connect to a database using an object that
             is PathLike, i.e. has __fspath__(). """
-        self.addCleanup(rmtree, TESTFN)
+        self.addCleanup(lambda x: rmtree(x, ignore_errors=True), TESTFN)
 
         class Path:
             def __fspath__(self):
