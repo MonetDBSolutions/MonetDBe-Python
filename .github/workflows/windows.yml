@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
         with:
-          name: monetdbe-lwininux-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
+          name: monetdbe-win-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
       -
         name: Print version info
