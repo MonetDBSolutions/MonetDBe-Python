@@ -19,7 +19,7 @@ jobs:
       - 
         uses: actions/upload-artifact@v2
         with:
-          name: monetdb-osx-Oct2020
+          name: monetdb-osx-${{ env.MONETDB_BRANCH }}
           path: /usr/local/Cellar/monetdb
 
   osx-monetdb-Jul2021:
@@ -61,9 +61,9 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        MONETDB_BRANCH: [Oct2020, Jul2021]
+        branch: [Oct2020, Jul2021]
     env:
-      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
+      MONETDB_BRANCH: ${{ matrix.branch }}
     needs: [osx-monetdb-Oct2020, osx-monetdb-Jul2021]
     steps:
       -
@@ -73,9 +73,9 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       - 
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v2 
         with:
-          name: monetdb-osx-${{ matrix.MONETDB_BRANCH }}
+          name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb
@@ -93,7 +93,7 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ matrix.MONETDB_BRANCH }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
+        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
         name: make binary wheel
         run: venv/bin/python setup.py bdist_wheel
@@ -104,6 +104,7 @@ jobs:
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v2
         with:
+          name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
       -
         name: Print version info

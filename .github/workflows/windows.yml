@@ -15,13 +15,11 @@ jobs:
         MONETDB_BRANCH: [ Oct2020, Jul2021 ]
         include:
           - MONETDB_BRANCH: Oct2020
-            MONETDB_WIN_PREFIX: 81504
-            MONETDB_WIN_VERSION: 87d2b41ef8db
+            MONETDB_WIN_PREFIX: 81587
+            MONETDB_WIN_VERSION: 90ec7ad61401
           - MONETDB_BRANCH: Jul2021
-            MONETDB_WIN_PREFIX: 81516
-            MONETDB_WIN_VERSION: ff40ce536e95
-
-            :ff40ce536e95
+            MONETDB_WIN_PREFIX: 81588
+            MONETDB_WIN_VERSION: 386371c4359f
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
@@ -43,19 +41,18 @@ jobs:
           ls 'C:\Program Files\MonetDB\MonetDB5'
       - uses: actions/upload-artifact@v2
         with:
-          name: windows-monetdb-${{ matrix.MONETDB_BRANCH }}
+          name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
           path: 'C:\Program Files\MonetDB\MonetDB5'
 
   windows-wheel:
     needs: windows-monetdb-build
     runs-on: windows-2019
-    continue-on-error: true
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        MONETDB_BRANCH: [ Oct2020, Jul2021 ]
+        branch: [ Oct2020, Jul2021 ]
     env:
-      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
+      MONETDB_BRANCH: ${{ matrix.branch }}
     steps:
       -
         name: Print monetdbe branch variable to make sure it is set properly
@@ -71,7 +68,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2
         with:
-          name: windows-monetdb-${{ env.MONETDB_BRANCH }}
+          name: monetdb-win-${{ matrix.branch }}
           path: 'C:\Program Files\MonetDB\MonetDB5'
       -
         name: Collect DLLs
@@ -115,6 +112,7 @@ jobs:
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
         with:
+          name: monetdbe-win-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
       -
         name: Print version info
