@@ -17,6 +17,7 @@ venv/installed: venv/
 	touch venv/installed
 
 setup: venv/installed
+build: venv/installed
 
 test: setup
 	venv/bin/pytest
@@ -47,33 +48,43 @@ dockers: docker-wheels docker-test docker-mypy docker-pycodestyle docker-doc
 clean: venv/
 	venv/bin/python3 setup.py clean
 	rm -rf build dist *.egg-info .eggs monetdbe/*.so monetdbe/*.dylib .*_cache venv/
+	rm monetdbe/_cffi/branch.py
+	find . -name __pycache__ | xargs rm -rf
 
 venv/bin/mypy: venv/
 	venv/bin/pip install mypy
+	touch venv/bin/mypy
 
 venv/bin/pycodestyle: venv/
 	venv/bin/pip install pycodestyle
+	touch venv/bin/pycodestyle
 
 mypy: venv/bin/mypy
-	venv/bin/mypy monetdbe tests
+	venv/bin/mypy --show-error-codes monetdbe tests
 
 pycodestyle: venv/bin/pycodestyle
 	venv/bin/pycodestyle monetdbe tests
 
 venv/bin/jupyter-notebook: venv/
 	venv/bin/pip install notebook
+	touch venv/bin/jupyter-notebook
 
 notebook: venv/bin/jupyter-notebook
 	venv/bin/jupyter-notebook
 
 venv/bin/delocate-wheel: venv/
 	venv/bin/pip install delocate
+	touch venv/bin/delocate-wheel
 
 delocate: venv/bin/delocate-wheel
 	venv/bin/delocate-wheel -v dist/*.whl
 
 venv/bin/twine: venv/
 	venv/bin/pip install twine
+	touch venv/bin/twine
 
 twine: venv/bin/twine
 	venv/bin/twine upload dist/*.whl
+
+info: setup
+	venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"

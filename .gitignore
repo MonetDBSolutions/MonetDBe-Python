@@ -133,12 +133,16 @@ monetdbe/util/*.c
 
 tests/@test_*_tmp/
 
-# pycharm
+# editors
 .idea/
+.vscode/
+.vscode/settings.json
 
 
 doc/_build
-
 monetdbe/*.dll
 /monetdbe/_cffi/monetdbe/_lowlevel.c
 /monetdbe/_cffi/monetdbe/_lowlevel.o
+monetdbe/_cffi/branch.py
+this_folder_can_be_removed
+

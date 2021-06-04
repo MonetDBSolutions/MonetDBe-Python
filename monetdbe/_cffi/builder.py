@@ -4,40 +4,47 @@ CFFI bridging shared library.
 """
 from pathlib import Path
 from sys import platform
-
+from os import environ
 from cffi import FFI
-
-ffibuilder = FFI()
-
-# not all platforms support 128 bit (windows). Since CFFI cdefs dont support conditionals
-# we need to do this a bit awkward:
-monetdbe_types_template = """
-typedef enum {{
- monetdbe_bool, monetdbe_int8_t, monetdbe_int16_t, monetdbe_int32_t, monetdbe_int64_t,
- {placeholder}
- monetdbe_size_t, monetdbe_float, monetdbe_double,
- monetdbe_str, monetdbe_blob,
- monetdbe_date, monetdbe_time, monetdbe_timestamp,
- monetdbe_type_unknown
-}} monetdbe_types;
-"""
-
-if platform == 'win32':
-    monetdbe_types = monetdbe_types_template.format(placeholder="")
-else:
-    monetdbe_types = monetdbe_types_template.format(placeholder="monetdbe_int128_t,")
+from jinja2 import Template
 
 
-lowlevel_source = """
+monetdb_branch = environ.get("MONETDB_BRANCH", "default")
+print(f"\n**MONETDB**: We are assuming you are building against MonetDB branch {monetdb_branch}")
+print("**MONETDB**: If this is incorrect, set the MONETDB_BRANCH environment variable during monetdbe-python build\n")
+
+branch_file = str(Path(__file__).parent / 'branch.py')
+
+with open(branch_file, 'w') as f:
+    f.write("# this file is created by the cffi interface builder and contains the monetdb branch env variable.\n\n")
+    f.write(f"monetdb_branch = '{monetdb_branch}'\n")
+
+
+default = monetdb_branch.lower() in ("default", "jul2021")
+win32 = platform == 'win32'
+
+
+source = """
 #include "monetdb/monetdbe.h"
 """
 
-ffibuilder.set_source("monetdbe._lowlevel", lowlevel_source, libraries=['monetdbe'])
-path = str(Path(__file__).parent / 'embed.h')
 
-with open(path, 'r') as f:
-    cdef = monetdbe_types + f.read()
+# the ffibuilder object needs to exist and be configured in the module namespace so setup.py can reach it
+ffibuilder = FFI()
+ffibuilder.set_source("monetdbe._lowlevel", source, libraries=['monetdbe'])
+embed_path = str(Path(__file__).parent / 'embed.h.j2')
+
+
+with open(embed_path, 'r') as f:
+    content = f.read()
+    template = Template(content)
+    cdef = template.render(win32=win32, default=default)
     ffibuilder.cdef(cdef)
 
-if __name__ == "__main__":
+
+def build():
     ffibuilder.compile(verbose=True)
+
+
+if __name__ == "__main__":
+    build()

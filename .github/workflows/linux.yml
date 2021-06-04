@@ -1,4 +1,4 @@
-name: Linux
+name: linux test and wheels
 
 on:
   push:
@@ -8,73 +8,43 @@ on:
     branches: [ master ]
 
 jobs:
-  linux_test:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
+  linux-test:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        branch: [Oct2020, Jul2021]
+    container: monetdb/dev-builds:${{ matrix.branch }}
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=${{ matrix.branch }} python3 -m pip install -e .[test]
+      -
+        name: Print version info
+        run: python3 -c "from monetdbe._cffi.util import print_info; print_info()"
       -
         name: run tests
         run: py.test -vv
 
-
-  linux_mypy:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
-      -
-        name: Run mypy static code checks
-        run: mypy monetdbe tests
-
-
-  linux_pycodestyle:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
-      -
-        name: Check the python coding style
-        run: pycodestyle monetdbe tests
-
-
-  linux_wheel:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020_manylinux
+  linux-wheel:
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
+        branch: [Jul2021]
+    container: monetdb/dev-builds:${{ matrix.branch}}_manylinux
+
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: make linux binary wheels
-        run: scripts/make_wheel.sh ${{ matrix.python-version }}
+        run: MONETDB_BRANCH=${{ matrix.branch }} scripts/make_wheel.sh ${{ matrix.python-version }}
       -
         uses: actions/upload-artifact@v2
         name: Publish Linux binary wheels
         with:
           path: dist/*.whl
-
-      - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.MONETDBE_PYPI }}

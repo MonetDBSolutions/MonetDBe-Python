@@ -7,7 +7,8 @@ class TestSimpleDBAPI:
     def test_regular_selection(self, monetdbe_cursor):
         monetdbe_cursor.execute('SELECT * FROM integers')
         result = monetdbe_cursor.fetchall()
-        assert result == [(0,), (1,), (2,), (3,), (4,), (5,), (6,), (7,), (8,), (9,), (None,)], "Incorrect result returned"
+        assert result == [(0,), (1,), (2,), (3,), (4,), (5,), (6,), (7,), (8,), (9,),
+                          (None,)], "Incorrect result returned"
 
     def test_numpy_selection(self, monetdbe_cursor):
         monetdbe_cursor.execute('SELECT * FROM integers')
@@ -50,7 +51,8 @@ class TestSimpleDBAPI:
         numpy.testing.assert_array_equal(result['v'], data_dict['v'])
 
     def test_numpy_insertion(self, monetdbe_cursor):
-        data_dict = {'i': numpy.arange(10).astype(numpy.int32), 'v': numpy.random.randint(100, size=10).astype(numpy.int32)}
+        data_dict = {'i': numpy.arange(10).astype(numpy.int32),
+                     'v': numpy.random.randint(100, size=10).astype(numpy.int32)}
         monetdbe_cursor.execute("CREATE TABLE numpy_insertion (i INT, v INT)")
         monetdbe_cursor.insert('numpy_insertion', data_dict)
         monetdbe_cursor.commit()
@@ -62,7 +64,8 @@ class TestSimpleDBAPI:
         numpy.testing.assert_array_equal(result['v'], data_dict['v'])
 
     def test_pandas_insertion(self, monetdbe_cursor):
-        data_dict = {'i': numpy.arange(10).astype(numpy.int32), 'v': numpy.random.randint(100, size=10).astype(numpy.int32)}
+        data_dict = {'i': numpy.arange(10).astype(numpy.int32),
+                     'v': numpy.random.randint(100, size=10).astype(numpy.int32)}
         dframe = pandas.DataFrame.from_dict(data_dict)
         monetdbe_cursor.execute("CREATE TABLE pandas_insertion (i INT, v INT)")
         monetdbe_cursor.insert('pandas_insertion', dframe)

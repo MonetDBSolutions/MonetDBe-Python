@@ -3,7 +3,6 @@ from typing import List, Any
 from unittest import TestCase
 from math import isnan
 from pandas import DataFrame
-
 from monetdbe import connect, Timestamp
 
 

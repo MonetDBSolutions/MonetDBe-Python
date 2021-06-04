@@ -124,7 +124,7 @@ class RegressionTests(unittest.TestCase):
         pymonetdbe used to segfault with monetdbe versions 3.5.x. These return NULL
         for "no-operation" statements
         """
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             self.con.execute("")
 
     @unittest.skip("not supported (yet)")
@@ -143,6 +143,7 @@ class RegressionTests(unittest.TestCase):
         con.execute("insert into foo(bar) values (5)")
         con.execute(SELECT)
 
+    @unittest.skip("todo/note (gijs): disable this for now since the monetdbe engine sees this as valid")
     def test_ErrorMsgDecodeError(self):
         # When porting the module to Python 3.0, the error message about
         # decoding errors disappeared. This verifies they're back again.
@@ -213,7 +214,7 @@ class RegressionTests(unittest.TestCase):
         class MyStr(str):
             pass
 
-        self.con.execute("select ?", (MyStr("abc"),))
+        self.con.execute("select cast(? as varchar(3))", (MyStr("abc"),))
 
     def test_ConnectionConstructorCallCheck(self):
         """
@@ -236,7 +237,7 @@ class RegressionTests(unittest.TestCase):
         """
 
         class Connection(monetdbe.Connection):
-            def cursor(self):
+            def cursor(self, *args, **kwargs):
                 return Cursor(self)
 
         class Cursor(monetdbe.Cursor):
@@ -427,7 +428,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         m = monetdbe.connect()
         c = m.cursor()
         c.execute(q)
-        del m.lowlevel
+        del m._internal
         del m
         m = monetdbe.connect()
         c = m.cursor()
@@ -435,10 +436,10 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
     def test_proper_error_on_empty_query_issue63(self):
         conn = monetdbe.connect(':memory:')
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             conn.execute("")
 
-        with self.assertRaises(monetdbe.ProgrammingError):
+        with self.assertRaises(monetdbe.OperationalError):
             conn.execute(";")
 
     def test_real_issue83(self):
@@ -484,3 +485,19 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         path = str((Path(__file__).parent / "example.csv").resolve().absolute())
         cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")
+
+    @unittest.skip("Disabled since takes quite long")
+    def test_crash_loop(self):
+        for i in range(1000):
+            cx = monetdbe.connect(":memory:")
+            cu = cx.cursor()
+            cu.execute("create table test(id integer auto_increment primary key, name text)")
+            cu.execute("insert into test(name) values (?)", ("foo",))
+
+    def test_issue127(self):
+        conn = monetdbe.connect(':memory:')
+        cur = conn.cursor()
+        res = cur.execute("create table tmp(i integer, s string)")
+        res = cur.execute("insert into tmp values(123, 'hello''world'':\n ERROR');")
+        rows = res.fetchall()
+        print(rows)

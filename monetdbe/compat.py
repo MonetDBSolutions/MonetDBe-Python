@@ -1,13 +1,15 @@
 """
 compatibility with MonetDBLite
 """
+from typing import TYPE_CHECKING
 from warnings import warn
-from typing import List, Tuple
 from pandas import DataFrame
 
 from monetdbe.dbapi2 import connect
-from monetdbe.cursor import Cursor
 from monetdbe.connection import Connection
+
+if TYPE_CHECKING:
+    from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
 
 
 def make_connection(*args, **kwargs):
@@ -36,14 +38,14 @@ def sql(query: str, client=None) -> DataFrame:
         return connect().execute(query).fetchdf()
 
 
-def create(table, values, schema=None, conn=None) -> Cursor:
+def create(table, values, schema=None, conn=None) -> 'Cursor':
     warn("create() is deprecated and will be removed from future versions")
     if not conn:
         conn = connect()
     return conn.cursor().create(table=table, values=values, schema=schema)
 
 
-def insert(*args, **kwargs) -> Cursor:
+def insert(*args, **kwargs) -> 'Cursor':
     warn("insert() is deprecated and will be removed from future versions")
     if 'client' in kwargs:
         client = kwargs.pop('client')

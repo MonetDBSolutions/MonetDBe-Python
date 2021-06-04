@@ -22,7 +22,7 @@ else:
 
 setup(
     name="monetdbe",
-    version="0.9",
+    version="0.10",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",
@@ -39,7 +39,7 @@ setup(
         "Topic :: Database :: Front-Ends",
     ],
     python_requires='>=3.6',
-    setup_requires=["cffi>=1.0.0"],
+    setup_requires=["cffi>=1.0.0", "Jinja2"],
     extras_require=extras_require,
     cffi_modules=["monetdbe/_cffi/builder.py:ffibuilder"],
     install_requires=["cffi>=1.0.0", "numpy", "pandas"],

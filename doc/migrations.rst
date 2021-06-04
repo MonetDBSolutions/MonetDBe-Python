@@ -1,3 +1,5 @@
+.. _Application Migration:
+
 =====================
 Application Migration
 =====================
@@ -20,6 +22,11 @@ API is a subset of the old API and contains an interface geared at an embedded s
 
 The repository `MonetDBe example <https://github.com/MonetDBSolutions/monetdbe-examples>`_ contain a series of examples written
 in MonetDBe and  C to learn the API by example.
+
+If the application program uses multiple concurrent client-side threads to interact with the embedded database,
+each concurrent API consuming thread must use a non-shared `monetdbe_database` handle for its API calls.
+In other words `monetdbe_database` handles are not thread-safe. See the `concurrent.c` source file in the MonetDBe example repository
+for an example of a correct implementation of concurrent access to an embedded database.
 
 Porting SQLite3 programs
 ------------------------
