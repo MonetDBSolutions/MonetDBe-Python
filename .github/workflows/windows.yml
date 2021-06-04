@@ -50,9 +50,9 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        MONETDB_BRANCH: [ Oct2020, Jul2021 ]
+        branch: [ Oct2020, Jul2021 ]
     env:
-      MONETDB_BRANCH: ${{ matrix.MONETDB_BRANCH }}
+      MONETDB_BRANCH: ${{ matrix.branch }}
     steps:
       -
         name: Print monetdbe branch variable to make sure it is set properly
@@ -68,7 +68,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2
         with:
-          name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
+          name: monetdb-win-${{ matrix.branch }}
           path: 'C:\Program Files\MonetDB\MonetDB5'
       -
         name: Collect DLLs
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
         with:
-          name: monetdbe-linux-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
+          name: monetdbe-lwininux-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
       -
         name: Print version info
