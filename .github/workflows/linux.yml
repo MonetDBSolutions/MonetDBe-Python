@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-        branch: [Jul2021]
+        branch: [Oct2020, Jul2021]
     container: monetdb/dev-builds:${{ matrix.branch}}_manylinux
 
     steps:
@@ -47,4 +47,5 @@ jobs:
         uses: actions/upload-artifact@v2
         name: Publish Linux binary wheels
         with:
+          name: monetdbe-linux-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl

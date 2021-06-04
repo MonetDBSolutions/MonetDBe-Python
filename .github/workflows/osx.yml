@@ -19,7 +19,7 @@ jobs:
       - 
         uses: actions/upload-artifact@v2
         with:
-          name: monetdb-osx-Oct2020
+          name: monetdb-osx-${{ env.MONETDB_BRANCH }}
           path: /usr/local/Cellar/monetdb
 
   osx-monetdb-Jul2021:
@@ -73,7 +73,7 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       - 
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v2 
         with:
           name: monetdb-osx-${{ matrix.MONETDB_BRANCH }}
           path: /usr/local/Cellar/monetdb
@@ -104,6 +104,7 @@ jobs:
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v2
         with:
+          name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
       -
         name: Print version info
