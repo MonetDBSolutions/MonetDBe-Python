@@ -1,6 +1,6 @@
-# MonetDBe-Python
+# MonetDB/e-Python
 
-MonetDBe-Python - the serverless Python embedded MonetDB
+MonetDB/e-Python - the serverless Python embedded MonetDB
 
 ![alt text](monetdbe-python.png)
 
