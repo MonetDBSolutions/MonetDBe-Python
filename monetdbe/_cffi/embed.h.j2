@@ -96,7 +96,11 @@ typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; in
 typedef struct { monetdbe_types type; int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t *value); } monetdbe_column_int16_t;
 typedef struct { monetdbe_types type; int32_t *data; size_t count; char *name; int32_t null_value; double scale; int (*is_null)(int32_t *value); } monetdbe_column_int32_t;
 typedef struct { monetdbe_types type; int64_t *data; size_t count; char *name; int64_t null_value; double scale; int (*is_null)(int64_t *value); } monetdbe_column_int64_t;
-typedef struct { monetdbe_types type; int128_t *data; size_t count; char *name; int128_t null_value; double scale; int (*is_null)(int128_t *value); } monetdbe_column_int128_t;
+ {% if not win32 %}
+ {# windows does not support 128-bit #}
+ typedef struct { monetdbe_types type; __int128 *data; size_t count; char *name; __int128 null_value; double scale; int (*is_null)(__int128 *value); } monetdbe_column_int128_t;
+ {% endif %}
+
 
 typedef struct { monetdbe_types type; size_t *data; size_t count; char *name; size_t null_value; double scale; int (*is_null)(size_t *value); } monetdbe_column_size_t;
 
