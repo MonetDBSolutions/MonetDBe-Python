@@ -4,7 +4,16 @@ from sys import platform
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-tests_require = ['pytest', 'mypy', 'pycodestyle', 'data-science-types']
+tests_require = [
+    'pytest',
+    'mypy',
+    'pycodestyle',
+    'data-science-types',
+    'types-setuptools',
+    'types-pkg_resources',
+    'types-Jinja2',
+    'typing-extensions',
+]
 
 extras_require = {
     'test': tests_require,
@@ -42,7 +51,7 @@ setup(
     setup_requires=["cffi>=1.0.0", "Jinja2"],
     extras_require=extras_require,
     cffi_modules=["monetdbe/_cffi/builder.py:ffibuilder"],
-    install_requires=["cffi>=1.0.0", "numpy", "pandas"],
+    install_requires=["cffi>=1.0.0", "numpy>=1.21", "pandas"],
     tests_require=tests_require,
     test_suite="tests",
     package_data=package_data,
