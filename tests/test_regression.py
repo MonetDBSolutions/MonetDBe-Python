@@ -59,7 +59,7 @@ class RegressionTests(unittest.TestCase):
 
     @unittest.skip("cached_statements not supported (yet)")
     def test_StatementReset(self):
-        # pymonetdbe 2.1.0 to 2.2.0 have the problem that not all statements are
+        # sqlite 2.1.0 to 2.2.0 have the problem that not all statements are
         # reset before a rollback, but only those that are still in the
         # statement cache. The others are not accessible from the connection object.
         con = monetdbe.connect(":memory:", cached_statements=5)
@@ -82,7 +82,7 @@ class RegressionTests(unittest.TestCase):
         self.assertEqual(cur.description[0][0], "foo baz")
 
     def test_StatementFinalizationOnCloseDb(self):
-        # pymonetdbe versions <= 2.3.3 only finalized statements in the statement
+        # sqlite versions <= 2.3.3 only finalized statements in the statement
         # cache when closing the database. statements that were still
         # referenced in cursors weren't closed and could provoke "
         # "OperationalError: Unable to close due to unfinalised statements".
@@ -501,3 +501,11 @@ class TestMonetDBeRegressions(unittest.TestCase):
         res = cur.execute("insert into tmp values(123, 'hello''world'':\n ERROR');")
         rows = res.fetchall()
         print(rows)
+
+    @unittest.skip("Disabled until issue #118 is solved")
+    def test_issue118_explain(self):
+        conn = monetdbe.connect(':memory:')
+        cur = conn.cursor()
+        res = cur.execute('explain select 1')
+        tbl = res.fetchall()
+        print(tbl)
