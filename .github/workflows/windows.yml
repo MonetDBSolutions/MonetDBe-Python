@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [ master ]
 
+# the prefix and version numbers for the branches need to be manually copied (for now) from:
+# http://monetdb.cwi.nl/testweb/web/status.php
 jobs:
   windows-monetdb-build:
     runs-on: windows-2019
@@ -15,11 +17,11 @@ jobs:
         MONETDB_BRANCH: [ Oct2020, Jul2021 ]
         include:
           - MONETDB_BRANCH: Oct2020
-            MONETDB_WIN_PREFIX: 81587
-            MONETDB_WIN_VERSION: 90ec7ad61401
+            MONETDB_WIN_PREFIX: 82158
+            MONETDB_WIN_VERSION: 94eccb312131
           - MONETDB_BRANCH: Jul2021
-            MONETDB_WIN_PREFIX: 81872
-            MONETDB_WIN_VERSION: 5ff93408e804
+            MONETDB_WIN_PREFIX: 82181
+            MONETDB_WIN_VERSION: 079fc84e56bc
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
