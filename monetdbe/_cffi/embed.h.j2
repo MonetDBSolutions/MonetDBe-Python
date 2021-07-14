@@ -81,6 +81,7 @@ typedef struct {
  {% if default %}
  monetdbe_remote* remote;
  monetdbe_mapi_server* mapi_server;
+ const char *trace_file;
  {% endif %}
 
 } monetdbe_options;

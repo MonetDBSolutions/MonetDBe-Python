@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
 
 import numpy as np
-from monetdbe._lowlevel import ffi, lib
 
+from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
 from monetdbe._cffi.convert.bind import prepare_bind
@@ -52,7 +52,7 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
         else:
             mask = np.ma.nomask  # type: ignore[attr-defined]
 
-        masked = np.ma.masked_array(np_col, mask=mask)
+        masked: np.ndarray = np.ma.masked_array(np_col, mask=mask)
 
         result_dict[name] = masked
     return result_dict
@@ -262,7 +262,8 @@ class Internal:
             work_column.data = ffi.cast(f"{type_info.c_string_type} *", ffi.from_buffer(column_values))
             work_columns[column_num] = work_column
             work_objs.append(work_column)
-        check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
+        check_error(
+            lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
@@ -280,7 +281,8 @@ class Internal:
 
     def dump_table(self, schema_name: str, table_name: str, backupfile: Path):
         # todo (gijs): use :)
-        lib.monetdbe_dump_table(self._monetdbe_database, schema_name.encode(), table_name.encode(), str(backupfile).encode())
+        lib.monetdbe_dump_table(self._monetdbe_database, schema_name.encode(), table_name.encode(),
+                                str(backupfile).encode())
 
     def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
         self._switch()
