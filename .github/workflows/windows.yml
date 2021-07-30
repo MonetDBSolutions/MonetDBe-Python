@@ -109,7 +109,7 @@ jobs:
           dlldiag.exe deps .\monetdbe\_lowlevel.pyd  
       -
         name: Make wheel
-        run: pyproject-build
+        run: python3 -m build
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
