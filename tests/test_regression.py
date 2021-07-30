@@ -33,6 +33,9 @@ import numpy as np
 import pandas as pd
 
 import monetdbe as monetdbe
+from monetdbe._cffi.branch import monetdb_branch
+
+OCT2020 = monetdb_branch == "Oct2020"
 
 
 class RegressionTests(unittest.TestCase):
@@ -502,6 +505,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         rows = res.fetchall()
         print(rows)
 
+
     @unittest.skip("Disabled until issue #118 is solved")
     def test_issue118_explain(self):
         conn = monetdbe.connect(':memory:')
@@ -509,3 +513,25 @@ class TestMonetDBeRegressions(unittest.TestCase):
         res = cur.execute('explain select 1')
         tbl = res.fetchall()
         print(tbl)
+
+    @unittest.skipIf(OCT2020, "This issue was not fixed on Oct2020")
+    def test_issue_136_bigint_result(self):
+        con = monetdbe.connect(':memory:')
+        cur = con.execute("""
+        CREATE TABLE test (
+            col1 INT NOT NULL,
+            col2 INT NOT NULL,
+            col3 INT NOT NULL,
+            col4 INT NOT NULL
+        )
+        """)
+        np.random.seed(0)
+        df = pd.DataFrame(
+            np.random.randint(low=np.iinfo(np.int32).min, high=np.iinfo(np.int32).max, dtype=np.int32, size=(100, 4)),
+            columns=('col1', 'col2', 'col3', 'col4'))
+        cur.insert('test', df)
+        a = np.array([-781377998], dtype=np.int32)
+        cur.insert('test', {'col1': a, 'col2': a, 'col3': a, 'col4': a})
+        res5 = cur.execute('select * from test where col1 = -781377998').fetchall()
+        assert (len(res5) == 1)
+        assert (len(res5[0]) == 4)
