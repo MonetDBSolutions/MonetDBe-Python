@@ -32,6 +32,8 @@ esac
 
 TARGET=cp${VERSION}-cp${VERSION}${PLATFORM}
 
-/opt/python/${TARGET}/bin/python ./setup.py bdist_wheel -d ${WORKDIR}
+/opt/python/${TARGET}/bin/pip install --upgrade pip wheel build
+
+/opt/python/${TARGET}/bin/pyproject-build -o ${WORKDIR}
 
 auditwheel repair --plat manylinux2014_x86_64 -w ${OUTPUT} ${WORKDIR}/*.whl
