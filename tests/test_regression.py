@@ -505,7 +505,6 @@ class TestMonetDBeRegressions(unittest.TestCase):
         rows = res.fetchall()
         print(rows)
 
-
     @unittest.skip("Disabled until issue #118 is solved")
     def test_issue118_explain(self):
         conn = monetdbe.connect(':memory:')

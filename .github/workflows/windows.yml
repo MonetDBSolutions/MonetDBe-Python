@@ -17,11 +17,11 @@ jobs:
         MONETDB_BRANCH: [ Oct2020, Jul2021 ]
         include:
           - MONETDB_BRANCH: Oct2020
-            MONETDB_WIN_PREFIX: 82158
-            MONETDB_WIN_VERSION: 94eccb312131
+            MONETDB_WIN_PREFIX: 82411
+            MONETDB_WIN_VERSION: c51ff55bd174
           - MONETDB_BRANCH: Jul2021
-            MONETDB_WIN_PREFIX: 82181
-            MONETDB_WIN_VERSION: 079fc84e56bc
+            MONETDB_WIN_PREFIX: 82431
+            MONETDB_WIN_VERSION: f61cd4ed3473
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
@@ -94,7 +94,7 @@ jobs:
           ls monetdbe
       -
         name: Upgrade pip and wheel for all pythons
-        run: python3 -m pip install --upgrade pip wheel dll-diagnostics
+        run: python3 -m pip install --upgrade pip wheel dll-diagnostics build
       -
         name: Build binary python extension
         run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
@@ -109,7 +109,7 @@ jobs:
           dlldiag.exe deps .\monetdbe\_lowlevel.pyd  
       -
         name: Make wheel
-        run: python setup.py bdist_wheel
+        run: pyproject-build
       -
         uses: actions/upload-artifact@v2
         name: Publish Windows binary wheels
