@@ -140,6 +140,7 @@ class TransactionTests(unittest.TestCase):
         # NO self.con2.rollback() HERE!!!
         self.con1.commit()
 
+    @unittest.skip("disabled: MonetDBe does not yet support concurrent connections to different dbfarm's")
     def test_RollbackCursorConsistency(self):
         """
         Checks if cursors on the connection are set into a "reset" state
@@ -154,6 +155,7 @@ class TransactionTests(unittest.TestCase):
         con.rollback()
         with self.assertRaises(monetdbe.InterfaceError):
             cur.fetchall()
+        con.close()
 
 
 class SpecialCommandTests(unittest.TestCase):

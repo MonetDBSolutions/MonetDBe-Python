@@ -10,8 +10,8 @@ def monetdbe_int(data: int) -> ffi.CData:
         return ffi.new("int *", data)
 
 
-def bind_str(data: str) -> bytes:
-    return str(data).encode()
+def bind_str(data: str) -> ffi.CData:
+    return ffi.new("char[]", str(data).encode())
 
 
 def bind_float(data: float) -> ffi.CData:
