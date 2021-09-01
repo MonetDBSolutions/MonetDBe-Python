@@ -8,7 +8,7 @@ on:
     branches: [ master ]
 
 jobs:
-  osx-monetdb-Jul2021
+  osx-monetdb-Jul2021:
     runs-on: macos-10.15
     env:
       MONETDB_BRANCH: Jul2021
