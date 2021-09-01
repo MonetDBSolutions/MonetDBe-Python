@@ -56,7 +56,6 @@ typedef struct {
 
 typedef void* monetdbe_database;
 
-{% if default %}
 typedef struct {
  const char *host;
  int port;
@@ -71,23 +70,16 @@ typedef struct {
  const char* usock;
  const char* usock;
 } monetdbe_mapi_server;
-{% endif %}
 
 typedef struct {
  int memorylimit;
  int querytimeout;
  int sessiontimeout;
  int nr_threads;
- {% if default %}
  monetdbe_remote* remote;
  monetdbe_mapi_server* mapi_server;
  const char *trace_file;
- {% endif %}
-
 } monetdbe_options;
-
-
-
 
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_bool;
 typedef struct { monetdbe_types type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_int8_t;
@@ -107,9 +99,7 @@ typedef struct { monetdbe_types type; monetdbe_data_date *data; size_t count; ch
 typedef struct { monetdbe_types type; monetdbe_data_time *data; size_t count; char *name; monetdbe_data_time null_value; double scale; int (*is_null)(monetdbe_data_time *value); } monetdbe_column_time;
 typedef struct { monetdbe_types type; monetdbe_data_timestamp *data; size_t count; char *name; monetdbe_data_timestamp null_value; double scale; int (*is_null)(monetdbe_data_timestamp *value); } monetdbe_column_timestamp;
 
-{% if default %}
 extern const char *monetdbe_version(void);
-{% endif %}
 
 extern int monetdbe_open(monetdbe_database *db, char *url, monetdbe_options *opts);
 
