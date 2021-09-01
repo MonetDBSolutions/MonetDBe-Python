@@ -113,14 +113,18 @@ class Internal:
         self.nr_threads = nr_threads
         self.have_hge = have_hge
         self._switch()
-        self._monetdbe_database = self.open()
 
     @classmethod
     def set_active_context(cls, active_context: Optional['Internal']):
         cls._active_context = active_context
 
-    def set_monetdbe_database(self, connection: Optional[monetdbe_database]):
-        self._monetdbe_database = connection
+    @classmethod
+    def set_active_connection(cls, active_connection: Optional['Connection']):
+        cls._active_connection = active_connection
+
+    @classmethod
+    def set_monetdbe_database(cls, connection: Optional[monetdbe_database]):
+        cls._monetdbe_database = connection
 
     def __del__(self):
         if self._active_context == self:
@@ -131,10 +135,17 @@ class Internal:
         if self._active_context == self:
             return
 
+        # this is a bit scary but just to make sure the previous connection
+        # can't touch us anymore
+        if self._active_connection:
+            self._active_connection._internal = None
+
+        self.close()
+        self.set_monetdbe_database(self.open())
         self.set_active_context(self)
+        self.set_active_connection(self._connection)
 
     def cleanup_result(self, result: monetdbe_result):
-        self._switch()
         _logger.info("cleanup_result called")
         if result and self._monetdbe_database:
             check_error(lib.monetdbe_cleanup_result(self._monetdbe_database, result))
@@ -169,13 +180,11 @@ class Internal:
                 lib.monetdbe_close(connection)
             else:
                 error = errors.get(result_code, "unknown error")
-            msg = "Failed to open database: {error} (code {result_code})".format(error=error, result_code=result_code)
-            raise exceptions.OperationalError(msg)
+            raise exceptions.OperationalError(f"Failed to open database: {error} (code {result_code})")
 
         return connection
 
     def close(self) -> None:
-        self._switch()
         if self._monetdbe_database:
             if lib.monetdbe_close(self._monetdbe_database):
                 raise exceptions.OperationalError("Failed to close database")
@@ -183,6 +192,8 @@ class Internal:
 
         if self._active_context:
             self.set_active_context(None)
+
+        self.set_active_connection(None)
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
@@ -257,7 +268,7 @@ class Internal:
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
         stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt, ffi.NULL))
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
         return stmt[0]
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:

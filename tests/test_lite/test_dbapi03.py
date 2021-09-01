@@ -5,8 +5,7 @@ import monetdbe
 
 class TestShutdown:
     def test_commited_on_restart(self, monetdbe_cursor_autocommit):
-        context = monetdbe_cursor_autocommit
-        cursor = context.cursor
+        (cursor, connection, dbfarm) = monetdbe_cursor_autocommit
         cursor.transaction()
         cursor.execute('CREATE TABLE integers (i INTEGER)')
         cursor.executemany('INSERT INTO integers VALUES (%s)', [[x] for x in range(3)])
@@ -14,32 +13,30 @@ class TestShutdown:
         result = cursor.fetchall()
         assert result == [(0,), (1,), (2,)], "Incorrect result returned"
         cursor.commit()
-        context.connection.close()
+        connection.close()
 
-        context.connection = monetdbe.make_connection(context.dbfarm)
-        cursor = context.connection.cursor()
+        connection = monetdbe.make_connection(dbfarm)
+        cursor = connection.cursor()
         cursor.execute('SELECT * FROM integers')
         assert result == [(0,), (1,), (2,)], "Incorrect result returned"
 
     def test_transaction_aborted_on_shutdown(self, monetdbe_cursor_autocommit):
-        context = monetdbe_cursor_autocommit
-        cursor = context.cursor
+        (cursor, connection, dbfarm) = monetdbe_cursor_autocommit
         cursor.transaction()
         cursor.execute('CREATE TABLE integers (i INTEGER)')
         cursor.executemany('INSERT INTO integers VALUES (%s)', [[x] for x in range(3)])
         cursor.execute('SELECT * FROM integers')
         result = cursor.fetchall()
         assert result == [(0,), (1,), (2,)], "Incorrect result returned"
-        context.connection.close()
+        connection.close()
 
-        context.connection = monetdbe.make_connection(context.dbfarm)
-        cursor = context.connection.cursor()
+        connection = monetdbe.make_connection(dbfarm)
+        cursor = connection.cursor()
         with pytest.raises(monetdbe.DatabaseError):
             cursor.execute('SELECT * FROM integers')
 
     def test_many_shutdowns(self, monetdbe_cursor_autocommit):
-        context = monetdbe_cursor_autocommit
-        cursor = context.cursor
+        (cursor, connection, dbfarm) = monetdbe_cursor_autocommit
         for i in range(10):
             cursor.transaction()
             cursor.execute('CREATE TABLE integers (i INTEGER)')
@@ -47,10 +44,9 @@ class TestShutdown:
             cursor.execute('SELECT MIN(i * 3 + 5) FROM integers')
             result = cursor.fetchall()
             assert result == [(5,)], "Incorrect result returned"
-            context.connection.close()
+            connection.close()
 
-            context.connection = monetdbe.make_connection(context.dbfarm)
-            connection = context.connection
+            connection = monetdbe.make_connection(dbfarm)
             connection.set_autocommit(True)
             cursor = connection.cursor()
 

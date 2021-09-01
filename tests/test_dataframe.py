@@ -7,11 +7,11 @@ from monetdbe import connect, Timestamp
 
 
 def _connect(values: List[Any], type: str) -> DataFrame:
-    with connect(autocommit=True) as con:
-        cur = con.execute(f"create table example(d {type})")
-        cur.executemany("insert into example(d) values (?)", ((v,) for v in values))
-        cur.execute("select * from example")
-        return cur.fetchdf()
+    con = connect(autocommit=True)
+    cur = con.execute(f"create table example(d {type})")
+    cur.executemany("insert into example(d) values (?)", ((v,) for v in values))
+    cur.execute("select * from example")
+    return cur.fetchdf()
 
 
 class TestDataFrame(TestCase):
