@@ -114,7 +114,11 @@ extern char* monetdbe_query(monetdbe_database dbhdl, char* query, monetdbe_resul
 extern char* monetdbe_result_fetch(monetdbe_result *mres, monetdbe_column** res, size_t column_index);
 extern char* monetdbe_cleanup_result(monetdbe_database dbhdl, monetdbe_result* result);
 
+{% if newer_then_jul2021 %}
 extern char* monetdbe_prepare(monetdbe_database dbhdl, char *query, monetdbe_statement **stmt, monetdbe_result** result);
+{% else %}
+extern char* monetdbe_prepare(monetdbe_database dbhdl, char *query, monetdbe_statement **stmt);
+{% endif %}
 extern char* monetdbe_bind(monetdbe_statement *stmt, void *data, size_t parameter_nr);
 extern char* monetdbe_execute(monetdbe_statement *stmt, monetdbe_result **result, monetdbe_cnt* affected_rows);
 extern char* monetdbe_cleanup_statement(monetdbe_database dbhdl, monetdbe_statement *stmt);

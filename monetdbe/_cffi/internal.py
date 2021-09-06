@@ -257,7 +257,11 @@ class Internal:
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
         stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt, ffi.NULL))
+        from monetdbe._cffi.branch import newer_then_jul2021
+        if newer_then_jul2021:
+            check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt, ffi.NULL))
+        else:
+            check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
         return stmt[0]
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:
