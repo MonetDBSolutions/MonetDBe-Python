@@ -299,7 +299,6 @@ class RegressionTests(unittest.TestCase):
 
     def test_RecursiveCursorUse(self):
         # note: modified test slighty since we actually just handle this fine.
-        
         con = self.con
 
         cur = con.cursor()

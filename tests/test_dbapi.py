@@ -153,6 +153,7 @@ class ConnectionTests(unittest.TestCase):
             with self.assertRaises(monetdbe.OperationalError):
                 cx.execute('insert into test(id) values(1)')
 
+
 class VariousConnectionTests(unittest.TestCase):
     def test_OpenWithPathLikeObject(self):
         """ Checks that we can successfully connect to a database using an object that
@@ -198,6 +199,7 @@ class VariousConnectionTests(unittest.TestCase):
             with self.assertRaises(monetdbe.OperationalError):
                 conn.execute(";")
 
+
 def prepare_cursor(cx):
     cu = cx.cursor()
 
@@ -208,6 +210,7 @@ def prepare_cursor(cx):
     )
     cu.execute("insert into test(name) values (?)", ("foo",))
     return cu
+
 
 class CursorTests(unittest.TestCase):
     def setUp(self):
@@ -551,6 +554,7 @@ class CursorTests(unittest.TestCase):
             ('ROLLBACK', 4), ('ROLLBACK', 4),
         ]
         self.assertEqual(results, expected)
+
 
 @unittest.skip("todo (gijs): for now we dont support or check for multi-threading")
 class ThreadTests(unittest.TestCase):

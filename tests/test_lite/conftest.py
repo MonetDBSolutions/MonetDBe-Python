@@ -3,6 +3,7 @@ import pytest
 from shutil import rmtree
 import monetdbe
 
+
 @pytest.fixture(scope="function")
 def monetdbe_empty_cursor(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
@@ -56,9 +57,8 @@ def monetdbe_cursor_autocommit(tmp_path):
     yield context
 
     if tmp_path.is_dir():
-            context.connection.close()
-            rmtree(context.dbfarm, ignore_errors=True)
-
+        context.connection.close()
+        rmtree(context.dbfarm, ignore_errors=True)
 
 
 @pytest.fixture(scope="function")
