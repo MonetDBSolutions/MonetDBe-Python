@@ -6,6 +6,8 @@ on:
     tags: [ "*" ]
   pull_request:
     branches: [ master ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 # the prefix and version numbers for the branches need to be manually copied (for now) from:
 # http://monetdb.cwi.nl/testweb/web/status.php
