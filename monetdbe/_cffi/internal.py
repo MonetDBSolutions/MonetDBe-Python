@@ -295,4 +295,4 @@ if not newer_then_jul2021:
         check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
         return stmt[0]
 
-    Internal.prepare = prepare
+    setattr(Internal, 'prepare', prepare)
