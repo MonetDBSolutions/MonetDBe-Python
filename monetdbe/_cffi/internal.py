@@ -286,12 +286,13 @@ class Internal:
             type_ = types_p[0][i]
             yield name, type_
 
-    from monetdbe._cffi.branch import newer_then_jul2021
-    if not newer_then_jul2021:
-        def prepare(_self: Internal, query: str) -> monetdbe_statement:
-            _self._switch()
-            stmt = ffi.new("monetdbe_statement **")
-            check_error(lib.monetdbe_prepare(_self._monetdbe_database, str(query).encode(), stmt))
-            return stmt[0]
 
-        Internal.prepare = prepare
+from monetdbe._cffi.branch import newer_then_jul2021
+if not newer_then_jul2021:
+    def prepare(self, query: str) -> monetdbe_statement:
+        self._switch()
+        stmt = ffi.new("monetdbe_statement **")
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
+        return stmt[0]
+
+    Internal.prepare = prepare
