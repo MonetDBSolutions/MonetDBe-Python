@@ -10,10 +10,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  osx-monetdb-Jul2021:
+  osx-monetdb:
     runs-on: macos-10.15
+    strategy:
+      matrix:
+        branch: [default, Jul2021]
     env:
-      MONETDB_BRANCH: Jul2021
+      MONETDB_BRANCH: ${{ matrix.branch }}
     steps:
       -
         name: brew packages
@@ -49,10 +52,10 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        branch: [Jul2021]
+        branch: [default, Jul2021]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
-    needs: [osx-monetdb-Jul2021]
+    needs: [osx-monetdb]
     steps:
       -
         name: Print MONETDB_BRANCH to make sure it is set
