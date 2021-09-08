@@ -78,21 +78,7 @@ jobs:
         name: Collect DLLs
         run: |
           ls 'C:\Program Files\MonetDB\MonetDB5\bin'
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\bat.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\mapi.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdb5.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdbe.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdbsql.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\stream.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libcrypto-1_1-x64.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\iconv-2.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libxml2.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\pcre.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\zlib1.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lzma.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\charset-1.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\bz2.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lz4.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\*.dll' monetdbe\.
           ls monetdbe
       -
         name: Upgrade pip and wheel for all pythons
