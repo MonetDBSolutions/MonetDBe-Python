@@ -16,11 +16,10 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        MONETDB_BRANCH: [ Jul2021 ]
         include:
-#          - MONETDB_BRANCH: default
-#            MONETDB_WIN_PREFIX: 82411
-#            MONETDB_WIN_VERSION: c51ff55bd174
+          - MONETDB_BRANCH: default
+            MONETDB_WIN_PREFIX: 82777
+            MONETDB_WIN_VERSION: f619cf62c92d
           - MONETDB_BRANCH: Jul2021
             MONETDB_WIN_PREFIX: 82786
             MONETDB_WIN_VERSION: e39e91cde6b5
@@ -55,7 +54,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        branch: [ Jul2021 ]
+        branch: [ default, Jul2021 ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
     steps:
