@@ -122,11 +122,6 @@ class ConnectionTests(unittest.TestCase):
     def test_Cursor(self):
         cu = self.cx.cursor()
 
-    def test_FailedOpen(self):
-        YOU_CANNOT_OPEN_THIS = "asdiadasdiasjdasoijdasdsdasasl31mydb.db"
-        with self.assertRaises(monetdbe.OperationalError):
-            con = monetdbe.connect(YOU_CANNOT_OPEN_THIS)
-
     def test_Close(self):
         self.cx.close()
 
@@ -192,7 +187,7 @@ class VariousConnectionTests(unittest.TestCase):
             self.assertEqual(cx.in_transaction, True)
 
     def test_FailedOpen(self):
-        YOU_CANNOT_OPEN_THIS = "/foo/bar/bla/23534/mydb.db"
+        YOU_CANNOT_OPEN_THIS = "asdiadasdiasjdasoijdasdsdasasl31mydb.db"
         with self.assertRaises(monetdbe.OperationalError):
             con = monetdbe.connect(YOU_CANNOT_OPEN_THIS)
 
