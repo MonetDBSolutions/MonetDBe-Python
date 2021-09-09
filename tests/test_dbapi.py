@@ -122,11 +122,6 @@ class ConnectionTests(unittest.TestCase):
     def test_Cursor(self):
         cu = self.cx.cursor()
 
-    def test_FailedOpen(self):
-        YOU_CANNOT_OPEN_THIS = "/foo/bar/bla/23534/mydb.db"
-        with self.assertRaises(monetdbe.OperationalError):
-            con = monetdbe.connect(YOU_CANNOT_OPEN_THIS)
-
     def test_Close(self):
         self.cx.close()
 
@@ -143,28 +138,23 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(self.cx.ProgrammingError, monetdbe.ProgrammingError)
         self.assertEqual(self.cx.NotSupportedError, monetdbe.NotSupportedError)
 
-    def test_InTransaction(self):
-        # Can't use db from setUp because we want to test initial state.
-        cx = monetdbe.connect(":memory:")
-        cu = cx.cursor()
-        self.assertEqual(cx.in_transaction, False)
-        cu.execute("create table transactiontest(id integer auto_increment primary key, name text)")
-        self.assertEqual(cx.in_transaction, True)
-        cu.execute("insert into transactiontest(name) values (?)", ("foo",))
-        self.assertEqual(cx.in_transaction, True)
-        cu.execute("select name from transactiontest where name=?", ["foo"])
-        row = cu.fetchone()
-        self.assertEqual(cx.in_transaction, True)
-        cx.commit()
-        self.assertEqual(cx.in_transaction, False)
-        cu.execute("select name from transactiontest where name=?", ["foo"])
-        row = cu.fetchone()
-        self.assertEqual(cx.in_transaction, True)
-
     def test_InTransactionRO(self):
         with self.assertRaises(AttributeError):
             self.cx.in_transaction = True
 
+    @unittest.skip("TODO: Not yet implemented, see issue #22")
+    def test_OpenUri(self):
+        self.addCleanup(rmtree, TESTFN)
+        with monetdbe.connect(TESTFN) as cx:
+            cx.execute('create table test(id integer)')
+        with monetdbe.connect('file:' + TESTFN, uri=True) as cx:
+            cx.execute('insert into test(id) values(0)')
+        with monetdbe.connect('file:' + TESTFN + '?mode=ro', uri=True) as cx:
+            with self.assertRaises(monetdbe.OperationalError):
+                cx.execute('insert into test(id) values(1)')
+
+
+class VariousConnectionTests(unittest.TestCase):
     def test_OpenWithPathLikeObject(self):
         """ Checks that we can successfully connect to a database using an object that
             is PathLike, i.e. has __fspath__(). """
@@ -178,16 +168,49 @@ class ConnectionTests(unittest.TestCase):
         with monetdbe.connect(path) as cx:
             cx.execute('create table test(id integer)')
 
-    @unittest.skip("TODO: Not yet implemented, see issue #22")
-    def test_OpenUri(self):
-        self.addCleanup(rmtree, TESTFN)
-        with monetdbe.connect(TESTFN) as cx:
-            cx.execute('create table test(id integer)')
-        with monetdbe.connect('file:' + TESTFN, uri=True) as cx:
-            cx.execute('insert into test(id) values(0)')
-        with monetdbe.connect('file:' + TESTFN + '?mode=ro', uri=True) as cx:
+    def test_InTransaction(self):
+        # Can't use db from setUp because we want to test initial state.
+        with monetdbe.connect(":memory:") as cx:
+            cu = cx.cursor()
+            self.assertEqual(cx.in_transaction, False)
+            cu.execute("create table transactiontest(id integer auto_increment primary key, name text)")
+            self.assertEqual(cx.in_transaction, True)
+            cu.execute("insert into transactiontest(name) values (?)", ("foo",))
+            self.assertEqual(cx.in_transaction, True)
+            cu.execute("select name from transactiontest where name=?", ["foo"])
+            row = cu.fetchone()
+            self.assertEqual(cx.in_transaction, True)
+            cx.commit()
+            self.assertEqual(cx.in_transaction, False)
+            cu.execute("select name from transactiontest where name=?", ["foo"])
+            row = cu.fetchone()
+            self.assertEqual(cx.in_transaction, True)
+
+    def test_FailedOpen(self):
+        import os
+        YOU_CANNOT_OPEN_THIS = os.path.join("foo", "bar", "bla", "23534", "mydb.db")
+        with self.assertRaises(monetdbe.OperationalError):
+            con = monetdbe.connect(YOU_CANNOT_OPEN_THIS)
+
+    def test_empty_query(self):
+        with monetdbe.connect(':memory:') as conn:
             with self.assertRaises(monetdbe.OperationalError):
-                cx.execute('insert into test(id) values(1)')
+                conn.execute("")
+
+            with self.assertRaises(monetdbe.OperationalError):
+                conn.execute(";")
+
+
+def prepare_cursor(cx):
+    cu = cx.cursor()
+
+    # todo/note (Gijs): changed income type from number to float and made ID auto_increment
+    cu.execute(
+        "create table test(id integer auto_increment primary key, name text, "
+        "income float, unique_test text unique)"
+    )
+    cu.execute("insert into test(name) values (?)", ("foo",))
+    return cu
 
 
 class CursorTests(unittest.TestCase):
@@ -231,12 +254,11 @@ class CursorTests(unittest.TestCase):
             """)
 
     def test_empty_query(self):
-        conn = monetdbe.connect(':memory:')
         with self.assertRaises(monetdbe.OperationalError):
-            conn.execute("")
+            self.cx.execute("")
 
         with self.assertRaises(monetdbe.OperationalError):
-            conn.execute(";")
+            self.cx.execute(";")
 
     def test_ExecuteWrongSqlArg(self):
         with self.assertRaises(monetdbe.OperationalError):
@@ -419,6 +441,10 @@ class CursorTests(unittest.TestCase):
         row = self.cu.fetchone()
         self.assertEqual(row, None)
 
+    @unittest.skip(
+        """
+        monetdbe returns the parameter description table for PREPARED statements.
+        Not really sure if it is a bad thing that the cursor can fetch that information""")
     def test_FetchoneNoStatement(self):
         cur = self.cx.cursor()
         row = cur.fetchone()
@@ -716,84 +742,84 @@ class ConstructorTests(unittest.TestCase):
 
 class ExtensionTests(unittest.TestCase):
     def test_ScriptStringSql(self):
-        con = monetdbe.connect(":memory:")
-        cur = con.cursor()
-        cur.executescript("""
-            -- bla bla
-            /* a stupid comment */
-            create table a(i int);
-            insert into a(i) values (5);
-            """)
-        cur.execute("select i from a")
-        res = cur.fetchone()[0]
-        self.assertEqual(res, 5)
+        with monetdbe.connect(":memory:") as con:
+            cur = con.cursor()
+            cur.executescript("""
+                -- bla bla
+                /* a stupid comment */
+                create table a(i int);
+                insert into a(i) values (5);
+                """)
+            cur.execute("select i from a")
+            res = cur.fetchone()[0]
+            self.assertEqual(res, 5)
 
     def test_ScriptSyntaxError(self):
-        con = monetdbe.connect(":memory:")
-        cur = con.cursor()
-        with self.assertRaises(monetdbe.OperationalError):
-            cur.executescript("create table test(x); asdf; create table test2(x)")
+        with monetdbe.connect(":memory:") as con:
+            cur = con.cursor()
+            with self.assertRaises(monetdbe.OperationalError):
+                cur.executescript("create table test(x); asdf; create table test2(x)")
 
     def test_ScriptErrorNormal(self):
-        con = monetdbe.connect(":memory:")
-        cur = con.cursor()
-        with self.assertRaises(monetdbe.OperationalError):
-            cur.executescript("create table test(sadfsadfdsa); select foo from hurz;")
+        with monetdbe.connect(":memory:") as con:
+            cur = con.cursor()
+            with self.assertRaises(monetdbe.OperationalError):
+                cur.executescript("create table test(sadfsadfdsa); select foo from hurz;")
 
     def test_CursorExecutescriptAsBytes(self):
-        con = monetdbe.connect(":memory:")
-        cur = con.cursor()
-        with self.assertRaises(ValueError) as cm:
-            cur.executescript(b"create table test(foo); insert into test(foo) values (5);")
-        self.assertEqual(str(cm.exception), 'script argument must be unicode.')
+        with monetdbe.connect(":memory:") as con:
+            cur = con.cursor()
+            with self.assertRaises(ValueError) as cm:
+                cur.executescript(b"create table test(foo); insert into test(foo) values (5);")
+            self.assertEqual(str(cm.exception), 'script argument must be unicode.')
 
     def test_ConnectionExecute(self):
-        con = monetdbe.connect(":memory:")
-        result = con.execute("select 5").fetchone()[0]
-        self.assertEqual(result, 5, "Basic test of Connection.execute")
+        with monetdbe.connect(":memory:") as con:
+            result = con.execute("select 5").fetchone()[0]
+            self.assertEqual(result, 5, "Basic test of Connection.execute")
 
     def test_ConnectionExecutemany(self):
-        con = monetdbe.connect(":memory:")
-        # NOTE: (gijs) added type int, required for MonetDB
-        con.execute("create table test(foo int)")
-        con.executemany("insert into test(foo) values (?)", [(3,), (4,)])
-        result = con.execute("select foo from test order by foo").fetchall()
-        self.assertEqual(result[0][0], 3, "Basic test of Connection.executemany")
-        self.assertEqual(result[1][0], 4, "Basic test of Connection.executemany")
+        with monetdbe.connect(":memory:") as con:
+            # NOTE: (gijs) added type int, required for MonetDB
+            con.execute("create table test(foo int)")
+            con.executemany("insert into test(foo) values (?)", [(3,), (4,)])
+            result = con.execute("select foo from test order by foo").fetchall()
+            self.assertEqual(result[0][0], 3, "Basic test of Connection.executemany")
+            self.assertEqual(result[1][0], 4, "Basic test of Connection.executemany")
 
     def test_ConnectionExecutescript(self):
-        con = monetdbe.connect(":memory:")
-        # NOTE: (gijs) added type int, required for MonetDB
-        con.executescript("create table test(foo int); insert into test(foo) values (5);")
-        result = con.execute("select foo from test").fetchone()[0]
-        self.assertEqual(result, 5, "Basic test of Connection.executescript")
+        with monetdbe.connect(":memory:") as con:
+            # NOTE: (gijs) added type int, required for MonetDB
+            con.executescript("create table test(foo int); insert into test(foo) values (5);")
+            result = con.execute("select foo from test").fetchone()[0]
+            self.assertEqual(result, 5, "Basic test of Connection.executescript")
 
 
 class ClosedConTests(unittest.TestCase):
     def test_ClosedConCursor(self):
-        con = monetdbe.connect(":memory:")
-        con.close()
-        with self.assertRaises(monetdbe.ProgrammingError):
-            cur = con.cursor()
+        with monetdbe.connect(":memory:") as con:
+            con.close()
+            with self.assertRaises(monetdbe.ProgrammingError):
+                cur = con.cursor()
 
     def test_ClosedConCommit(self):
-        con = monetdbe.connect(":memory:")
-        con.close()
-        with self.assertRaises(monetdbe.ProgrammingError):
-            con.commit()
+        with monetdbe.connect(":memory:") as con:
+            con.close()
+            with self.assertRaises(monetdbe.ProgrammingError):
+                con.commit()
 
     def test_ClosedConRollback(self):
-        con = monetdbe.connect(":memory:")
-        con.close()
-        with self.assertRaises(monetdbe.ProgrammingError):
-            con.rollback()
+        with monetdbe.connect(":memory:") as con:
+            con.close()
+            with self.assertRaises(monetdbe.ProgrammingError):
+                con.rollback()
 
     def test_ClosedCurExecute(self):
-        con = monetdbe.connect(":memory:")
-        cur = con.cursor()
-        con.close()
-        with self.assertRaises(monetdbe.ProgrammingError):
-            cur.execute("select 4")
+        with monetdbe.connect(":memory:") as con:
+            cur = con.cursor()
+            con.close()
+            with self.assertRaises(monetdbe.ProgrammingError):
+                cur.execute("select 4")
 
     def test_ClosedCreateFunction(self):
         con = monetdbe.connect(":memory:")
@@ -851,21 +877,21 @@ class ClosedConTests(unittest.TestCase):
 
 class ClosedCurTests(unittest.TestCase):
     def test_Closed(self):
-        con = monetdbe.connect(":memory:")
-        cur = con.cursor()
-        cur.close()
+        with monetdbe.connect(":memory:") as con:
+            cur = con.cursor()
+            cur.close()
 
-        for method_name in ("execute", "executemany", "executescript", "fetchall", "fetchmany", "fetchone"):
-            if method_name in ("execute", "executescript"):
-                params = ("select 4 union select 5",)
-            elif method_name == "executemany":
-                params = ("insert into foo(bar) values (?)", [(3,), (4,)])
-            else:
-                params = []
+            for method_name in ("execute", "executemany", "executescript", "fetchall", "fetchmany", "fetchone"):
+                if method_name in ("execute", "executescript"):
+                    params = ("select 4 union select 5",)
+                elif method_name == "executemany":
+                    params = ("insert into foo(bar) values (?)", [(3,), (4,)])
+                else:
+                    params = []
 
-            with self.assertRaises(monetdbe.ProgrammingError):
-                method = getattr(cur, method_name)
-                method(*params)
+                with self.assertRaises(monetdbe.ProgrammingError):
+                    method = getattr(cur, method_name)
+                    method(*params)
 
 
 @unittest.skip("We don't support INSERT OR syntax")

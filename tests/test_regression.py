@@ -89,9 +89,9 @@ class RegressionTests(unittest.TestCase):
         # cache when closing the database. statements that were still
         # referenced in cursors weren't closed and could provoke "
         # "OperationalError: Unable to close due to unfinalised statements".
-        con = monetdbe.connect(":memory:")
         cursors = []
         # default statement cache size is 100
+        con = self.con
         for i in range(105):
             cur = con.cursor()
             cursors.append(cur)
@@ -100,7 +100,7 @@ class RegressionTests(unittest.TestCase):
 
     @unittest.skip("syntax not supported")
     def test_OnConflictRollback(self):
-        con = monetdbe.connect(":memory:")
+        con = self.con
         con.execute("create table foo(x int, unique(x) on conflict rollback)")
         con.execute("insert into foo(x) values (1)")
         try:
@@ -137,6 +137,9 @@ class RegressionTests(unittest.TestCase):
         a statement. This test exhibits the problem.
         """
         SELECT = "select * from foo"
+
+        con = self.con
+        con.close()
         con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_DECLTYPES)
         con.execute("create table foo(bar timestamp)")
         con.execute("insert into foo(bar) values (?)", (datetime.datetime.now(),))
@@ -145,6 +148,7 @@ class RegressionTests(unittest.TestCase):
         con.execute("create table foo(bar integer)")
         con.execute("insert into foo(bar) values (5)")
         con.execute(SELECT)
+        self.con = con
 
     @unittest.skip("todo/note (gijs): disable this for now since the monetdbe engine sees this as valid")
     def test_ErrorMsgDecodeError(self):
@@ -295,7 +299,7 @@ class RegressionTests(unittest.TestCase):
 
     def test_RecursiveCursorUse(self):
         # note: modified test slighty since we actually just handle this fine.
-        con = monetdbe.connect(":memory:")
+        con = self.con
 
         cur = con.cursor()
         cur.execute("create table a (bar int)")
@@ -317,6 +321,8 @@ class RegressionTests(unittest.TestCase):
         since the microsecond string "456" actually represents "456000".
         """
 
+        con = self.con
+        con.close()
         con = monetdbe.connect(":memory:", detect_types=monetdbe.PARSE_DECLTYPES)
         cur = con.cursor()
         cur.execute("CREATE TABLE t (x TIMESTAMP)")
@@ -334,9 +340,12 @@ class RegressionTests(unittest.TestCase):
             datetime.datetime(2012, 4, 4, 15, 6, 0, 456000),
             datetime.datetime(2012, 4, 4, 15, 6, 0, 123456),
         ])
+        self.con = con
 
     def test_InvalidIsolationLevelType(self):
         # isolation level is a string, not an integer
+
+        self.con.close()
         self.assertRaises(TypeError,
                           monetdbe.connect, ":memory:", isolation_level=123)
 
@@ -399,6 +408,7 @@ class RegressionTests(unittest.TestCase):
         # The interpreter shouldn't crash when ref is collected.
         del ref
         gc.collect()
+        con.close()
 
     @unittest.skip("not supported (yet)")
     def test_DelIsolation_levelSegfault(self):
@@ -431,11 +441,11 @@ class TestMonetDBeRegressions(unittest.TestCase):
         m = monetdbe.connect()
         c = m.cursor()
         c.execute(q)
-        del m._internal
-        del m
+        m.close()
         m = monetdbe.connect()
         c = m.cursor()
         c.execute(q)
+        m.close()
 
     def test_proper_error_on_empty_query_issue63(self):
         conn = monetdbe.connect(':memory:')
@@ -444,6 +454,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         with self.assertRaises(monetdbe.OperationalError):
             conn.execute(";")
+        conn.close()
 
     def test_real_issue83(self):
         conn = monetdbe.connect(':memory:')
@@ -456,6 +467,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         cursor.execute('SELECT * FROM "test"')
         df_out = cursor.fetchdf()
         pd.testing.assert_frame_equal(df, df_out)
+        conn.close()
 
     def test_relative_path(self):
         path = Path('this_folder_can_be_removed')
@@ -488,6 +500,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
 
         path = str((Path(__file__).parent / "example.csv").resolve().absolute())
         cur.execute(f"COPY  INTO test FROM '{path}' delimiters ',','\n'  best effort")
+        con.close()
 
     @unittest.skip("Disabled since takes quite long")
     def test_crash_loop(self):
@@ -496,6 +509,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
             cu = cx.cursor()
             cu.execute("create table test(id integer auto_increment primary key, name text)")
             cu.execute("insert into test(name) values (?)", ("foo",))
+            cx.close()
 
     def test_issue127(self):
         conn = monetdbe.connect(':memory:')
@@ -504,6 +518,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         res = cur.execute("insert into tmp values(123, 'hello''world'':\n ERROR');")
         rows = res.fetchall()
         print(rows)
+        conn.close()
 
     @unittest.skip("Disabled until issue #118 is solved")
     def test_issue118_explain(self):
@@ -512,6 +527,7 @@ class TestMonetDBeRegressions(unittest.TestCase):
         res = cur.execute('explain select 1')
         tbl = res.fetchall()
         print(tbl)
+        conn.close()
 
     @unittest.skipIf(OCT2020, "This issue was not fixed on Oct2020")
     def test_issue_136_bigint_result(self):
@@ -534,3 +550,4 @@ class TestMonetDBeRegressions(unittest.TestCase):
         res5 = cur.execute('select * from test where col1 = -781377998').fetchall()
         assert (len(res5) == 1)
         assert (len(res5[0]) == 4)
+        con.close()

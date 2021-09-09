@@ -6,6 +6,8 @@ on:
     tags: [ "*" ]
   pull_request:
     branches: [ master ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 # the prefix and version numbers for the branches need to be manually copied (for now) from:
 # http://monetdb.cwi.nl/testweb/web/status.php
@@ -14,14 +16,13 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        MONETDB_BRANCH: [ Jul2021 ]
         include:
-#          - MONETDB_BRANCH: default
-#            MONETDB_WIN_PREFIX: 82411
-#            MONETDB_WIN_VERSION: c51ff55bd174
+          - MONETDB_BRANCH: default
+            MONETDB_WIN_PREFIX: 82777
+            MONETDB_WIN_VERSION: f619cf62c92d
           - MONETDB_BRANCH: Jul2021
-            MONETDB_WIN_PREFIX: 82733
-            MONETDB_WIN_VERSION: 3a8a37d1da2b
+            MONETDB_WIN_PREFIX: 82786
+            MONETDB_WIN_VERSION: e39e91cde6b5
 
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
@@ -53,7 +54,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        branch: [ Jul2021 ]
+        branch: [ default, Jul2021 ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
     steps:
@@ -77,21 +78,7 @@ jobs:
         name: Collect DLLs
         run: |
           ls 'C:\Program Files\MonetDB\MonetDB5\bin'
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\bat.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\mapi.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdb5.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdbe.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\monetdbsql.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\stream.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libcrypto-1_1-x64.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\iconv-2.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\libxml2.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\pcre.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\zlib1.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lzma.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\charset-1.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\bz2.dll' monetdbe\.
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\lz4.dll' monetdbe\.
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\*.dll' monetdbe\.
           ls monetdbe
       -
         name: Upgrade pip and wheel for all pythons

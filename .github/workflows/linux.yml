@@ -6,13 +6,15 @@ on:
     tags: [ "*" ]
   pull_request:
     branches: [ master ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   linux-test:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        branch: [Jul2021]
+        branch: [default, Jul2021]
     container: monetdb/dev-builds:${{ matrix.branch }}
     steps:
       -
@@ -29,11 +31,12 @@ jobs:
         run: py.test -vv
 
   linux-wheel:
+    needs: linux-test
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-        branch: [Jul2021]
+        branch: [default, Jul2021]
     container: monetdb/dev-builds:${{ matrix.branch}}_manylinux
 
     steps:
