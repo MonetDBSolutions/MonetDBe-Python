@@ -187,7 +187,8 @@ class VariousConnectionTests(unittest.TestCase):
             self.assertEqual(cx.in_transaction, True)
 
     def test_FailedOpen(self):
-        YOU_CANNOT_OPEN_THIS = "asdiadasdiasjdasoijdasdsdasasl31mydb.db"
+        import os
+        YOU_CANNOT_OPEN_THIS = os.path.join("foo", "bar", "bla", "23534", "mydb.db")
         with self.assertRaises(monetdbe.OperationalError):
             con = monetdbe.connect(YOU_CANNOT_OPEN_THIS)
 
