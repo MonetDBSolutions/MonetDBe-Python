@@ -169,7 +169,7 @@ class Internal:
                 lib.monetdbe_close(connection)
             else:
                 error = errors.get(result_code, "unknown error")
-            msg = "Failed to open database: {error} (code {result_code})".format(error=error, result_code=result_code)
+            msg = f"Failed to open database: {error} (code {result_code})"
             raise exceptions.OperationalError(msg)
 
         return connection
