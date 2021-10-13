@@ -1,6 +1,23 @@
 from typing import Any, Union
+from decimal import Decimal
 import datetime
 from monetdbe._lowlevel import ffi
+
+
+def monetdbe_decimal_to_bte(data: int) -> ffi.CData:
+    return ffi.new("int8_t *", data)
+
+
+def monetdbe_decimal_to_sht(data: int) -> ffi.CData:
+    return ffi.new("int16_t *", data)
+
+
+def monetdbe_decimal_to_int(data: int) -> ffi.CData:
+    return ffi.new("int *", data)
+
+
+def monetdbe_decimal_to_lng(data: int) -> ffi.CData:
+    return ffi.new("int64_t *", data)
 
 
 def monetdbe_int(data: int) -> ffi.CData:
@@ -81,8 +98,20 @@ map_ = {
 }
 
 
-def prepare_bind(data: Any) -> Union[str, ffi.CData]:
+def prepare_bind(data: Any, type_info) -> Union[str, ffi.CData]:
     try:
+        if (type_info[0] == 'decimal'):
+            d = int(Decimal(data) * (Decimal(10) ** type_info[1]))
+            if (type_info[2] == 'bte'):
+                return monetdbe_decimal_to_bte(d)
+            elif (type_info[2] == 'sht'):
+                return monetdbe_decimal_to_sht(d)
+            elif (type_info[2] == 'int'):
+                return monetdbe_decimal_to_int(d)
+            elif (type_info[2] == 'lng'):
+                return monetdbe_decimal_to_lng(d)
+            else:
+                raise NotImplementedError("Unknown decimal implementation type")
         return map_[type(data)](data)  # type: ignore[operator]
     except KeyError:
         for type_, func in map_.items():

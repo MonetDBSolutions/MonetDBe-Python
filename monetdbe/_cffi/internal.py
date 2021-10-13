@@ -64,8 +64,12 @@ def get_autocommit() -> bool:
     return bool(value[0])
 
 
-def bind(statement: monetdbe_statement, data: Any, parameter_nr: int) -> None:
-    prepared = prepare_bind(data)
+def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info) -> None:
+    try:
+        prepared = prepare_bind(data, type_info[parameter_nr])
+    except IndexError as e:
+        from monetdbe import exceptions
+        raise exceptions.ProgrammingError from e
     check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
 
 
@@ -256,9 +260,21 @@ class Internal:
 
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
+
         stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt, ffi.NULL))
-        return stmt[0]
+        p_result = ffi.new("monetdbe_result **")
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt, p_result))
+
+        input_parameter_info = list()
+
+        columns = list(map(lambda x: result_fetch(p_result[0], x), (0, 2, 3, 6)))  # type: ignore[union-attr]
+
+        for r in range(p_result[0].nrows):
+            if (extract(columns[2], r)) is None:
+                row = (extract(columns[0], r), extract(columns[1], r), extract(columns[3], r))
+                input_parameter_info.append(row)
+
+        return stmt[0], input_parameter_info
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:
         self._switch()
@@ -275,15 +291,14 @@ class Internal:
 
     def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
         self._switch()
-        count_p = ffi.new('size_t *')
-        names_p = ffi.new('char ***')
-        types_p = ffi.new('int **')
+        count_p = ffi.new('size_t*')
+        columns_p = ffi.new('monetdbe_column**')
 
-        lib.monetdbe_get_columns(self._monetdbe_database, schema.encode(), table.encode(), count_p, names_p, types_p)
+        lib.monetdbe_get_columns(self._monetdbe_database, schema.encode(), table.encode(), count_p, columns_p)
 
         for i in range(count_p[0]):
-            name = ffi.string(names_p[0][i]).decode()
-            type_ = types_p[0][i]
+            name = ffi.string(columns_p[0][i].name).decode()
+            type_ = columns_p[0][i].type
             yield name, type_
 
 
@@ -293,6 +308,6 @@ if not newer_then_jul2021:
         self._switch()
         stmt = ffi.new("monetdbe_statement **")
         check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
-        return stmt[0]
+        return stmt[0],
 
     setattr(Internal, 'prepare', prepare)
