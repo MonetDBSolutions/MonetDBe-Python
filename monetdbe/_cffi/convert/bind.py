@@ -98,20 +98,8 @@ map_ = {
 }
 
 
-def prepare_bind(data: Any, type_info) -> Union[str, ffi.CData]:
+def prepare_bind(data: Any) -> Union[str, ffi.CData]:
     try:
-        if (type_info[0] == 'decimal'):
-            d = int(Decimal(data) * (Decimal(10) ** type_info[1]))
-            if (type_info[2] == 'bte'):
-                return monetdbe_decimal_to_bte(d)
-            elif (type_info[2] == 'sht'):
-                return monetdbe_decimal_to_sht(d)
-            elif (type_info[2] == 'int'):
-                return monetdbe_decimal_to_int(d)
-            elif (type_info[2] == 'lng'):
-                return monetdbe_decimal_to_lng(d)
-            else:
-                raise NotImplementedError("Unknown decimal implementation type")
         return map_[type(data)](data)  # type: ignore[operator]
     except KeyError:
         for type_, func in map_.items():

@@ -2,6 +2,7 @@ import logging
 from _warnings import warn
 from pathlib import Path
 from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
+from decimal import Decimal
 
 import numpy as np
 
@@ -9,6 +10,8 @@ from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
 from monetdbe._cffi.convert.bind import prepare_bind
+from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng
+
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
@@ -64,9 +67,22 @@ def get_autocommit() -> bool:
     return bool(value[0])
 
 
-def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info) -> None:
+def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
     try:
-        prepared = prepare_bind(data, type_info[parameter_nr])
+        if (type_info[0] == 'decimal'):
+            d = int(Decimal(data) * (Decimal(10) ** type_info[1]))
+            if (type_info[2] == 'bte'):
+                prepared = monetdbe_decimal_to_bte(d)
+            elif (type_info[2] == 'sht'):
+                prepared = monetdbe_decimal_to_sht(d)
+            elif (type_info[2] == 'int'):
+                prepared = monetdbe_decimal_to_int(d)
+            elif (type_info[2] == 'lng'):
+                prepared = monetdbe_decimal_to_lng(d)
+            else:
+                raise NotImplementedError("Unknown decimal implementation type")
+        else:
+            prepared = prepare_bind(data)
     except IndexError as e:
         from monetdbe import exceptions
         raise exceptions.ProgrammingError from e
@@ -304,10 +320,31 @@ class Internal:
 
 from monetdbe._cffi.branch import newer_then_jul2021
 if not newer_then_jul2021:
+    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
+        prepared = prepare_bind(data)
+        check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
+
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
         stmt = ffi.new("monetdbe_statement **")
         check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
         return stmt[0],
 
+    def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
+        self._switch()
+        count_p = ffi.new('size_t *')
+        names_p = ffi.new('char ***')
+        types_p = ffi.new('int **')
+
+        lib.monetdbe_get_columns(self._monetdbe_database, schema.encode(), table.encode(), count_p, names_p, types_p)
+
+        for i in range(count_p[0]):
+            name = ffi.string(names_p[0][i]).decode()
+            type_ = types_p[0][i]
+            yield name, type_
+
+    import sys
+    Module = sys.modules[__name__]
+    setattr(Module, 'bind', bind)
     setattr(Internal, 'prepare', prepare)
+    setattr(Internal, 'get_columns', get_columns)

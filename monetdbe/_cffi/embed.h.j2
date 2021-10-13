@@ -34,15 +34,19 @@ typedef enum {
  monetdbe_type_unknown
 } monetdbe_types;
 
+{% if newer_then_jul2021 %}
 typedef struct {
  char* name;
  unsigned int scale;
  unsigned int digits;
 } monetdbe_sql_type;
+{% endif %}
 
 typedef struct {
  monetdbe_types type;
+ {% if newer_then_jul2021 %}
  monetdbe_sql_type sql_type;
+ {% endif %}
  void *data;
  size_t count;
  char* name;
@@ -87,23 +91,23 @@ typedef struct {
  const char *trace_file;
 } monetdbe_options;
 
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_bool;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_int8_t;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t *value); } monetdbe_column_int16_t;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; int32_t *data; size_t count; char *name; int32_t null_value; double scale; int (*is_null)(int32_t *value); } monetdbe_column_int32_t;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; int64_t *data; size_t count; char *name; int64_t null_value; double scale; int (*is_null)(int64_t *value); } monetdbe_column_int64_t;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_bool;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} int8_t *data; size_t count; char *name; int8_t null_value; double scale; int (*is_null)(int8_t *value); } monetdbe_column_int8_t;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} int16_t *data; size_t count; char *name; int16_t null_value; double scale; int (*is_null)(int16_t *value); } monetdbe_column_int16_t;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} int32_t *data; size_t count; char *name; int32_t null_value; double scale; int (*is_null)(int32_t *value); } monetdbe_column_int32_t;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} int64_t *data; size_t count; char *name; int64_t null_value; double scale; int (*is_null)(int64_t *value); } monetdbe_column_int64_t;
 
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; size_t *data; size_t count; char *name; size_t null_value; double scale; int (*is_null)(size_t *value); } monetdbe_column_size_t;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} size_t *data; size_t count; char *name; size_t null_value; double scale; int (*is_null)(size_t *value); } monetdbe_column_size_t;
 
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; float *data; size_t count; char *name; float null_value; double scale; int (*is_null)(float *value); } monetdbe_column_float;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; double *data; size_t count; char *name; double null_value; double scale; int (*is_null)(double *value); } monetdbe_column_double;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} float *data; size_t count; char *name; float null_value; double scale; int (*is_null)(float *value); } monetdbe_column_float;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} double *data; size_t count; char *name; double null_value; double scale; int (*is_null)(double *value); } monetdbe_column_double;
 
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; char * *data; size_t count; char *name; char * null_value; double scale; int (*is_null)(char * *value); } monetdbe_column_str;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; monetdbe_data_blob *data; size_t count; char *name; monetdbe_data_blob null_value; double scale; int (*is_null)(monetdbe_data_blob *value); } monetdbe_column_blob;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} char * *data; size_t count; char *name; char * null_value; double scale; int (*is_null)(char * *value); } monetdbe_column_str;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} monetdbe_data_blob *data; size_t count; char *name; monetdbe_data_blob null_value; double scale; int (*is_null)(monetdbe_data_blob *value); } monetdbe_column_blob;
 
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; monetdbe_data_date *data; size_t count; char *name; monetdbe_data_date null_value; double scale; int (*is_null)(monetdbe_data_date *value); } monetdbe_column_date;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; monetdbe_data_time *data; size_t count; char *name; monetdbe_data_time null_value; double scale; int (*is_null)(monetdbe_data_time *value); } monetdbe_column_time;
-typedef struct { monetdbe_types type; monetdbe_sql_type sql_type; monetdbe_data_timestamp *data; size_t count; char *name; monetdbe_data_timestamp null_value; double scale; int (*is_null)(monetdbe_data_timestamp *value); } monetdbe_column_timestamp;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} monetdbe_data_date *data; size_t count; char *name; monetdbe_data_date null_value; double scale; int (*is_null)(monetdbe_data_date *value); } monetdbe_column_date;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} monetdbe_data_time *data; size_t count; char *name; monetdbe_data_time null_value; double scale; int (*is_null)(monetdbe_data_time *value); } monetdbe_column_time;
+typedef struct { monetdbe_types type; {% if newer_then_jul2021 %} monetdbe_sql_type sql_type; {% endif %} monetdbe_data_timestamp *data; size_t count; char *name; monetdbe_data_timestamp null_value; double scale; int (*is_null)(monetdbe_data_timestamp *value); } monetdbe_column_timestamp;
 
 extern const char *monetdbe_version(void);
 
@@ -133,7 +137,12 @@ extern char* monetdbe_cleanup_statement(monetdbe_database dbhdl, monetdbe_statem
 extern char* monetdbe_append(monetdbe_database dbhdl, const char* schema, const char* table, monetdbe_column **input, size_t column_count);
 extern const void* monetdbe_null(monetdbe_database dbhdl, monetdbe_types t);
 
+{% if newer_then_jul2021 %}
 extern char* monetdbe_get_columns(monetdbe_database dbhdl, const char* schema_name, const char *table_name, size_t *column_count, monetdbe_column **columns);
+{% else %}
+extern char* monetdbe_get_columns(monetdbe_database dbhdl, const char* schema_name, const char *table_name, size_t *column_count, char ***column_names, int **column_types);
+{% endif %}
+
 
 extern char* monetdbe_dump_database(monetdbe_database dbhdl, const char *backupfile);
 extern char* monetdbe_dump_table(monetdbe_database dbhdl, const char *schema_name, const char *table_name, const char *backupfile);
