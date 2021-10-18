@@ -3,6 +3,7 @@ from _warnings import warn
 from pathlib import Path
 from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
 from decimal import Decimal
+from collections import namedtuple
 
 import numpy as np
 
@@ -67,17 +68,25 @@ def get_autocommit() -> bool:
     return bool(value[0])
 
 
-def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
+TypeInfo = namedtuple('TypeInfo', (
+    'impl_type',
+    'sql_type',
+    'scale')
+)
+
+
+def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info = None) -> None:
     try:
-        if (type_info[0] == 'decimal'):
-            d = int(Decimal(data) * (Decimal(10) ** type_info[1]))
-            if (type_info[2] == 'bte'):
+        _type_info = type_info[parameter_nr]
+        if (_type_info.sql_type == 'decimal'):
+            d = int(Decimal(data) * (Decimal(10) ** _type_info.scale))
+            if (_type_info.impl_type == 'bte'):
                 prepared = monetdbe_decimal_to_bte(d)
-            elif (type_info[2] == 'sht'):
+            elif (_type_info.impl_type == 'sht'):
                 prepared = monetdbe_decimal_to_sht(d)
-            elif (type_info[2] == 'int'):
+            elif (_type_info.impl_type == 'int'):
                 prepared = monetdbe_decimal_to_int(d)
-            elif (type_info[2] == 'lng'):
+            elif (_type_info.impl_type == 'lng'):
                 prepared = monetdbe_decimal_to_lng(d)
             else:
                 raise NotImplementedError("Unknown decimal implementation type")
@@ -283,11 +292,9 @@ class Internal:
 
         input_parameter_info = list()
 
-        columns = list(map(lambda x: result_fetch(p_result[0], x), (0, 2, 3, 6)))  # type: ignore[union-attr]
-
         for r in range(p_result[0].nrows):
-            if (extract(columns[2], r)) is None:
-                row = (extract(columns[0], r), extract(columns[1], r), extract(columns[3], r))
+            if (extract(result_fetch(p_result[0], 3), r)) is None:
+                row=TypeInfo(impl_type=extract(result_fetch(p_result[0], 6), r), sql_type=extract(result_fetch(p_result[0], 0), r), scale=extract(result_fetch(p_result[0], 2), r))
                 input_parameter_info.append(row)
 
         return stmt[0], input_parameter_info
@@ -320,7 +327,7 @@ class Internal:
 
 from monetdbe._cffi.branch import newer_then_jul2021
 if not newer_then_jul2021:
-    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
+    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info = None) -> None:
         prepared = prepare_bind(data)
         check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
 
