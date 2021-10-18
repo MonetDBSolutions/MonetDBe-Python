@@ -68,14 +68,10 @@ def get_autocommit() -> bool:
     return bool(value[0])
 
 
-TypeInfo = namedtuple('TypeInfo', (
-    'impl_type',
-    'sql_type',
-    'scale')
-)
+TypeInfo = namedtuple('TypeInfo', ('impl_type', 'sql_type', 'scale'))
 
 
-def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info = None) -> None:
+def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
     try:
         _type_info = type_info[parameter_nr]
         if (_type_info.sql_type == 'decimal'):
@@ -294,7 +290,7 @@ class Internal:
 
         for r in range(p_result[0].nrows):
             if (extract(result_fetch(p_result[0], 3), r)) is None:
-                row=TypeInfo(impl_type=extract(result_fetch(p_result[0], 6), r), sql_type=extract(result_fetch(p_result[0], 0), r), scale=extract(result_fetch(p_result[0], 2), r))
+                row = TypeInfo(impl_type=extract(result_fetch(p_result[0], 6), r), sql_type=extract(result_fetch(p_result[0], 0), r), scale=extract(result_fetch(p_result[0], 2), r))
                 input_parameter_info.append(row)
 
         return stmt[0], input_parameter_info
@@ -327,7 +323,7 @@ class Internal:
 
 from monetdbe._cffi.branch import newer_then_jul2021
 if not newer_then_jul2021:
-    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info = None) -> None:
+    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
         prepared = prepare_bind(data)
         check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
 
