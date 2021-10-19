@@ -754,12 +754,12 @@ if newer_then_jul2021:
             self.con.close()
 
         def test_decimals(self):
-                from decimal import Decimal
-                d = Decimal('12345.12345')
-                self.cur.execute("insert into test VALUES (?)", [d])
-                self.cur.execute("select x from test")
-                row = self.cur.fetchone()
-                assert(d == row[0])
+            from decimal import Decimal
+            d = Decimal('12345.12345')
+            self.cur.execute("insert into test VALUES (?)", [d])
+            self.cur.execute("select x from test")
+            row = self.cur.fetchone()
+            assert(d == row[0])
 
 
 class ExtensionTests(unittest.TestCase):
