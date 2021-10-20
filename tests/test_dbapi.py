@@ -740,6 +740,28 @@ class ConstructorTests(unittest.TestCase):
         b = monetdbe.Binary(b"\0'")
 
 
+from monetdbe._cffi.branch import newer_then_jul2021
+if newer_then_jul2021:
+    class DecimalTests(unittest.TestCase):
+        def setUp(self):
+            self.con = monetdbe.connect(":memory:")
+            self.cur = self.con.cursor()
+            # NOTE: (gijs) replaced binary type with blob
+            self.cur.execute("create table test(x DECIMAL(10,5))")
+
+        def tearDown(self):
+            self.cur.close()
+            self.con.close()
+
+        def test_decimals(self):
+            from decimal import Decimal
+            d = Decimal('12345.12345')
+            self.cur.execute("insert into test VALUES (?)", [d])
+            self.cur.execute("select x from test")
+            row = self.cur.fetchone()
+            assert(d == row[0])
+
+
 class ExtensionTests(unittest.TestCase):
     def test_ScriptStringSql(self):
         with monetdbe.connect(":memory:") as con:
