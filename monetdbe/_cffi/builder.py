@@ -22,7 +22,7 @@ with open(branch_file, 'w') as f:
     f.write(f"newer_then_jul2021 = {newer_then_jul2021}\n")
 
 
-default = monetdb_branch.lower() in ("default", "jul2021")
+default = monetdb_branch.lower() in ("default", "jul2021", "jan2022")
 win32 = platform == 'win32'
 
 

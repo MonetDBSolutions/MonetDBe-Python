@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Install MonetDBe in developer mode
-        run: MONETDB_BRANCH=Jul2021 python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=Jan2022 python3 -m pip install -e .[test]
       -
         name: Run mypy static code checks
         run: mypy monetdbe tests
