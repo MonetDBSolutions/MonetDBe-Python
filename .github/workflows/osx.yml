@@ -89,7 +89,7 @@ jobs:
         run: python3 -m venv venv
       -
         name: Install Python dependencies
-        run: venv/bin/pip install --upgrade pip wheel delocate pytest build
+        run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pip install --upgrade pip wheel delocate pytest build
       -
         name: Compile and install MonetDBe-python
         run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
