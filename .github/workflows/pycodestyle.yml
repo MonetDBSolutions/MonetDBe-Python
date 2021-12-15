@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       branch: Jul2021
-    container: monetdb/dev-builds:{{ env.branch }}
+    container: monetdb/dev-builds:${{ env.branch }}
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: Install MonetDBe in developer mode
-        run: MONETDB_BRANCH={ env.branch }} python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=${{ env.branch }} python3 -m pip install -e .[test]
       -
         name: Check the python coding style
         run: pycodestyle monetdbe tests
