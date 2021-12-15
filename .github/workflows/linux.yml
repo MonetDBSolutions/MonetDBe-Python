@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         branch: [default, Jul2021, Jan2022]
-    container: monetdb/dev-builds:${{ matrix.branch }}_manylinux
+    container: monetdb/dev-builds:${{ matrix.branch }}
     steps:
       -
         name: Checkout

@@ -10,7 +10,7 @@ on:
 jobs:
   linux-pycodestyle:
     runs-on: ubuntu-20.04
-    container: monetdb/dev-builds:Jul2021_manylinux
+    container: monetdb/dev-builds:Jul2021
     steps:
       -
         name: Checkout
