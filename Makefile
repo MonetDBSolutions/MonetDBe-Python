@@ -20,6 +20,10 @@ setup: venv/installed
 build: venv/installed
 	venv/bin/pyproject-build
 
+build-osx-m1: venv/
+	MONETDB_BRANCH=oct2020 CFLAGS="-I/opt/include -L/opt/lib" venv/bin/pyproject-build
+
+
 test: setup
 	venv/bin/pytest
 

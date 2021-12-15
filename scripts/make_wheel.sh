@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This should most likely be ran inside the manylinux2014 docker container
+# This should most likely be ran inside the cd docker container
 #
 set -e
 set -v
@@ -9,6 +9,10 @@ WORKDIR=/tmp/
 OUTPUT=dist/
 
 case "$1" in
+    3.10)
+        VERSION=310
+        PLATFORM=""
+        ;;
     3.9)
         VERSION=39
         PLATFORM=""

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        branch: [default, Jul2021]
+        branch: [default, Jul2021, Jan2022]
     container: monetdb/dev-builds:${{ matrix.branch }}
     steps:
       -
@@ -35,9 +35,9 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        branch: [default, Jul2021]
-    container: monetdb/dev-builds:${{ matrix.branch}}_manylinux
+        python-version: ["3.6", "3.7"," 3.8", "3.9", "3.10"]
+        branch: [default, Jul2021, Jan2022]
+    container: monetdb/dev-builds:${{ matrix.branch }}_manylinux
 
     steps:
       -
