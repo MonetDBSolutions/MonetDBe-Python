@@ -19,6 +19,7 @@ jobs:
       -
         name: brew packages
         run: brew install bison monetdb
+
 #      -
 #        name: download MonetDB
 #        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
@@ -38,7 +39,8 @@ jobs:
 #            -DRINTEGRATION=OFF \
 #            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
 #          make install -j3
-#      -
+
+      -
         uses: actions/upload-artifact@v2
         with:
           name: monetdb-osx-${{ matrix.branch }}
