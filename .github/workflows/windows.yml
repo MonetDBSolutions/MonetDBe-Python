@@ -18,12 +18,14 @@ jobs:
       matrix:
         include:
           - MONETDB_BRANCH: default
-            MONETDB_WIN_PREFIX: 83187
-            MONETDB_WIN_VERSION: 9b268809c28c
+            MONETDB_WIN_PREFIX: 83966
+            MONETDB_WIN_VERSION: 01d3e88859f6
           - MONETDB_BRANCH: Jul2021
-            MONETDB_WIN_PREFIX: 82786
-            MONETDB_WIN_VERSION: e39e91cde6b5
-
+            MONETDB_WIN_PREFIX: 83906
+            MONETDB_WIN_VERSION: 6b29387f74c9
+          - MONETDB_BRANCH: Jan2022
+            MONETDB_WIN_PREFIX: 83969
+            MONETDB_WIN_VERSION: 9d59d8f9560d
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
@@ -54,7 +56,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.6", "3.7"," 3.8", "3.9", "3.10"]
-        branch: [ default, Jul2021 ]
+        branch: [ default, Jul2021, Jan2022 ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
     steps:
