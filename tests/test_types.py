@@ -24,6 +24,7 @@ import datetime
 import unittest
 import zlib
 
+from monetdbe._lowlevel import lib
 import monetdbe as monetdbe
 
 
@@ -458,3 +459,19 @@ class monetdbeTypeComplexTests(unittest.TestCase):
         self.cur.execute("select c from test")
         row = self.cur.fetchone()
         self.assertEqual(row[0], val)
+
+
+@unittest.skipIf(not hasattr(lib, "monetdbe_int128_t"), "int128 support disabled")
+class Int128Tests(unittest.TestCase):
+    hugeint_max = 170141183460469231731687303715884105727
+
+    def setUp(self):
+        self.con = monetdbe.connect(":memory:")
+        self.cur = self.con.cursor()
+        self.cur.execute("create table bigtable(x HUGEINT)")
+        self.cur.execute(f"insert into bigtable values ({self.hugeint_max})")
+
+    def test_fetch_numpy(self):
+        self.cur.execute("select * from bigtable")
+        df = self.cur.fetchdf()
+        self.assertEqual(df['x'][0], self.hugeint_max)

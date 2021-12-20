@@ -22,8 +22,9 @@ with open(branch_file, 'w') as f:
     f.write(f"newer_then_jul2021 = {newer_then_jul2021}\n")
 
 
-default = monetdb_branch.lower() in ("default", "jul2021", "jan2022")
-win32 = platform == 'win32'
+default: bool = monetdb_branch.lower() in ("default", "jul2021", "jan2022")
+win32: bool = platform == 'win32'
+HAVE_HGE: bool = not win32
 
 
 source = """
@@ -40,7 +41,7 @@ embed_path = str(Path(__file__).resolve().parent / 'embed.h.j2')
 with open(embed_path, 'r') as f:
     content = f.read()
     template = Template(content)
-    cdef = template.render(win32=win32, default=default, newer_then_jul2021=newer_then_jul2021)
+    cdef = template.render(win32=win32, default=default, newer_then_jul2021=newer_then_jul2021, HAVE_HGE=HAVE_HGE)
     ffibuilder.cdef(cdef)
 
 
