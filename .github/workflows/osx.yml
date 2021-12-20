@@ -6,65 +6,64 @@ on:
     tags: [ "*" ]
   pull_request:
     branches: [ master ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
-  osx-monetdb-Oct2020:
+  osx-monetdb-brew:
     runs-on: macos-10.15
-    env:
-      MONETDB_BRANCH: Oct2020
     steps:
-      -
-        name: brew packages
-        run: brew install monetdb
-      - 
-        uses: actions/upload-artifact@v2
+      - name: brew packages
+        run: brew install bison monetdb
+      - uses: actions/upload-artifact@v2
         with:
-          name: monetdb-osx-${{ env.MONETDB_BRANCH }}
+          name: monetdb-osx-brew
           path: /usr/local/Cellar/monetdb
 
-  osx-monetdb-Jul2021:
-    runs-on: macos-10.15
-    env:
-      MONETDB_BRANCH: Jul2021
-    steps:
-      -
-        name: brew packages
-        run: brew install bison
-      -
-        name: download MonetDB
-        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ env.MONETDB_BRANCH }}.tar.bz2 -O
-      -
-        name: extract MonetDB
-        run: tar jxvf ${{ env.MONETDB_BRANCH }}.tar.bz2
-      -
-        name: build monetdb
-        run: |
-          mkdir MonetDB-${{ env.MONETDB_BRANCH }}/build
-          cd MonetDB-${{ env.MONETDB_BRANCH }}/build
-          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
-            -DWITH_CRYPTO=OFF \
-            -DPY3INTEGRATION=OFF \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DASSERT=OFF \
-            -DRINTEGRATION=OFF \
-            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
-          make install -j3
-      - 
-        uses: actions/upload-artifact@v2
-        with:
-          name: monetdb-osx-${{ env.MONETDB_BRANCH }}
-          path: /usr/local/Cellar/monetdb
+#  osx-monetdb-build:
+#    runs-on: macos-10.15
+#    strategy:
+#      matrix:
+#        branch: [default, Jul2021, Jan2022]
+#    steps:
+#      -
+#        name: brew packages
+#        run: brew install bison monetdb
+#
+#      -
+#        name: download MonetDB
+#        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
+#      -
+#        name: extract MonetDB
+#        run: tar jxvf ${{ matrix.branch }}.tar.bz2
+#      -
+#        name: build monetdb
+#        run: |
+#          mkdir MonetDB-${{ matrix.branch }}/build
+#          cd MonetDB-${{ matrix.branch }}/build
+#          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
+#            -DWITH_CRYPTO=OFF \
+#            -DPY3INTEGRATION=OFF \
+#            -DCMAKE_BUILD_TYPE=Release \
+#            -DASSERT=OFF \
+#            -DRINTEGRATION=OFF \
+#            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
+#          make install -j3
+#
+#      -
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: monetdb-osx-${{ matrix.branch }}
+#          path: /usr/local/Cellar/monetdb
 
   osx-wheel:
-    continue-on-error: true
+#    continue-on-error: true
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-        branch: [Oct2020, Jul2021]
-    env:
-      MONETDB_BRANCH: ${{ matrix.branch }}
-    needs: [osx-monetdb-Oct2020, osx-monetdb-Jul2021]
+        python-version: [ "3.6", "3.7", "3.8", "3.9", "3.10"]
+        branch: [Jul2021] # default, , Jan2022]
+    needs: [osx-monetdb-brew]
     steps:
       -
         name: Print MONETDB_BRANCH to make sure it is set
@@ -75,7 +74,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2 
         with:
-          name: monetdb-osx-${{ matrix.branch }}
+          name: monetdb-osx-brew # ${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb
@@ -90,13 +89,13 @@ jobs:
         run: python3 -m venv venv
       -
         name: Install Python dependencies
-        run: venv/bin/pip install --upgrade pip wheel delocate pytest
+        run: venv/bin/pip install --upgrade pip wheel delocate pytest build
       -
         name: Compile and install MonetDBe-python
         run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
         name: make binary wheel
-        run: venv/bin/python setup.py bdist_wheel
+        run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
       -
         name: Delocate binary wheel
         run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl

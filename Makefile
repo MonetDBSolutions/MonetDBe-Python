@@ -10,7 +10,7 @@ all: test
 
 venv/:
 	python3 -m venv venv
-	venv/bin/pip install --upgrade pip wheel
+	venv/bin/pip install --upgrade pip wheel build
 
 venv/installed: venv/
 	venv/bin/pip install -e ".[test]"
@@ -18,6 +18,11 @@ venv/installed: venv/
 
 setup: venv/installed
 build: venv/installed
+	venv/bin/pyproject-build
+
+build-osx-m1: venv/
+	MONETDB_BRANCH=oct2020 CFLAGS="-I/opt/include -L/opt/lib" venv/bin/pyproject-build
+
 
 test: setup
 	venv/bin/pytest
@@ -84,7 +89,7 @@ venv/bin/twine: venv/
 	touch venv/bin/twine
 
 twine: venv/bin/twine
-	venv/bin/twine upload dist/*.whl
+	venv/bin/twine upload dist/*.whl dist/*.tar.gz
 
 info: setup
 	venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"

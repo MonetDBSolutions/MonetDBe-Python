@@ -1,6 +1,23 @@
 from typing import Any, Union
+from decimal import Decimal
 import datetime
 from monetdbe._lowlevel import ffi
+
+
+def monetdbe_decimal_to_bte(data: int) -> ffi.CData:
+    return ffi.new("int8_t *", data)
+
+
+def monetdbe_decimal_to_sht(data: int) -> ffi.CData:
+    return ffi.new("int16_t *", data)
+
+
+def monetdbe_decimal_to_int(data: int) -> ffi.CData:
+    return ffi.new("int *", data)
+
+
+def monetdbe_decimal_to_lng(data: int) -> ffi.CData:
+    return ffi.new("int64_t *", data)
 
 
 def monetdbe_int(data: int) -> ffi.CData:
@@ -10,8 +27,8 @@ def monetdbe_int(data: int) -> ffi.CData:
         return ffi.new("int *", data)
 
 
-def bind_str(data: str) -> bytes:
-    return str(data).encode()
+def bind_str(data: str) -> ffi.CData:
+    return ffi.new("char[]", str(data).encode())
 
 
 def bind_float(data: float) -> ffi.CData:

@@ -37,6 +37,12 @@ class Cursor:
 
         self._fetch_generator: Optional[Iterator['Row']] = None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def __del__(self):
         self.close()
 
@@ -120,10 +126,16 @@ class Cursor:
     def _execute_monetdbe(self, operation: str, parameters: parameters_type = None):
         from monetdbe._cffi.internal import bind, execute
         self._check_connection()
-        statement = self.connection.prepare(operation)
+        prepare_result = self.connection.prepare(operation)
+        statement = prepare_result[0]
+
+        self.connection.type_info = None
+        if len(prepare_result) == 2:
+            self.connection.type_info = prepare_result[1]
+
         if parameters:
             for index, parameter in enumerate(parameters):
-                bind(statement, parameter, index)
+                bind(statement, parameter, index, self.connection.type_info)
         self.connection.result, self.rowcount = execute(statement, make_result=True)
         self.connection.cleanup_statement(statement)
         self.connection.total_changes += self.rowcount

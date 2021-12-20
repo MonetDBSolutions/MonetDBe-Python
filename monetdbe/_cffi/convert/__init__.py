@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List, Optional, Callable, Union, Any, Mapping
 from typing import NamedTuple
 
@@ -77,20 +78,43 @@ def numpy_monetdb_map(numpy_type: np.dtype):
     raise ProgrammingError("append() only support int and float family types")
 
 
-def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str], Any]] = None):
-    """
-    Extracts values from a monetdbe_column.
+from monetdbe._cffi.branch import newer_then_jul2021
+if newer_then_jul2021:
+    def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str], Any]] = None):
+        """
+        Extracts values from a monetdbe_column.
 
-    The text_factory is optional, and wraps the value with a custom user supplied text function.
-    """
-    type_info = monet_c_type_map[rcol.type]
-    col = ffi.cast(f"monetdbe_column_{type_info.c_string_type} *", rcol)
-    if col.is_null(col.data + r):
-        return None
-    else:
-        if type_info.py_converter:
-            result = type_info.py_converter(col.data[r])
-            if rcol.type == lib.monetdbe_str and text_factory:
-                return text_factory(result)
-            return result
-        return col.data[r]
+        The text_factory is optional, and wraps the value with a custom user supplied text function.
+        """
+
+        type_info = monet_c_type_map[rcol.type]
+        col = ffi.cast(f"monetdbe_column_{type_info.c_string_type} *", rcol)
+        if col.is_null(col.data + r):
+            return None
+        else:
+            col_data = col.data[r]
+            if rcol.sql_type.name != ffi.NULL and ffi.string(rcol.sql_type.name).decode() == 'decimal':
+                col_data = Decimal(col_data) / (Decimal(10) ** rcol.sql_type.scale)
+            if type_info.py_converter:
+                result = type_info.py_converter(col_data)
+                if rcol.type == lib.monetdbe_str and text_factory:
+                    return text_factory(result)
+                return result
+            return col_data
+else:
+    def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str], Any]] = None):
+        """
+        Extracts values from a monetdbe_column.
+        The text_factory is optional, and wraps the value with a custom user supplied text function.
+        """
+        type_info = monet_c_type_map[rcol.type]
+        col = ffi.cast(f"monetdbe_column_{type_info.c_string_type} *", rcol)
+        if col.is_null(col.data + r):
+            return None
+        else:
+            if type_info.py_converter:
+                result = type_info.py_converter(col.data[r])
+                if rcol.type == lib.monetdbe_str and text_factory:
+                    return text_factory(result)
+                return result
+            return col.data[r]

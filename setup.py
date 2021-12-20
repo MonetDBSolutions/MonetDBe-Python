@@ -4,7 +4,16 @@ from sys import platform
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-tests_require = ['pytest', 'mypy', 'pycodestyle', 'data-science-types']
+tests_require = [
+    'pytest',
+    'mypy',
+    'pycodestyle',
+    'data-science-types',
+    'types-setuptools',
+    'types-pkg_resources',
+    'types-Jinja2',
+    'typing-extensions',
+]
 
 extras_require = {
     'test': tests_require,
@@ -22,7 +31,7 @@ else:
 
 setup(
     name="monetdbe",
-    version="0.10",
+    version="0.10.1",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",

@@ -2,13 +2,17 @@ import logging
 from _warnings import warn
 from pathlib import Path
 from typing import Optional, Tuple, Any, Mapping, Iterator, Dict, TYPE_CHECKING
+from decimal import Decimal
+from collections import namedtuple
 
 import numpy as np
-from monetdbe._lowlevel import ffi, lib
 
+from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
 from monetdbe._cffi.convert.bind import prepare_bind
+from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng
+
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
@@ -52,7 +56,7 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
         else:
             mask = np.ma.nomask  # type: ignore[attr-defined]
 
-        masked = np.ma.masked_array(np_col, mask=mask)
+        masked: np.ndarray = np.ma.masked_array(np_col, mask=mask)
 
         result_dict[name] = masked
     return result_dict
@@ -64,8 +68,29 @@ def get_autocommit() -> bool:
     return bool(value[0])
 
 
-def bind(statement: monetdbe_statement, data: Any, parameter_nr: int) -> None:
-    prepared = prepare_bind(data)
+TypeInfo = namedtuple('TypeInfo', ('impl_type', 'sql_type', 'scale'))
+
+
+def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
+    try:
+        _type_info = type_info[parameter_nr]
+        if (_type_info.sql_type == 'decimal'):
+            d = int(Decimal(data) * (Decimal(10) ** _type_info.scale))
+            if (_type_info.impl_type == 'bte'):
+                prepared = monetdbe_decimal_to_bte(d)
+            elif (_type_info.impl_type == 'sht'):
+                prepared = monetdbe_decimal_to_sht(d)
+            elif (_type_info.impl_type == 'int'):
+                prepared = monetdbe_decimal_to_int(d)
+            elif (_type_info.impl_type == 'lng'):
+                prepared = monetdbe_decimal_to_lng(d)
+            else:
+                raise NotImplementedError("Unknown decimal implementation type")
+        else:
+            prepared = prepare_bind(data)
+    except IndexError as e:
+        from monetdbe import exceptions
+        raise exceptions.ProgrammingError from e
     check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
 
 
@@ -113,18 +138,14 @@ class Internal:
         self.nr_threads = nr_threads
         self.have_hge = have_hge
         self._switch()
+        self._monetdbe_database = self.open()
 
     @classmethod
     def set_active_context(cls, active_context: Optional['Internal']):
         cls._active_context = active_context
 
-    @classmethod
-    def set_active_connection(cls, active_connection: Optional['Connection']):
-        cls._active_connection = active_connection
-
-    @classmethod
-    def set_monetdbe_database(cls, connection: Optional[monetdbe_database]):
-        cls._monetdbe_database = connection
+    def set_monetdbe_database(self, connection: Optional[monetdbe_database]):
+        self._monetdbe_database = connection
 
     def __del__(self):
         if self._active_context == self:
@@ -135,17 +156,10 @@ class Internal:
         if self._active_context == self:
             return
 
-        # this is a bit scary but just to make sure the previous connection
-        # can't touch us anymore
-        if self._active_connection:
-            self._active_connection._internal = None
-
-        self.close()
-        self.set_monetdbe_database(self.open())
         self.set_active_context(self)
-        self.set_active_connection(self._connection)
 
     def cleanup_result(self, result: monetdbe_result):
+        self._switch()
         _logger.info("cleanup_result called")
         if result and self._monetdbe_database:
             check_error(lib.monetdbe_cleanup_result(self._monetdbe_database, result))
@@ -180,11 +194,13 @@ class Internal:
                 lib.monetdbe_close(connection)
             else:
                 error = errors.get(result_code, "unknown error")
-            raise exceptions.OperationalError(f"Failed to open database: {error} (code {result_code})")
+            msg = f"Failed to open database: {error} (code {result_code})"
+            raise exceptions.OperationalError(msg)
 
         return connection
 
     def close(self) -> None:
+        self._switch()
         if self._monetdbe_database:
             if lib.monetdbe_close(self._monetdbe_database):
                 raise exceptions.OperationalError("Failed to close database")
@@ -192,8 +208,6 @@ class Internal:
 
         if self._active_context:
             self.set_active_context(None)
-
-        self.set_active_connection(None)
 
     def query(self, query: str, make_result: bool = False) -> Tuple[Optional[Any], int]:
         """
@@ -262,13 +276,24 @@ class Internal:
             work_column.data = ffi.cast(f"{type_info.c_string_type} *", ffi.from_buffer(column_values))
             work_columns[column_num] = work_column
             work_objs.append(work_column)
-        check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
+        check_error(
+            lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
 
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()
+
         stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
-        return stmt[0]
+        p_result = ffi.new("monetdbe_result **")
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt, p_result))
+
+        input_parameter_info = list()
+
+        for r in range(p_result[0].nrows):
+            if (extract(result_fetch(p_result[0], 3), r)) is None:
+                row = TypeInfo(impl_type=extract(result_fetch(p_result[0], 6), r), sql_type=extract(result_fetch(p_result[0], 0), r), scale=extract(result_fetch(p_result[0], 2), r))
+                input_parameter_info.append(row)
+
+        return stmt[0], input_parameter_info
 
     def cleanup_statement(self, statement: monetdbe_statement) -> None:
         self._switch()
@@ -280,7 +305,33 @@ class Internal:
 
     def dump_table(self, schema_name: str, table_name: str, backupfile: Path):
         # todo (gijs): use :)
-        lib.monetdbe_dump_table(self._monetdbe_database, schema_name.encode(), table_name.encode(), str(backupfile).encode())
+        lib.monetdbe_dump_table(self._monetdbe_database, schema_name.encode(), table_name.encode(),
+                                str(backupfile).encode())
+
+    def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
+        self._switch()
+        count_p = ffi.new('size_t*')
+        columns_p = ffi.new('monetdbe_column**')
+
+        lib.monetdbe_get_columns(self._monetdbe_database, schema.encode(), table.encode(), count_p, columns_p)
+
+        for i in range(count_p[0]):
+            name = ffi.string(columns_p[0][i].name).decode()
+            type_ = columns_p[0][i].type
+            yield name, type_
+
+
+from monetdbe._cffi.branch import newer_then_jul2021
+if not newer_then_jul2021:
+    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
+        prepared = prepare_bind(data)
+        check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
+
+    def prepare(self, query: str) -> monetdbe_statement:
+        self._switch()
+        stmt = ffi.new("monetdbe_statement **")
+        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
+        return stmt[0],
 
     def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
         self._switch()
@@ -294,3 +345,9 @@ class Internal:
             name = ffi.string(names_p[0][i]).decode()
             type_ = types_p[0][i]
             yield name, type_
+
+    import sys
+    Module = sys.modules[__name__]
+    setattr(Module, 'bind', bind)
+    setattr(Internal, 'prepare', prepare)
+    setattr(Internal, 'get_columns', get_columns)

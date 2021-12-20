@@ -1,6 +1,6 @@
-# MonetDBe-Python
+# MonetDB/e-Python
 
-MonetDBe-Python - the serverless Python embedded MonetDB
+MonetDB/e-Python - the serverless Python embedded MonetDB
 
 ![alt text](monetdbe-python.png)
 
@@ -17,7 +17,7 @@ The source code can be found at: https://github.com/monetdBSolutions/MonetDBe-Py
 
 you need:
 
- * An up-to-date Linux, OSX or Windows
+ * An up-to-date Linux, OSX or Windows 
  * pip `>= 19.3`
  * Python `>= 3.6`
 

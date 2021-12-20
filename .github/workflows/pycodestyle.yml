@@ -9,15 +9,15 @@ on:
 
 jobs:
   linux-pycodestyle:
-    runs-on: ubuntu-18.04
-    container: monetdb/dev-builds:Oct2020
+    runs-on: ubuntu-20.04
+    container: monetdb/dev-builds:Jul2021
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: Install MonetDBe in developer mode
-        run: MONETDB_BRANCH=Oct2020 python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=Jul2021 python3 -m pip install -e .[test]
       -
         name: Check the python coding style
         run: pycodestyle monetdbe tests

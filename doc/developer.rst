@@ -41,61 +41,8 @@ After setting up te testing environment, run from the source folder:
     LD_LIBRARY_PATH=<monetdb_prefix>/lib pytest
 
 
-Making binary wheel for Linux
-=============================
+Making binary wheels
+====================
 
-requirements:
- * Docker
- * make
-
-Then run
-
-.. code-block::
-
-    $ make docker-wheels
-    $ venv/bin/pip install twine
-    $ venv/bin/twine upload dist/*.whl dist/*.tar.gz
-
-
-
-Making binary wheel for OSX
-===========================
-
-1. get a High Sierra machine (10.13)
-
-
-2. install homebrew
-
-.. code-block::
-
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-
-4. Run the OSX wheel script
-
-.. code-block::
-
-   scripts/osx_wheel.sh
-
-
-10 upload the wheels
-
-.. code-block::
-
-    pip install twine
-    twine upload dist/*.whl
-
-
-Making binary wheel for Windows
-===============================
-
-
-Compile MonetDB on Windows
---------------------------
-
-1. install microsoft visual studio community edition:
-
-https://visualstudio.microsoft.com/vs/community/
-
-
-2. Refer to the Github Actions Windows build script `.github/workflows/windows.yml` for further actions.
+This is fully automated on Github Actions, the build scripts are located in `.github/workflows/`.
 
