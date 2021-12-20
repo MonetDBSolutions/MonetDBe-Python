@@ -10,19 +10,16 @@ all: test
 
 venv/:
 	python3 -m venv venv
-	venv/bin/pip install --upgrade pip wheel build
+	venv/bin/pip install --upgrade pip wheel build setuptools
 
 venv/installed: venv/
 	venv/bin/pip install -e ".[test]"
 	touch venv/installed
 
 setup: venv/installed
+
 build: venv/installed
 	venv/bin/pyproject-build
-
-build-osx-m1: venv/
-	MONETDB_BRANCH=oct2020 CFLAGS="-I/opt/include -L/opt/lib" venv/bin/pyproject-build
-
 
 test: setup
 	venv/bin/pytest
@@ -93,3 +90,23 @@ twine: venv/bin/twine
 
 info: setup
 	venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
+
+venv38/:
+	/opt/homebrew/Cellar/python@3.8/3.8.*/bin/python3.8 -m venv venv38
+
+venv39/:
+	/opt/homebrew/Cellar/python@3.9/3.9.*/bin/python3.9 -m venv venv39
+
+venv310/:
+	/opt/homebrew/Cellar/python@3.10/3.10.*/bin/python3.10 -m venv venv310
+
+osx-m1-all-wheels: venv38/ venv39/ venv310/
+	venv38/bin/pip install --upgrade pip wheel setuptools build
+	venv39/bin/pip install --upgrade pip wheel setuptools build
+	venv310/bin/pip install --upgrade pip wheel setuptools build
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv38/bin/python -m build
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv39/bin/python -m build
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv310/bin/python -m build
+
+osx-m1-wheel: venv/
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv/bin/python -m build

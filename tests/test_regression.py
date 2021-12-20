@@ -551,3 +551,15 @@ class TestMonetDBeRegressions(unittest.TestCase):
         assert (len(res5) == 1)
         assert (len(res5[0]) == 4)
         con.close()
+
+    def test_issue158_afunkyfunc(self):
+        """
+        the afunkyfunc name should not be taken, but in older monetdbe versions it is.
+        """
+        with monetdbe.connect(":memory:") as conn:
+            # conn.set_autocommit(True)
+            cursor = conn.cursor()
+            q = "create function afunkyfunc(a double) returns double begin return a/2; end"
+            res = cursor.execute(q)
+            res = cursor.execute("select afunkyfunc(1.0);")
+            print(cursor.fetchone()[0])
