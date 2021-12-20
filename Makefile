@@ -10,19 +10,16 @@ all: test
 
 venv/:
 	python3 -m venv venv
-	venv/bin/pip install --upgrade pip wheel build
+	venv/bin/pip install --upgrade pip wheel build setuptools
 
 venv/installed: venv/
 	venv/bin/pip install -e ".[test]"
 	touch venv/installed
 
 setup: venv/installed
+
 build: venv/installed
 	venv/bin/pyproject-build
-
-build-osx-m1: venv/
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv/bin/python -m build
-
 
 test: setup
 	venv/bin/pytest
@@ -103,10 +100,13 @@ venv39/:
 venv310/:
 	/opt/homebrew/Cellar/python@3.10/3.10.*/bin/python3.10 -m venv venv310
 
-osx-m1-wheels: venv38/ venv39/ venv310/
+osx-m1-all-wheels: venv38/ venv39/ venv310/
 	venv38/bin/pip install --upgrade pip wheel setuptools build
 	venv39/bin/pip install --upgrade pip wheel setuptools build
 	venv310/bin/pip install --upgrade pip wheel setuptools build
 	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv38/bin/python -m build
 	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv39/bin/python -m build
 	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv310/bin/python -m build
+
+osx-m1-wheel: venv/
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv/bin/python -m build
