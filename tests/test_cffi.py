@@ -44,18 +44,42 @@ class TestCffi(unittest.TestCase):
 
     def test_append_supported_types(self):
         with connect() as con:
-            con.execute("CREATE TABLE test (t tinyint, s smallint, i int, b bigint, r real, f float)")
+            con.execute("CREATE TABLE test (t tinyint, s smallint, i int, h bigint, r real, f float, b bool)")
             con.execute(
                 """
-                INSERT INTO test VALUES (2^8,  2^16,  2^32,  2^64,  0.12345,  0.123456789),
-                                        (NULL, NULL,  NULL,  NULL,  NULL,     NULL),
-                                        (0,    0,     0,     0,     0.0,      0.0),
-                                        (-2^8, -2^16, -2^32, -2^64, -0.12345, -0.123456789)
+                INSERT INTO test VALUES (2^8,  2^16,  2^32,  2^64,  0.12345,  0.123456789, true),
+                                        (NULL, NULL,  NULL,  NULL,  NULL,     NULL, NULL),
+                                        (0,    0,     0,     0,     0.0,      0.0, false),
+                                        (-2^8, -2^16, -2^32, -2^64, -0.12345, -0.123456789, false)
                 """
             )
             data = con.execute("select * from test").fetchnumpy()
             con._internal.append(schema='sys', table='test', data=data)
             con.cursor().insert(table='test', values=data)
+
+    def test_append_numpy_only_types(self):
+        """
+        test numpy types don't have have a direct 1-on-1 sql mapping
+        """
+        with connect() as con:
+            table = 'i'
+            con.execute(f"CREATE TABLE {table} (i int)")
+            data = {'i': np.ndarray([0], dtype=np.uint32)}
+            con._internal.append(schema='sys', table=table, data=data)
+            con.cursor().insert(table=table, values=data)
+
+
+    'b'  # boolean
+    'i'  # signed integer
+    'u'  # unsigned integer
+    'f'  # floating-point
+    # c complex floating-point
+    # m timedelta
+    # M datetime
+    # O object
+    # S (byte-)string
+    # U Unicode
+    # V void
 
     def test_append_unsupported_types(self):
         with connect() as con:

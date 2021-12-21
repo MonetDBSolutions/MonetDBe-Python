@@ -266,18 +266,23 @@ class Internal:
             work_column = ffi.new('monetdbe_column *')
             type_info = numpy_monetdb_map(column_values.dtype)
             if not type_info.c_type == existing_type:
-                existing_type_string = monet_c_type_map[existing_type].c_string_type
-                error = f"Type '{type_info.c_string_type}' for appended column '{column_name}' " \
-                        f"does not match table type '{existing_type_string}'"
-                raise exceptions.ProgrammingError(error)
+                to_numpy_type = monet_c_type_map[existing_type].numpy_type
+                try:
+                    column_values = column_values.astype(to_numpy_type)
+                except Exception as e:
+                    _logger.error(e)
+                    existing_type_string = monet_c_type_map[existing_type].c_string_type
+                    error = f"Type '{type_info.c_string_type}' for appended column '{column_name}' " \
+                        f"does not match table type '{existing_type_string}' ({existing_type})"
+                    raise exceptions.ProgrammingError(error)
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
             work_column.data = ffi.cast(f"{type_info.c_string_type} *", ffi.from_buffer(column_values))
             work_columns[column_num] = work_column
             work_objs.append(work_column)
-        check_error(
-            lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
+        check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(),
+                                        table.encode(), work_columns, n_columns))
 
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()

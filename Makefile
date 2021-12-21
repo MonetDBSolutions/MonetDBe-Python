@@ -12,16 +12,16 @@ venv/:
 	python3 -m venv venv
 	venv/bin/pip install --upgrade pip wheel build setuptools
 
-venv/installed: venv/
+venv/bin/pytest: venv/
 	venv/bin/pip install -e ".[test]"
-	touch venv/installed
+	touch venv/bin/pytest
 
-setup: venv/installed
+setup: venv/bin/pytest
 
-build: venv/installed
+build: venv/bin/pytest
 	venv/bin/pyproject-build
 
-test: setup
+test: venv/bin/pytest
 	venv/bin/pytest
 
 docker-wheels:

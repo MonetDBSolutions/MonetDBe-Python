@@ -77,6 +77,7 @@ mapping: List[Tuple[Type, Callable]] = [
     (datetime.date, monet_escape),
     (datetime.timedelta, monet_escape),
     (bool, monet_bool),
+    (np.bool_, monet_bool),
     (type(None), monet_none),
     (np.int64, int),
     (np.int32, int),
