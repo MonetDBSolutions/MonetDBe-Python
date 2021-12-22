@@ -204,7 +204,7 @@ class VariousConnectionTests(unittest.TestCase):
 def prepare_cursor(cx):
     cu = cx.cursor()
 
-    # todo/note (Gijs): changed income type from number to float and made ID auto_increment
+    # note (Gijs): changed income type from number to float and made ID auto_increment
     cu.execute(
         "create table test(id integer auto_increment primary key, name text, "
         "income float, unique_test text unique)"
