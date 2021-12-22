@@ -283,7 +283,7 @@ class Internal:
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
-            work_column.data = ffi.cast(f"{type_info.c_string_type} *", ffi.from_buffer(column_values))
+            work_column.data = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
             work_columns[column_num] = work_column
             work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(),
