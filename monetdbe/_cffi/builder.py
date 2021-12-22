@@ -29,6 +29,7 @@ HAVE_HGE: bool = not win32
 
 source = """
 #include "monetdb/monetdbe.h"
+typedef union { struct { unsigned long long low; long long high; } a; __int128 b; } int128_t;
 """
 
 

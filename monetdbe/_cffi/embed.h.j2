@@ -1,3 +1,5 @@
+typedef union { struct { unsigned long long low; long long high; } a; ...; } int128_t ;
+
 typedef int64_t monetdbe_cnt;
 
 typedef struct {
@@ -103,7 +105,7 @@ typedef struct { monetdbe_types type; {{monetdbe_sql_type}} int16_t *data; size_
 typedef struct { monetdbe_types type; {{monetdbe_sql_type}} int32_t *data; size_t count; char *name; int32_t null_value; double scale; int (*is_null)(int32_t *value); } monetdbe_column_int32_t;
 typedef struct { monetdbe_types type; {{monetdbe_sql_type}} int64_t *data; size_t count; char *name; int64_t null_value; double scale; int (*is_null)(int64_t *value); } monetdbe_column_int64_t;
 {% if HAVE_HGE %}
-typedef struct { monetdbe_types type; {{monetdbe_sql_type}} __int128 *data; size_t count; char *name; __int128 null_value; double scale; int (*is_null)(__int128 *value); } monetdbe_column_int128_t;
+typedef struct { monetdbe_types type; {{monetdbe_sql_type}} int128_t *data; size_t count; char *name; int128_t null_value; double scale; int (*is_null)(int128_t *value); } monetdbe_column_int128_t;
 {% endif %}
 
 typedef struct { monetdbe_types type; {{monetdbe_sql_type}} size_t *data; size_t count; char *name; size_t null_value; double scale; int (*is_null)(size_t *value); } monetdbe_column_size_t;

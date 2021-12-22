@@ -465,13 +465,19 @@ class monetdbeTypeComplexTests(unittest.TestCase):
 class Int128Tests(unittest.TestCase):
     hugeint_max = 170141183460469231731687303715884105727
 
-    def setUp(self):
-        self.con = monetdbe.connect(":memory:")
-        self.cur = self.con.cursor()
-        self.cur.execute("create table bigtable(x HUGEINT)")
-        self.cur.execute(f"insert into bigtable values ({self.hugeint_max})")
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.con = monetdbe.connect(":memory:")
+        cls.cur = cls.con.cursor()
+        cls.cur.execute("create table bigtable(x HUGEINT)")
+        cls.cur.execute(f"insert into bigtable values ({cls.hugeint_max})")
 
     def test_fetch_numpy(self):
         self.cur.execute("select * from bigtable")
         df = self.cur.fetchdf()
         self.assertEqual(df['x'][0], self.hugeint_max)
+
+    def test_fetch_vanilla(self):
+        self.cur.execute("select * from bigtable")
+        r = self.cur.fetchall()
+        self.assertEqual(r[0][0], self.hugeint_max)
