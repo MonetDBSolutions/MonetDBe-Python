@@ -9,7 +9,8 @@ import numpy as np
 
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, MonetdbTypeInfo, \
+    precision_warning
 from monetdbe._cffi.convert.bind import prepare_bind
 from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng
 
@@ -265,16 +266,20 @@ class Internal:
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
             type_info = numpy_monetdb_map(column_values.dtype)
-            if not type_info.c_type == existing_type:
+
+            # try to convert the values if types don't match
+            if type_info.c_type != existing_type:
+                precision_warning(type_info.c_type, existing_type)
                 to_numpy_type = monet_c_type_map[existing_type].numpy_type
                 try:
                     column_values = column_values.astype(to_numpy_type)
+                    type_info = numpy_monetdb_map(column_values.dtype)
                 except Exception as e:
-                    _logger.error(e)
                     existing_type_string = monet_c_type_map[existing_type].c_string_type
-                    error = f"Type '{type_info.c_string_type}' for appended column '{column_name}' " \
-                        f"does not match table type '{existing_type_string}' ({existing_type})"
-                    raise exceptions.ProgrammingError(error)
+                    error = f"Can't convert '{type_info.c_string_type}' " \
+                            f"to type '{existing_type_string}' for column '{column_name}': {e} "
+                    raise ValueError(error)
+
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())

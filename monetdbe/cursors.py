@@ -286,7 +286,7 @@ class Cursor:
         query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
         return self.executemany(query, rows_zipped)
 
-    def insert(self, table: str, values: Union[pd.DataFrame, Dict[str, np.ndarray]], schema: str = 'sys'):
+    def insert(self, table: str, values: Union[pd.DataFrame, Mapping[str, np.ndarray]], schema: str = 'sys'):
         """
         Inserts a set of values into the specified table.
 
