@@ -32,17 +32,21 @@ class TestCffi(unittest.TestCase):
         with connect() as con:
             con.execute("CREATE TABLE test (i int)")
             data = {'i': np.array([0.1, 0.2, 0.3], dtype=np.float32)}
-            # we now convert this automatically
-            #with self.assertRaises(ProgrammingError):
+            """
+            We now convert this automatically
+            with self.assertRaises(ProgrammingError):
+            """
             con._internal.append(table='test', data=data)
 
     def test_append_wrong_size(self):
         with connect() as con:
             con.execute("CREATE TABLE test (i int)")  # SQL int is 32 bit
             data = {'i': np.array([1, 2, 3], dtype=np.int64)}
-            # we now convert this automatically
-            #with self.assertRaises(ProgrammingError):
+            """
+            we now convert this automatically
+            with self.assertRaises(ProgrammingError):
             con._internal.append(table='test', data=data)
+            """
 
     def test_append_supported_types(self):
         with connect() as con:
@@ -69,7 +73,6 @@ class TestCffi(unittest.TestCase):
             data = {'i': np.ndarray([0], dtype=np.uint32)}
             con._internal.append(schema='sys', table=table, data=data)
             con.cursor().insert(table=table, values=data)
-
 
     'b'  # boolean
     'i'  # signed integer

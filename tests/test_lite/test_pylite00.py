@@ -40,9 +40,11 @@ class TestmonetdbeBase(TestCase):
     def test_sql_types(self):
         con = monetdbe.connect()
         cur = con.execute('CREATE TABLE pylite04_decimal(d DECIMAL(18,3))')
-        #cur.insert('pylite04_decimal', {'d': numpy.arange(100000).astype(numpy.int64)})
-        #result = cur.execute('SELECT * FROM pylite04_decimal').fetchdf()
-        #assert result['d'][0] == 0, "Incorrect result"
+        """
+        cur.insert('pylite04_decimal', {'d': numpy.arange(100000).astype(numpy.int64)})
+        result = cur.execute('SELECT * FROM pylite04_decimal').fetchdf()
+        assert result['d'][0] == 0, "Incorrect result"
+        """
 
         cur.execute('CREATE TABLE pylite04_date(d DATE)')
         cur.execute("INSERT INTO pylite04_date VALUES ('2000-01-01')")
