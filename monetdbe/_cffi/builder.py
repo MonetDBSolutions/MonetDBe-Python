@@ -25,15 +25,12 @@ with open(branch_file, 'w') as f:
 default = monetdb_branch.lower() in ("default", "jul2021", "jan2022")
 win32 = platform == 'win32'
 
-
-source = """
-#include "monetdb/monetdbe.h"
-"""
-
+with open(Path(__file__).resolve().parent / "native_utilities.c") as f:
+    source = f.read()
 
 # the ffibuilder object needs to exist and be configured in the module namespace so setup.py can reach it
 ffibuilder = FFI()
-ffibuilder.set_source("monetdbe._lowlevel", source, libraries=['monetdbe'], sources=[str(Path(__file__).resolve().parent / "native_utilities.c")])
+ffibuilder.set_source("monetdbe._lowlevel", source=source, libraries=['monetdbe'])
 embed_path = str(Path(__file__).resolve().parent / 'embed.h.j2')
 
 

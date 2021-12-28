@@ -50,7 +50,7 @@ class MonetdbTypeInfo(NamedTuple):
 
 
 inversable_type_infos: List[MonetdbTypeInfo] = [
-    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool), "bool", None, None),
+    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
     MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
     MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
     MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
