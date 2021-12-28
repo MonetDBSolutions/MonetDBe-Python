@@ -1,1 +1,2 @@
 include monetdbe/_cffi/embed.h.j2
+include monetdbe/_cffi/native_utilities.c

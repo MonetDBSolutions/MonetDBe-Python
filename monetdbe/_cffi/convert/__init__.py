@@ -11,6 +11,8 @@ from monetdbe.exceptions import ProgrammingError
 from monetdbe.pythonize import py_date, py_time, py_timestamp
 from monetdbe._cffi.branch import newer_then_jul2021
 
+from monetdbe.types import supported_numpy_types
+
 _logger = logging.getLogger()
 
 
@@ -80,20 +82,6 @@ numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type: i for i in
                                                       inversable_type_infos + numpy_to_monetdb_type_infos}
 monet_c_type_map: Mapping[int, MonetdbTypeInfo] = {i.c_type: i for i in
                                                    inversable_type_infos + monetdb_to_numpy_type_infos}
-
-supported_numpy_types: str = (
-    'b'  # boolean
-    'i'  # signed integer
-    'u'  # unsigned integer
-    'f'  # floating-point
-    # 'M'  # datetime
-    'U'  # Unicode
-    # c complex floating-point
-    # m timedelta
-    # O object
-    # S (byte-)string
-    # V void
-)
 
 
 def precision_warning(from_: int, to: int):

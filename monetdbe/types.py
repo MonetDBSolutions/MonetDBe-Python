@@ -50,3 +50,17 @@ CHARACHTER_LARGE_OBJECT = CLOB
 BINARY_LARGE_OBJECT = BLOB
 NUMERIC = DECIMAL
 DOUBLE_PRECISION = DOUBLE
+
+supported_numpy_types: str = (
+    'b'  # boolean
+    'i'  # signed integer
+    'u'  # unsigned integer
+    'f'  # floating-point
+    # 'M'  # datetime
+    'U'  # Unicode
+    # c complex floating-point
+    # m timedelta
+    # O object
+    # S (byte-)string
+    # V void
+)
