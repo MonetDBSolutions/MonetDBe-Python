@@ -262,6 +262,8 @@ class Internal:
 
         work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
         work_objs = []
+        # cffi_objects assists to keep all in-memory native data structure alive during the execution of this call
+        cffi_objects = list()
         for column_num, (column_name, existing_type) in enumerate(existing_columns):
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
@@ -284,9 +286,17 @@ class Internal:
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
             if type_info.numpy_type.kind == 'U':
-                p = ffi.from_buffer(f"wchar_t*", column_values)
-                pp = ffi.new("wchar_t**", p)
-                work_column.data = ffi.new("wchar_t***", pp)
+                # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.
+                v = np.char.encode(column_values).view('b').reshape((work_column.count, -1))
+                v = np.c_[v, np.zeros(work_column.count, dtype='b')]
+                stride_length = v.shape[1]
+                cffi_objects.append(v)
+                t = ffi.new('char*[]', work_column.count)
+                cffi_objects.append(t)
+                p = ffi.from_buffer("char*", v)
+                cffi_objects.append(p)
+                lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length)
+                work_column.data = t
             else:
                 work_column.data = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
             work_columns[column_num] = work_column

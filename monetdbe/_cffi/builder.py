@@ -33,7 +33,7 @@ source = """
 
 # the ffibuilder object needs to exist and be configured in the module namespace so setup.py can reach it
 ffibuilder = FFI()
-ffibuilder.set_source("monetdbe._lowlevel", source, libraries=['monetdbe'])
+ffibuilder.set_source("monetdbe._lowlevel", source, libraries=['monetdbe'], sources=[str(Path(__file__).resolve().parent / "native_utilities.c")])
 embed_path = str(Path(__file__).resolve().parent / 'embed.h.j2')
 
 

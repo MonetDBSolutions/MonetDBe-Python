@@ -97,7 +97,7 @@ supported_numpy_types: str = (
 
 
 def precision_warning(from_: int, to: int):
-    if from_ == lib.monetdbe_int64_t and  to in (lib.monetdbe_int32_t, lib.monetdbe_int16_t, lib.monetdbe_int8_t):
+    if from_ == lib.monetdbe_int64_t and to in (lib.monetdbe_int32_t, lib.monetdbe_int16_t, lib.monetdbe_int8_t):
         _logger.warning("appending 64-bit data to lower bit column, potential loss of precision")
     elif from_ == lib.monetdbe_int32_t and to in (lib.monetdbe_int16_t, lib.monetdbe_int8_t):
         _logger.warning("appending 32-bit data to lower bit column, potential loss of precision")
