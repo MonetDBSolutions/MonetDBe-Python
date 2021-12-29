@@ -1,3 +1,6 @@
 [build-system]
 requires = ["setuptools >= 40.6.0", "wheel", 'cffi']
 build-backend = "setuptools.build_meta"
+
+[mypy]
+plugins = "numpy.typing.mypy_plugin"

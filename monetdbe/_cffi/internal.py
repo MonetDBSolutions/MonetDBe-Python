@@ -9,10 +9,8 @@ import numpy as np
 
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map
-from monetdbe._cffi.convert.bind import prepare_bind
-from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng
-
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning
+from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng, prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
@@ -74,15 +72,15 @@ TypeInfo = namedtuple('TypeInfo', ('impl_type', 'sql_type', 'scale'))
 def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
     try:
         _type_info = type_info[parameter_nr]
-        if (_type_info.sql_type == 'decimal'):
+        if _type_info.sql_type == 'decimal':
             d = int(Decimal(data) * (Decimal(10) ** _type_info.scale))
-            if (_type_info.impl_type == 'bte'):
+            if _type_info.impl_type == 'bte':
                 prepared = monetdbe_decimal_to_bte(d)
-            elif (_type_info.impl_type == 'sht'):
+            elif _type_info.impl_type == 'sht':
                 prepared = monetdbe_decimal_to_sht(d)
-            elif (_type_info.impl_type == 'int'):
+            elif _type_info.impl_type == 'int':
                 prepared = monetdbe_decimal_to_int(d)
-            elif (_type_info.impl_type == 'lng'):
+            elif _type_info.impl_type == 'lng':
                 prepared = monetdbe_decimal_to_lng(d)
             else:
                 raise NotImplementedError("Unknown decimal implementation type")
@@ -250,6 +248,7 @@ class Internal:
         """
         Directly append an array structure
         """
+
         self._switch()
         n_columns = len(data)
         existing_columns = list(self.get_columns(schema=schema, table=table))
@@ -260,24 +259,47 @@ class Internal:
             raise exceptions.ProgrammingError(error)
 
         work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
-        work_objs = []
+        # cffi_objects assists to keep all in-memory native data structure alive during the execution of this call
+        cffi_objects = []
         for column_num, (column_name, existing_type) in enumerate(existing_columns):
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
             type_info = numpy_monetdb_map(column_values.dtype)
-            if not type_info.c_type == existing_type:
-                existing_type_string = monet_c_type_map[existing_type].c_string_type
-                error = f"Type '{type_info.c_string_type}' for appended column '{column_name}' " \
-                        f"does not match table type '{existing_type_string}'"
-                raise exceptions.ProgrammingError(error)
+
+            # try to convert the values if types don't match
+            if type_info.c_type != existing_type:
+                precision_warning(type_info.c_type, existing_type)
+                to_numpy_type = monet_c_type_map[existing_type].numpy_type
+                try:
+                    column_values = column_values.astype(to_numpy_type)
+                    type_info = numpy_monetdb_map(column_values.dtype)
+                except Exception as e:
+                    existing_type_string = monet_c_type_map[existing_type].c_string_type
+                    error = f"Can't convert '{type_info.c_string_type}' " \
+                            f"to type '{existing_type_string}' for column '{column_name}': {e} "
+                    raise ValueError(error)
+
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
-            work_column.data = ffi.cast(f"{type_info.c_string_type} *", ffi.from_buffer(column_values))
+            if type_info.numpy_type.kind == 'U':
+                # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.
+                v = np.char.encode(column_values).view('b').reshape((work_column.count, -1))
+                v = np.c_[v, np.zeros(work_column.count, dtype=np.int8)]
+                stride_length = v.shape[1]
+                cffi_objects.append(v)
+                t = ffi.new('char*[]', work_column.count)
+                cffi_objects.append(t)
+                p = ffi.from_buffer("char*", v)
+                cffi_objects.append(p)
+                lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length)
+                work_column.data = t
+            else:
+                work_column.data = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
             work_columns[column_num] = work_column
-            work_objs.append(work_column)
-        check_error(
-            lib.monetdbe_append(self._monetdbe_database, schema.encode(), table.encode(), work_columns, n_columns))
+            cffi_objects.append(work_column)
+        check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(),
+                                        table.encode(), work_columns, n_columns))
 
     def prepare(self, query: str) -> monetdbe_statement:
         self._switch()

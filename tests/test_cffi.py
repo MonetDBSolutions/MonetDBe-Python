@@ -29,33 +29,49 @@ class TestCffi(unittest.TestCase):
                 con._internal.append(table='test', data=data)
 
     def test_append_wrong_type(self):
+        """
+        we now convert this automatically, so should not raise error
+        """
         with connect() as con:
             con.execute("CREATE TABLE test (i int)")
             data = {'i': np.array([0.1, 0.2, 0.3], dtype=np.float32)}
-            with self.assertRaises(ProgrammingError):
-                con._internal.append(table='test', data=data)
+            con._internal.append(table='test', data=data)
 
     def test_append_wrong_size(self):
+        """
+        we now convert this automatically, so should not raise error
+        """
         with connect() as con:
+
             con.execute("CREATE TABLE test (i int)")  # SQL int is 32 bit
             data = {'i': np.array([1, 2, 3], dtype=np.int64)}
-            with self.assertRaises(ProgrammingError):
-                con._internal.append(table='test', data=data)
+            con._internal.append(table='test', data=data)
 
     def test_append_supported_types(self):
         with connect() as con:
-            con.execute("CREATE TABLE test (t tinyint, s smallint, i int, b bigint, r real, f float)")
+            con.execute("CREATE TABLE test (t tinyint, s smallint, i int, h bigint, r real, f float, b bool)")
             con.execute(
                 """
-                INSERT INTO test VALUES (2^8,  2^16,  2^32,  2^64,  0.12345,  0.123456789),
-                                        (NULL, NULL,  NULL,  NULL,  NULL,     NULL),
-                                        (0,    0,     0,     0,     0.0,      0.0),
-                                        (-2^8, -2^16, -2^32, -2^64, -0.12345, -0.123456789)
+                INSERT INTO test VALUES (2^8,  2^16,  2^32,  2^64,  0.12345,  0.123456789, true),
+                                        (NULL, NULL,  NULL,  NULL,  NULL,     NULL, NULL),
+                                        (0,    0,     0,     0,     0.0,      0.0, false),
+                                        (-2^8, -2^16, -2^32, -2^64, -0.12345, -0.123456789, false)
                 """
             )
             data = con.execute("select * from test").fetchnumpy()
             con._internal.append(schema='sys', table='test', data=data)
             con.cursor().insert(table='test', values=data)
+
+    def test_append_numpy_only_types(self):
+        """
+        test numpy types don't have have a direct 1-on-1 sql mapping
+        """
+        with connect() as con:
+            table = 'i'
+            con.execute(f"CREATE TABLE {table} (i int)")
+            data = {'i': np.ndarray([0], dtype=np.uint32)}
+            con._internal.append(schema='sys', table=table, data=data)
+            con.cursor().insert(table=table, values=data)
 
     def test_append_unsupported_types(self):
         with connect() as con:

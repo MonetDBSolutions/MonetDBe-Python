@@ -6,7 +6,8 @@ import pandas as pd
 from monetdbe.connection import Connection, Description
 from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
-from monetdbe.monetize import monet_identifier_escape, convert
+from monetdbe.monetize import monet_identifier_escape
+from monetdbe.types import supported_numpy_types
 
 if TYPE_CHECKING:
     from monetdbe.row import Row
@@ -285,7 +286,7 @@ class Cursor:
         query = f"insert into {schema}.{table} ({columns}) values ({qmarks})"
         return self.executemany(query, rows_zipped)
 
-    def insert(self, table: str, values: Union[pd.DataFrame, Dict[str, np.ndarray]], schema: str = 'sys'):
+    def insert(self, table: str, values: Union[pd.DataFrame, Mapping[str, np.ndarray]], schema: str = 'sys'):
         """
         Inserts a set of values into the specified table.
 
@@ -303,7 +304,7 @@ class Cursor:
             if not isinstance(value, (np.ma.core.MaskedArray, np.ndarray)):  # type: ignore
                 prepared[key] = np.array(value)
 
-        if sum(i.dtype.kind not in 'if' for i in prepared.values()):  # type: ignore
+        if sum(i.dtype.kind not in supported_numpy_types for i in prepared.values()):  # type: ignore
             warn(
                 "One of the columns you are inserting is not of type int or float which fast append doesn't support. Falling back to regular insert.")
             return self._insert_slow(table, prepared, schema)
