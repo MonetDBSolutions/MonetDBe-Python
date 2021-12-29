@@ -91,6 +91,12 @@ twine: venv/bin/twine
 info: setup
 	venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
 
+venv/bin/ipython: venv/
+	venv/bin/pip install ipython
+
+ipython: venv/bin/ipython
+	venv/bin/ipython
+
 venv38/:
 	/opt/homebrew/Cellar/python@3.8/3.8.*/bin/python3.8 -m venv venv38
 

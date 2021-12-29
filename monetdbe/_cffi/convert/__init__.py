@@ -98,11 +98,14 @@ def precision_warning(from_: int, to: int):
 
 def numpy_monetdb_map(numpy_type: np.dtype):
     if numpy_type.kind == 'U':
+        # this is an odd one, the numpy type string includes the width. Also, we don't format
+        # monetdb string columns as fixed width numpy columns yet, so technically this type is
+        # non-reversable for now.
         return MonetdbTypeInfo(lib.monetdbe_str, "string", numpy_type, "char *", None, None)
 
     if numpy_type.kind in supported_numpy_types:  # type: ignore
         return numpy_type_map[numpy_type]
-    raise ProgrammingError("append() only support int and float family types")
+    raise ProgrammingError(f"append() called with unsupported type {numpy_type}")
 
 
 if newer_then_jul2021:
