@@ -33,7 +33,8 @@ class TestmonetdbeBase(TestCase):
     def test_monetdbe_create_multiple_columns(self):
         arrays = numpy.arange(100000).reshape((5, 20000))
         cur = monetdbe.connect().cursor().create('pylite03',
-                              {'i': arrays[0], 'j': arrays[1], 'k': arrays[2], 'l': arrays[3], 'm': arrays[4]})
+                                                 {'i': arrays[0], 'j': arrays[1], 'k': arrays[2], 'l': arrays[3],
+                                                  'm': arrays[4]})
         result = cur.execute('select * from pylite03').fetchnumpy()
         assert len(result) == 5, "Incorrect amount of columns"
         assert len(result['i']) == 20000, "Incorrect amount of rows"
@@ -62,27 +63,27 @@ class TestmonetdbeBase(TestCase):
         cur.create('pylite05', {'i': numpy.arange(1000)})
 
         # check that table was successfully created
-        result =monetdbe.connect().execute('SELECT MIN(i) AS minimum FROM pylite05', client=conn)
+        result = monetdbe.connect().execute('SELECT MIN(i) AS minimum FROM pylite05', client=conn)
         assert result['minimum'][0] == 0, "Incorrect result"
         # attempt to query the table from another client
         with pytest.raises(monetdbe.DatabaseError):
-           monetdbe.connect().execute('SELECT * FROM pylite05', client=conn2)
+            monetdbe.connect().execute('SELECT * FROM pylite05', client=conn2)
 
         # now commit the table
         monetdbe.connect().execute('COMMIT', client=conn)
         # query the table again from the other client, this time it should be there
-        result =monetdbe.connect().execute('SELECT MIN(i) AS minimum FROM pylite05', client=conn2)
+        result = monetdbe.connect().execute('SELECT MIN(i) AS minimum FROM pylite05', client=conn2)
         assert result['minimum'][0] == 0, "Incorrect result"
 
     def test_non_existent_table(self, ):
         # select from non-existent table
         with pytest.raises(monetdbe.DatabaseError):
-           monetdbe.connect().execute('select * from nonexistenttable')
+            monetdbe.connect().execute('select * from nonexistenttable')
 
     def test_invalid_connection_object(self):
         # invalid connection object
         with pytest.raises(TypeError):
-           monetdbe.connect().execute('select * from tables', client=33)
+            monetdbe.connect().execute('select * from tables', client=33)
 
     def test_invalid_colnames(self):
         # invalid colnames
