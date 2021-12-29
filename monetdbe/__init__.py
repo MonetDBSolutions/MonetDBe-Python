@@ -1,11 +1,3 @@
-from monetdbe.compat import (
-    create,
-    make_connection,
-    init,
-    insert,
-    shutdown,
-    sql
-)
 
 from monetdbe.converters import register_adapter
 from monetdbe.monetize import PrepareProtocol
