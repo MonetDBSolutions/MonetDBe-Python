@@ -18,14 +18,14 @@ jobs:
       matrix:
         include:
           - MONETDB_BRANCH: default
-            MONETDB_WIN_PREFIX: 83966
-            MONETDB_WIN_VERSION: 01d3e88859f6
+            MONETDB_WIN_PREFIX: 84056
+            MONETDB_WIN_VERSION: a19336b1e6fd
           - MONETDB_BRANCH: Jul2021
-            MONETDB_WIN_PREFIX: 83906
-            MONETDB_WIN_VERSION: 6b29387f74c9
+            MONETDB_WIN_PREFIX: 84054
+            MONETDB_WIN_VERSION: 6650381af78a
           - MONETDB_BRANCH: Jan2022
-            MONETDB_WIN_PREFIX: 83969
-            MONETDB_WIN_VERSION: 9d59d8f9560d
+            MONETDB_WIN_PREFIX: 84059
+            MONETDB_WIN_VERSION: c7bc6a69cf73
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
