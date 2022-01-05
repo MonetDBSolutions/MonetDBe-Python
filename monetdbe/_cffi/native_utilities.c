@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include "monetdb/monetdbe.h"
 
 void initialize_string_array_from_numpy(char** restrict output, size_t size, char* restrict numpy_string_input, size_t stride_length) {
@@ -7,7 +6,6 @@ void initialize_string_array_from_numpy(char** restrict output, size_t size, cha
         output[i] = numpy_string_input + i*stride_length;
     }
 }
-
 
 // The way to convert a numpy datetime to datetime struct is actually in numpy source code at multiarray/datetime.c.
 // 
@@ -37,7 +35,6 @@ typedef enum {
         NPY_FR_as = 13,         /* attoseconds */
         NPY_FR_GENERIC = 14     /* unbound units, can convert to anything */
 } NPY_DATETIMEUNIT;
-
 
 /*
  * Converts a substring given by 'str' and 'len' into
