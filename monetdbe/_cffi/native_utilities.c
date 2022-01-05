@@ -1,4 +1,6 @@
 #include <stddef.h>
+#include "monetdb/monetdbe.h"
+
 void initialize_string_array_from_numpy(char** restrict output, size_t size, char* restrict numpy_string_input, size_t stride_length) {
     // TODO: check for null values?
     for (size_t i = 0; i < size; i++) {

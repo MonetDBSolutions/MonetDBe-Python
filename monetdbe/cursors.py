@@ -7,7 +7,7 @@ from monetdbe.connection import Connection, Description
 from monetdbe.exceptions import ProgrammingError, InterfaceError
 from monetdbe.formatting import format_query, strip_split_and_clean, parameters_type
 from monetdbe.monetize import monet_identifier_escape
-from monetdbe._cffi.convert import supported_numpy_types
+from monetdbe.types import supported_numpy_types
 
 if TYPE_CHECKING:
     from monetdbe.row import Row

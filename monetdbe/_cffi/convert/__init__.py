@@ -11,6 +11,8 @@ from monetdbe.exceptions import ProgrammingError
 from monetdbe.pythonize import py_date, py_time, py_timestamp
 from monetdbe._cffi.branch import newer_then_jul2021
 
+from monetdbe.types import supported_numpy_types
+
 _logger = logging.getLogger()
 
 
@@ -50,7 +52,7 @@ class MonetdbTypeInfo(NamedTuple):
 
 
 inversable_type_infos: List[MonetdbTypeInfo] = [
-    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool), "bool", None, None),
+    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
     MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
     MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
     MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
@@ -81,20 +83,6 @@ numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type: i for i in
 monet_c_type_map: Mapping[int, MonetdbTypeInfo] = {i.c_type: i for i in
                                                    inversable_type_infos + monetdb_to_numpy_type_infos}
 
-supported_numpy_types: str = (
-    'b'  # boolean
-    'i'  # signed integer
-    'u'  # unsigned integer
-    'f'  # floating-point
-    # 'M'  # datetime
-    'U'  # Unicode
-    # c complex floating-point
-    # m timedelta
-    # O object
-    # S (byte-)string
-    # V void
-)
-
 
 def precision_warning(from_: int, to: int):
     if from_ == lib.monetdbe_int64_t and to in (lib.monetdbe_int32_t, lib.monetdbe_int16_t, lib.monetdbe_int8_t):
@@ -110,6 +98,9 @@ def precision_warning(from_: int, to: int):
 
 def numpy_monetdb_map(numpy_type: np.dtype):
     if numpy_type.kind == 'U':
+        # this is an odd one, the numpy type string includes the width. Also, we don't format
+        # monetdb string columns as fixed width numpy columns yet, so technically this type is
+        # non-reversable for now.
         return MonetdbTypeInfo(lib.monetdbe_str, "string", numpy_type, "char *", None, None)
     if numpy_type.kind == 'M':
         # TODO: another odd one
@@ -117,7 +108,7 @@ def numpy_monetdb_map(numpy_type: np.dtype):
 
     if numpy_type.kind in supported_numpy_types:  # type: ignore
         return numpy_type_map[numpy_type]
-    raise ProgrammingError("append() only support int and float family types")
+    raise ProgrammingError(f"append() called with unsupported type {numpy_type}")
 
 
 if newer_then_jul2021:

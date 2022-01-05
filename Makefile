@@ -1,9 +1,9 @@
 
 GITHUB_WORKSPACE=/build
-DOCKER_IMAGE= monetdb/dev-builds:Oct2020
 
-TEST_IMAGE = monetdb/dev-builds:Oct2020
-WHEEL_IMAGE = monetdb/dev-builds:Oct2020_manylinux 
+STABLE_BRANCH = Jul2021
+TEST_IMAGE = monetdb/dev-builds:$(STABLE_BRANCH)
+WHEEL_IMAGE = monetdb/dev-builds:$(STABLE_BRANCH)_manylinux
 
 
 all: test
@@ -25,13 +25,14 @@ test: venv/bin/pytest
 	venv/bin/pytest
 
 docker-wheels:
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.6"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.7"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.8"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.9"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.6"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.7"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.8"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.9"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.10"
 
 docker-test:
-	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/test.sh"
+	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/test.sh"
 
 docker-mypy:
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/mypy.sh"
@@ -90,6 +91,12 @@ twine: venv/bin/twine
 
 info: setup
 	venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
+
+venv/bin/ipython: venv/
+	venv/bin/pip install ipython
+
+ipython: venv/bin/ipython
+	venv/bin/ipython
 
 venv38/:
 	/opt/homebrew/Cellar/python@3.8/3.8.*/bin/python3.8 -m venv venv38

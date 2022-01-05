@@ -9,11 +9,8 @@ import numpy as np
 
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, MonetdbTypeInfo, \
-    precision_warning
-from monetdbe._cffi.convert.bind import prepare_bind
-from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng
-
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning
+from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng, prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
 
@@ -75,15 +72,15 @@ TypeInfo = namedtuple('TypeInfo', ('impl_type', 'sql_type', 'scale'))
 def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
     try:
         _type_info = type_info[parameter_nr]
-        if (_type_info.sql_type == 'decimal'):
+        if _type_info.sql_type == 'decimal':
             d = int(Decimal(data) * (Decimal(10) ** _type_info.scale))
-            if (_type_info.impl_type == 'bte'):
+            if _type_info.impl_type == 'bte':
                 prepared = monetdbe_decimal_to_bte(d)
-            elif (_type_info.impl_type == 'sht'):
+            elif _type_info.impl_type == 'sht':
                 prepared = monetdbe_decimal_to_sht(d)
-            elif (_type_info.impl_type == 'int'):
+            elif _type_info.impl_type == 'int':
                 prepared = monetdbe_decimal_to_int(d)
-            elif (_type_info.impl_type == 'lng'):
+            elif _type_info.impl_type == 'lng':
                 prepared = monetdbe_decimal_to_lng(d)
             else:
                 raise NotImplementedError("Unknown decimal implementation type")
@@ -251,6 +248,7 @@ class Internal:
         """
         Directly append an array structure
         """
+
         self._switch()
         n_columns = len(data)
         existing_columns = list(self.get_columns(schema=schema, table=table))
@@ -296,7 +294,7 @@ class Internal:
             elif type_info.numpy_type.kind == 'U':
                 # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.
                 v = np.char.encode(column_values).view('b').reshape((work_column.count, -1))
-                v = np.c_[v, np.zeros(work_column.count, dtype='b')]
+                v = np.c_[v, np.zeros(work_column.count, dtype=np.int8)]
                 stride_length = v.shape[1]
                 cffi_objects.append(v)
                 t = ffi.new('char*[]', work_column.count)
