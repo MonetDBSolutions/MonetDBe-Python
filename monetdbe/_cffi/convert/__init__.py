@@ -111,6 +111,9 @@ def precision_warning(from_: int, to: int):
 def numpy_monetdb_map(numpy_type: np.dtype):
     if numpy_type.kind == 'U':
         return MonetdbTypeInfo(lib.monetdbe_str, "string", numpy_type, "char *", None, None)
+    if numpy_type.kind == 'M':
+        # TODO: another odd one
+        return MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype(np.datetime64), "int64_t", None, None)
 
     if numpy_type.kind in supported_numpy_types:  # type: ignore
         return numpy_type_map[numpy_type]

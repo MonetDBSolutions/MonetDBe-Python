@@ -285,7 +285,15 @@ class Internal:
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
-            if type_info.numpy_type.kind == 'U':
+            if type_info.numpy_type.kind == 'M':
+                t = ffi.new('monetdbe_data_timestamp[]', work_column.count)
+                cffi_objects.append(t)
+                unit = np.datetime_data(column_values.dtype)[0].encode()
+                p = ffi.from_buffer("int64_t*", column_values)
+
+                lib.initialize_timestamp_array_from_numpy(self._monetdbe_database, t, work_column.count, p, unit)
+                work_column.data = t
+            elif type_info.numpy_type.kind == 'U':
                 # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.
                 v = np.char.encode(column_values).view('b').reshape((work_column.count, -1))
                 v = np.c_[v, np.zeros(work_column.count, dtype='b')]
@@ -298,7 +306,9 @@ class Internal:
                 lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length)
                 work_column.data = t
             else:
-                work_column.data = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
+                p = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
+                cffi_objects.append(p)
+                work_column.data = p
             work_columns[column_num] = work_column
             work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(),

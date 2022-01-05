@@ -50,3 +50,20 @@ CHARACHTER_LARGE_OBJECT = CLOB
 BINARY_LARGE_OBJECT = BLOB
 NUMERIC = DECIMAL
 DOUBLE_PRECISION = DOUBLE
+<<<<<<< HEAD
+=======
+
+supported_numpy_types: str = (
+    'b'  # boolean
+    'i'  # signed integer
+    'u'  # unsigned integer
+    'f'  # floating-point
+    'M'  # datetime
+    'U'  # Unicode
+    # c complex floating-point
+    # m timedelta
+    # O object
+    # S (byte-)string
+    # V void
+)
+>>>>>>> 3221fe0... numpy datetime seems to be working in append.

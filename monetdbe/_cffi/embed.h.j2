@@ -152,3 +152,4 @@ extern char* monetdbe_dump_database(monetdbe_database dbhdl, const char *backupf
 extern char* monetdbe_dump_table(monetdbe_database dbhdl, const char *schema_name, const char *table_name, const char *backupfile);
 
 extern void initialize_string_array_from_numpy(char** restrict output, size_t size, char* restrict numpy_string_input, size_t stride_length);
+extern void initialize_timestamp_array_from_numpy(monetdbe_database dbhdl, monetdbe_data_timestamp* restrict output, size_t size, int64_t* restrict numpy_datetime_input, char const *str);
