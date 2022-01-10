@@ -97,4 +97,3 @@ class TestDataFrame(TestCase):
         """
         result = df['d'].values.astype('datetime64[ms]')
         self.assertEqual(values.tolist(), result.tolist())
-
