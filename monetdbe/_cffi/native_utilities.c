@@ -1,8 +1,10 @@
 #include "monetdb/monetdbe.h"
 
-void initialize_string_array_from_numpy(char** restrict output, size_t size, char* restrict numpy_string_input, size_t stride_length) {
-    // TODO: check for null values?
-    for (size_t i = 0; i < size; i++) {
+void initialize_string_array_from_numpy(char** restrict output, size_t size, char* restrict numpy_string_input, size_t stride_length, bool* restrict mask) {
+    if (mask) for   (size_t i = 0; i < size; i++) {
+        output[i] = mask[i] ? NULL : numpy_string_input + i*stride_length;
+    }
+    else for        (size_t i = 0; i < size; i++) {
         output[i] = numpy_string_input + i*stride_length;
     }
 }

@@ -6,7 +6,6 @@ from decimal import Decimal
 from collections import namedtuple
 
 import numpy as np
-
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
 from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning
@@ -33,9 +32,12 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
         name = make_string(rcol.name)
         type_info = monet_c_type_map[rcol.type]
 
+        np_mask = np.ma.nomask  # type: ignore[attr-defined]
         # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
         if type_info.numpy_type.type == np.object_:
-            np_col: np.ndarray = np.array([extract(rcol, r) for r in range(result.nrows)])
+            values = [extract(rcol, r) for r in range(result.nrows)]
+            np_col: np.ndarray = np.array(values)
+            np_mask = np.array([v is None for v in values])
             if rcol.type == lib.monetdbe_str:
                 np_col = np_col.astype(str)
             elif rcol.type == lib.monetdbe_date:
@@ -49,12 +51,10 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
             c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=type_info.numpy_type)  # type: ignore
 
-        if type_info.null_value:
-            mask = np_col == type_info.null_value
-        else:
-            mask = np.ma.nomask  # type: ignore[attr-defined]
+        if np_mask is np.ma.nomask and type_info.null_value:  # type: ignore[attr-defined]
+            np_mask = np_col == type_info.null_value
 
-        masked: np.ndarray = np.ma.masked_array(np_col, mask=mask)
+        masked: np.ndarray = np.ma.masked_array(np_col, mask=np_mask)
 
         result_dict[name] = masked
     return result_dict
@@ -293,6 +293,8 @@ class Internal:
                 work_column.data = t
             elif type_info.numpy_type.kind == 'U':
                 # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.
+                m = ffi.from_buffer("bool*", column_values.mask) if np.ma.isMaskedArray(column_values) else 0  # type: ignore[attr-defined]
+                cffi_objects.append(m)
                 v = np.char.encode(column_values).view('b').reshape((work_column.count, -1))
                 v = np.c_[v, np.zeros(work_column.count, dtype=np.int8)]
                 stride_length = v.shape[1]
@@ -301,7 +303,7 @@ class Internal:
                 cffi_objects.append(t)
                 p = ffi.from_buffer("char*", v)
                 cffi_objects.append(p)
-                lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length)
+                lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length, ffi.cast("bool*", m))
                 work_column.data = t
             else:
                 p = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)

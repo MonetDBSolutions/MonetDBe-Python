@@ -4,6 +4,7 @@ from unittest import TestCase
 from math import isnan
 
 import numpy as np
+import numpy.ma as ma
 from pandas import DataFrame
 from monetdbe import connect, Timestamp
 
@@ -16,10 +17,11 @@ def connect_and_execute(values: List[Any], type: str) -> DataFrame:
         return cur.fetchdf()
 
 
-def connect_and_append(values: List[Any], type: str) -> DataFrame:
+def connect_and_append(values: List[Any], type: str, to_numpy=True) -> DataFrame:
     with connect(autocommit=True) as con:
         cur = con.execute(f"create table example(d {type})")
-        con.append(table='example', data={'d': np.array(values)})
+        input = np.array(values) if to_numpy else values
+        con.append(table='example', data={'d': input})
         cur.execute("select * from example")
         return cur.fetchdf()
 
@@ -70,6 +72,13 @@ class TestDataFrame(TestCase):
         values = ['asssssssssssssssss', 'iwwwwwwwwwwwwwww', 'éooooooooooooooooooooo']
         df = connect_and_append(values, 'string')
         self.assertEqual(values, list(df['d']))
+
+    def test_string_nil_append(self):
+        values = np.array(['asssssssssssssssss', 'iwwwwwwwwwwwwwww', None], dtype=np.str_)
+
+        masked = ma.masked_array(values, mask=[0, 0, 1])
+        df = connect_and_append(masked, 'string', False)
+        self.assertEqual(masked.tolist(), list(df['d'].replace({np.nan: None})))
 
     def test_varchar(self):
         values = ['a', 'aa', 'éooooooooooooooooooooo']

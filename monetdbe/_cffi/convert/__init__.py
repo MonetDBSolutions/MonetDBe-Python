@@ -141,7 +141,7 @@ else:
         """
         type_info = monet_c_type_map[rcol.type]
         col = ffi.cast(f"monetdbe_column_{type_info.c_string_type} *", rcol)
-        if col.is_null(col.data + r):
+        if col.is_null(col.data[r]):
             return None
         else:
             if type_info.py_converter:
