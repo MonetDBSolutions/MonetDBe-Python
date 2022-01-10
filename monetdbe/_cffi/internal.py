@@ -43,7 +43,7 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
             elif rcol.type == lib.monetdbe_time:
                 warn("Not converting column with type column since no proper numpy equivalent")
             elif rcol.type == lib.monetdbe_timestamp:
-                np_col = np_col.astype('datetime64[ns]')  # type: ignore
+                np_col = np_col.astype('datetime64[ms]')  # type: ignore
         else:
             buffer_size = result.nrows * type_info.numpy_type.itemsize  # type: ignore
             c_buffer = ffi.buffer(rcol.data, buffer_size)

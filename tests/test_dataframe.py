@@ -84,7 +84,17 @@ class TestDataFrame(TestCase):
     def test_datetime(self):
         values = np.array(['2001-01-01T12:00', '2002-02-03T13:56:03.172'], dtype='datetime64')
         values = list(values)
-        # TODO add cast string to numpy.datetime64
-        # TODO test for nat
         df = connect_and_append(values, 'timestamp')
         self.assertEqual(values, list(df['d']))
+
+    def test_datetime_nil(self):
+        values = np.array(['nat', '2002-02-03T13:56:03.172'], dtype='datetime64')
+        df = connect_and_append(values, 'timestamp')
+
+        """
+        NOTE: Unfortunately panda's only allows ns as unit of precision.
+        Hence we need to cast back to numpy to restore to ms precision.
+        """
+        result = df['d'].values.astype('datetime64[ms]')
+        self.assertEqual(values.tolist(), result.tolist())
+
