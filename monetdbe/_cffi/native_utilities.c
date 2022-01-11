@@ -369,9 +369,13 @@ void pandas_datetime_to_datetimestruct(npy_datetime dt, NPY_DATETIMEUNIT base, n
     }
 }
 
-void initialize_timestamp_array_from_numpy(monetdbe_database dbhdl, monetdbe_data_timestamp* restrict output, size_t size, int64_t* restrict numpy_datetime_input, char const *str) {
+void initialize_timestamp_array_from_numpy(
+    monetdbe_database dbhdl,
+    void* restrict output, const size_t size,
+    int64_t* restrict numpy_datetime_input, char const *unit_string,
+    const monetdbe_types type) {
 
-    NPY_DATETIMEUNIT base = parse_datetime_unit_from_string(str);
+    NPY_DATETIMEUNIT base = parse_datetime_unit_from_string(unit_string);
 
     // TODO: handle error
 
@@ -379,21 +383,46 @@ void initialize_timestamp_array_from_numpy(monetdbe_database dbhdl, monetdbe_dat
     for (size_t i = 0; i < size; i++) {
         npy_datetime dt = numpy_datetime_input[i];
         pandas_datetime_to_datetimestruct(dt, base, &out);
-        monetdbe_data_timestamp* t = &output[i];
 
-        if (out.year == NPY_DATETIME_NAT) {
-            // it is null
-            *t = *(monetdbe_data_timestamp*) monetdbe_null(dbhdl, monetdbe_timestamp);
-            continue;
+        monetdbe_data_timestamp*    ts  = NULL;
+        monetdbe_data_date*         d   = NULL;
+        monetdbe_data_time*         t   = NULL;
+
+        switch (type) {
+        case monetdbe_timestamp: {
+            ts  = &((monetdbe_data_timestamp*) output)[i];
+            d = &ts->date;
+            t = &ts->time;
+            break;
+        }
+        case monetdbe_date: {
+            d = &((monetdbe_data_date*) output)[i];
+            break;
+        }
+            // TODO error wrong type
         }
 
-        t->date.year = (short) out.year;
-        t->date.month = (unsigned char) out.month;
-        t->date.day = (unsigned char) out.day;
+        if (out.year == NPY_DATETIME_NAT) switch (type) {
+            // nil value
+            case monetdbe_timestamp: {
+                *ts = *(monetdbe_data_timestamp*) monetdbe_null(dbhdl, monetdbe_timestamp);
+                continue;
+            }
+            case monetdbe_date: {
+                *d = *(monetdbe_data_date*) monetdbe_null(dbhdl, monetdbe_date);
+                continue;
+            }
+        }
 
-        t->time.hours = (unsigned char) out.hour;
-        t->time.minutes = (unsigned char) out.min;
-        t->time.seconds = (unsigned char) out.sec;
-        t->time.ms = (unsigned int) (out.us / 1000);
+        d->year  = (short) out.year;
+        d->month = (unsigned char) out.month;
+        d->day   = (unsigned char) out.day;
+
+        if (t) {
+            t->hours     = (unsigned char) out.hour;
+            t->minutes   = (unsigned char) out.min;
+            t->seconds   = (unsigned char) out.sec;
+            t->ms        = (unsigned int) (out.us / 1000);
+        }
     }
 }

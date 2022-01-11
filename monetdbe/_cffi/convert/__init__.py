@@ -111,6 +111,10 @@ def numpy_monetdb_map(numpy_type: np.dtype):
     raise ProgrammingError(f"append() called with unsupported type {numpy_type}")
 
 
+def timestamp_to_date():
+    return MonetdbTypeInfo(lib.monetdbe_date, "date", np.dtype(np.datetime64), "int64_t", None, None)
+
+
 if newer_then_jul2021:
     def extract(rcol: monetdbe_column, r: int, text_factory: Optional[Callable[[str], Any]] = None):
         """

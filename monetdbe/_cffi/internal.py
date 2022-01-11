@@ -8,7 +8,7 @@ from collections import namedtuple
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning, timestamp_to_date
 from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng, prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
@@ -269,16 +269,23 @@ class Internal:
 
             # try to convert the values if types don't match
             if type_info.c_type != existing_type:
-                precision_warning(type_info.c_type, existing_type)
-                to_numpy_type = monet_c_type_map[existing_type].numpy_type
-                try:
-                    column_values = column_values.astype(to_numpy_type)
-                    type_info = numpy_monetdb_map(column_values.dtype)
-                except Exception as e:
-                    existing_type_string = monet_c_type_map[existing_type].c_string_type
-                    error = f"Can't convert '{type_info.c_string_type}' " \
-                            f"to type '{existing_type_string}' for column '{column_name}': {e} "
-                    raise ValueError(error)
+                if type_info.c_type == lib.monetdbe_timestamp and existing_type == lib.monetdbe_date and np.issubdtype(column_values.dtype, np.datetime64):
+                    """
+                    We are going to cast to a monetdbe_date and
+                    consider monetdbe_timestamp as a 'base type' to signal this.
+                    """
+                    type_info = timestamp_to_date()
+                else:
+                    precision_warning(type_info.c_type, existing_type)
+                    to_numpy_type = monet_c_type_map[existing_type].numpy_type
+                    try:
+                        column_values = column_values.astype(to_numpy_type)
+                        type_info = numpy_monetdb_map(column_values.dtype)
+                    except Exception as e:
+                        existing_type_string = monet_c_type_map[existing_type].c_string_type
+                        error = f"Can't convert '{type_info.c_string_type}' " \
+                                f"to type '{existing_type_string}' for column '{column_name}': {e} "
+                        raise ValueError(error)
 
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
@@ -289,7 +296,7 @@ class Internal:
                 unit = np.datetime_data(column_values.dtype)[0].encode()
                 p = ffi.from_buffer("int64_t*", column_values)
 
-                lib.initialize_timestamp_array_from_numpy(self._monetdbe_database, t, work_column.count, p, unit)
+                lib.initialize_timestamp_array_from_numpy(self._monetdbe_database, t, work_column.count, p, unit, existing_type)
                 work_column.data = t
             elif type_info.numpy_type.kind == 'U':
                 # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.

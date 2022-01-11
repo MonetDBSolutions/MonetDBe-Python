@@ -106,3 +106,10 @@ class TestDataFrame(TestCase):
         """
         result = df['d'].values.astype('datetime64[ms]')
         self.assertEqual(values.tolist(), result.tolist())
+
+    def test_date_nil(self):
+        values = np.array(['nat', '2002-02-03'], dtype='datetime64[D]')
+        df = connect_and_append(values, 'date')
+
+        result = df['d'].values.astype('datetime64[D]')
+        self.assertEqual(values.tolist(), result.tolist())
