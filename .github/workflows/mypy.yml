@@ -10,7 +10,7 @@ on:
 jobs:
   mypy:
     runs-on: ubuntu-20.04
-    container: monetdb/dev-builds:Oct2021
+    container: monetdb/dev-builds:Jul2021
     steps:
       -
         name: Checkout
