@@ -8,7 +8,7 @@ from collections import namedtuple
 import numpy as np
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning, timestamp_to_date
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning, timestamp_to_date, get_null_value
 from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng, prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
@@ -50,9 +50,7 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
             buffer_size = result.nrows * type_info.numpy_type.itemsize  # type: ignore
             c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=type_info.numpy_type)  # type: ignore
-
-        if np_mask is np.ma.nomask and type_info.null_value:  # type: ignore[attr-defined]
-            np_mask = np_col == type_info.null_value
+            np_mask = np_col == get_null_value(rcol)
 
         masked: np.ndarray = np.ma.masked_array(np_col, mask=np_mask)
 
