@@ -48,7 +48,7 @@ class MonetdbTypeInfo(NamedTuple):
     numpy_type: np.dtype
     c_string_type: str
     py_converter: Optional[Callable]
-    null_value: Optional[Union[int, float]]
+    null_value: Optional[Union[int, np.floating]]
 
 
 inversable_type_infos: List[MonetdbTypeInfo] = [
