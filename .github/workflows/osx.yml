@@ -10,6 +10,9 @@ on:
   workflow_dispatch:
 
 jobs:
+  #
+  ## This uses a homebrew bottle of the latest stable monetdb, which is jul2021 branch for now.
+  #
   osx-monetdb-brew:
     runs-on: macos-10.15
     steps:
@@ -20,6 +23,10 @@ jobs:
           name: monetdb-osx-brew
           path: /usr/local/Cellar/monetdb
 
+#
+## This builds monetdb from source, so we can build for multiple branches.
+## Disabled for now, since it slows down CI.
+#
 #  osx-monetdb-build:
 #    runs-on: macos-10.15
 #    strategy:
@@ -61,8 +68,8 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: [ "3.6", "3.7", "3.8", "3.9", "3.10"]
-        branch: [Jul2021] # default, , Jan2022]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        branch: [Jul2021]  # default, , Jan2022]
     needs: [osx-monetdb-brew]
     steps:
       -
@@ -74,7 +81,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2 
         with:
-          name: monetdb-osx-brew # ${{ matrix.branch }}
+          name: monetdb-osx-brew  # ${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb

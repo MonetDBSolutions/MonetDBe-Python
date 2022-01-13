@@ -25,10 +25,6 @@ case "$1" in
         VERSION=37
         PLATFORM="m"
         ;;
-    3.6)
-        VERSION=36
-        PLATFORM="m"
-        ;;
     *)
         echo "unsupposed argument"
         exit 1

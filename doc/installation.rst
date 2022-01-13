@@ -9,7 +9,7 @@ you need:
 
  * An up-to-date Linux, OSX or Windows, running on a 64-bit Intel compatible x86 architecture
  * pip ``>= 19.3``
- * Python ``>= 3.6``
+ * Python ``>= 3.10``
 
 to make sure you have a recent pip first upgrade pip::
 
