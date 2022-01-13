@@ -17,14 +17,14 @@ jobs:
         run: brew install bison monetdb
       - uses: actions/upload-artifact@v2
         with:
-          name: monetdb-osx-brew
+          name: osx-monetdb-brew
           path: /usr/local/Cellar/monetdb
 
 #  osx-monetdb-build:
 #    runs-on: macos-10.15
 #    strategy:
 #      matrix:
-#        branch: [default, Jul2021, Jan2022]
+#        branch: [Jul2021]
 #    steps:
 #      -
 #        name: brew packages
@@ -49,7 +49,6 @@ jobs:
 #            -DRINTEGRATION=OFF \
 #            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
 #          make install -j3
-#
 #      -
 #        uses: actions/upload-artifact@v2
 #        with:
@@ -62,19 +61,16 @@ jobs:
     strategy:
       matrix:
         python-version: [ "3.6", "3.7", "3.8", "3.9", "3.10"]
-        branch: [Jul2021] # default, , Jan2022]
+        branch: [Jul2021]
     needs: [osx-monetdb-brew]
     steps:
-      -
-        name: Print MONETDB_BRANCH to make sure it is set
-        run: echo $MONETDB_BRANCH
       -
         name: Checkout
         uses: actions/checkout@v2
       - 
         uses: actions/download-artifact@v2 
         with:
-          name: monetdb-osx-brew # ${{ matrix.branch }}
+          name: osx-monetdb-brew
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb
