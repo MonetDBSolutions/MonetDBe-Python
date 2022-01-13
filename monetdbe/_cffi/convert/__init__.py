@@ -52,30 +52,30 @@ class MonetdbTypeInfo(NamedTuple):
 
 
 inversable_type_infos: List[MonetdbTypeInfo] = [
-    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None, None),
-    MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None, np.iinfo(np.int8).min),  # type: ignore
-    MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None, np.iinfo(np.int16).min),  # type: ignore
-    MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None, np.iinfo(np.int32).min),  # type: ignore
-    MonetdbTypeInfo(lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None, np.iinfo(np.int64).min),  # type: ignore
-    MonetdbTypeInfo(lib.monetdbe_float, "real", np.dtype(np.float32), "float", py_float, np.finfo(np.float32).min),
-    MonetdbTypeInfo(lib.monetdbe_double, "float", np.dtype(np.float64), "double", py_float, np.finfo(np.float64).min),
+    MonetdbTypeInfo(lib.monetdbe_bool, "boolean", np.dtype(np.bool_), "bool", None),
+    MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.int8), "int8_t", None),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.int16), "int16_t", None),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.int32), "int32_t", None),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_int64_t, "bigint", np.dtype(np.int64), "int64_t", None),  # type: ignore
+    MonetdbTypeInfo(lib.monetdbe_float, "real", np.dtype(np.float32), "float", py_float),
+    MonetdbTypeInfo(lib.monetdbe_double, "float", np.dtype(np.float64), "double", py_float),
 ]
 
 # things that can have a mapping from numpy to monetdb but not back
 numpy_to_monetdb_type_infos: List[MonetdbTypeInfo] = [
-    MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.uint8), "int8_t", None, None),
-    MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.uint16), "int16_t", None, None),
-    MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.uint32), "int32_t", None, None),
-    MonetdbTypeInfo(lib.monetdbe_int64_t, "bigint", np.dtype(np.uint64), "int64_t", None, None),
+    MonetdbTypeInfo(lib.monetdbe_int8_t, "tinyint", np.dtype(np.uint8), "int8_t", None),
+    MonetdbTypeInfo(lib.monetdbe_int16_t, "smallint", np.dtype(np.uint16), "int16_t", None),
+    MonetdbTypeInfo(lib.monetdbe_int32_t, "int", np.dtype(np.uint32), "int32_t", None),
+    MonetdbTypeInfo(lib.monetdbe_int64_t, "bigint", np.dtype(np.uint64), "int64_t", None),
 ]
 
 # things that can have a mapping from monetdb to numpy but not back
 monetdb_to_numpy_type_infos: List[MonetdbTypeInfo] = [
-    MonetdbTypeInfo(lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string, None),
-    MonetdbTypeInfo(lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob, None),
-    MonetdbTypeInfo(lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date, None),
-    MonetdbTypeInfo(lib.monetdbe_time, "time", np.dtype('=O'), "time", py_time, None),
-    MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp, None),
+    MonetdbTypeInfo(lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string),
+    MonetdbTypeInfo(lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob),
+    MonetdbTypeInfo(lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date),
+    MonetdbTypeInfo(lib.monetdbe_time, "time", np.dtype('=O'), "time", py_time),
+    MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype('=O'), "timestamp", py_timestamp),
 ]
 
 numpy_type_map: Mapping[np.dtype, MonetdbTypeInfo] = {i.numpy_type: i for i in
@@ -101,11 +101,24 @@ def numpy_monetdb_map(numpy_type: np.dtype):
         # this is an odd one, the numpy type string includes the width. Also, we don't format
         # monetdb string columns as fixed width numpy columns yet, so technically this type is
         # non-reversable for now.
-        return MonetdbTypeInfo(lib.monetdbe_str, "string", numpy_type, "char *", None, None)
+        return MonetdbTypeInfo(lib.monetdbe_str, "string", numpy_type, "char *", None)
+    if numpy_type.kind == 'M':
+        # TODO: another odd one
+        return MonetdbTypeInfo(lib.monetdbe_timestamp, "timestamp", np.dtype(np.datetime64), "int64_t", None)
 
     if numpy_type.kind in supported_numpy_types:  # type: ignore
         return numpy_type_map[numpy_type]
     raise ProgrammingError(f"append() called with unsupported type {numpy_type}")
+
+
+def timestamp_to_date():
+    return MonetdbTypeInfo(lib.monetdbe_date, "date", np.dtype(np.datetime64), "int64_t", None)
+
+
+def get_null_value(rcol: monetdbe_column):
+    type_info = monet_c_type_map[rcol.type]
+    col = ffi.cast(f"monetdbe_column_{type_info.c_string_type} *", rcol)
+    return col.null_value
 
 
 if newer_then_jul2021:

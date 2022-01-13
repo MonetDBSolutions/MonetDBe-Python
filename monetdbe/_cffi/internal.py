@@ -6,10 +6,9 @@ from decimal import Decimal
 from collections import namedtuple
 
 import numpy as np
-
 from monetdbe._lowlevel import ffi, lib
 from monetdbe import exceptions
-from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning
+from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy_monetdb_map, precision_warning, timestamp_to_date, get_null_value
 from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng, prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
@@ -33,9 +32,12 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
         name = make_string(rcol.name)
         type_info = monet_c_type_map[rcol.type]
 
+        np_mask = np.ma.nomask  # type: ignore[attr-defined]
         # for non float/int we for now first make a numpy object array which we then convert to the right numpy type
         if type_info.numpy_type.type == np.object_:
-            np_col: np.ndarray = np.array([extract(rcol, r) for r in range(result.nrows)])
+            values = [extract(rcol, r) for r in range(result.nrows)]
+            np_col: np.ndarray = np.array(values)
+            np_mask = np.array([v is None for v in values])
             if rcol.type == lib.monetdbe_str:
                 np_col = np_col.astype(str)
             elif rcol.type == lib.monetdbe_date:
@@ -43,18 +45,14 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
             elif rcol.type == lib.monetdbe_time:
                 warn("Not converting column with type column since no proper numpy equivalent")
             elif rcol.type == lib.monetdbe_timestamp:
-                np_col = np_col.astype('datetime64[ns]')  # type: ignore
+                np_col = np_col.astype('datetime64[ms]')  # type: ignore
         else:
             buffer_size = result.nrows * type_info.numpy_type.itemsize  # type: ignore
             c_buffer = ffi.buffer(rcol.data, buffer_size)
             np_col = np.frombuffer(c_buffer, dtype=type_info.numpy_type)  # type: ignore
+            np_mask = np_col == get_null_value(rcol)
 
-        if type_info.null_value:
-            mask = np_col == type_info.null_value
-        else:
-            mask = np.ma.nomask  # type: ignore[attr-defined]
-
-        masked: np.ndarray = np.ma.masked_array(np_col, mask=mask)
+        masked: np.ndarray = np.ma.masked_array(np_col, mask=np_mask)
 
         result_dict[name] = masked
     return result_dict
@@ -248,7 +246,6 @@ class Internal:
         """
         Directly append an array structure
         """
-
         self._switch()
         n_columns = len(data)
         existing_columns = list(self.get_columns(schema=schema, table=table))
@@ -259,8 +256,9 @@ class Internal:
             raise exceptions.ProgrammingError(error)
 
         work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
+        work_objs = []
         # cffi_objects assists to keep all in-memory native data structure alive during the execution of this call
-        cffi_objects = []
+        cffi_objects = list()
         for column_num, (column_name, existing_type) in enumerate(existing_columns):
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
@@ -268,22 +266,39 @@ class Internal:
 
             # try to convert the values if types don't match
             if type_info.c_type != existing_type:
-                precision_warning(type_info.c_type, existing_type)
-                to_numpy_type = monet_c_type_map[existing_type].numpy_type
-                try:
-                    column_values = column_values.astype(to_numpy_type)
-                    type_info = numpy_monetdb_map(column_values.dtype)
-                except Exception as e:
-                    existing_type_string = monet_c_type_map[existing_type].c_string_type
-                    error = f"Can't convert '{type_info.c_string_type}' " \
-                            f"to type '{existing_type_string}' for column '{column_name}': {e} "
-                    raise ValueError(error)
+                if type_info.c_type == lib.monetdbe_timestamp and existing_type == lib.monetdbe_date and np.issubdtype(column_values.dtype, np.datetime64):
+                    """
+                    We are going to cast to a monetdbe_date and
+                    consider monetdbe_timestamp as a 'base type' to signal this.
+                    """
+                    type_info = timestamp_to_date()
+                else:
+                    precision_warning(type_info.c_type, existing_type)
+                    to_numpy_type = monet_c_type_map[existing_type].numpy_type
+                    try:
+                        column_values = column_values.astype(to_numpy_type)
+                        type_info = numpy_monetdb_map(column_values.dtype)
+                    except Exception as e:
+                        existing_type_string = monet_c_type_map[existing_type].c_string_type
+                        error = f"Can't convert '{type_info.c_string_type}' " \
+                                f"to type '{existing_type_string}' for column '{column_name}': {e} "
+                        raise ValueError(error)
 
             work_column.type = type_info.c_type
             work_column.count = column_values.shape[0]
             work_column.name = ffi.new('char[]', column_name.encode())
-            if type_info.numpy_type.kind == 'U':
+            if type_info.numpy_type.kind == 'M':
+                t = ffi.new('monetdbe_data_timestamp[]', work_column.count)
+                cffi_objects.append(t)
+                unit = np.datetime_data(column_values.dtype)[0].encode()
+                p = ffi.from_buffer("int64_t*", column_values)
+
+                lib.initialize_timestamp_array_from_numpy(self._monetdbe_database, t, work_column.count, p, unit, existing_type)
+                work_column.data = t
+            elif type_info.numpy_type.kind == 'U':
                 # first massage the numpy array of unicode into a matrix of null terminated rows of bytes.
+                m = ffi.from_buffer("bool*", column_values.mask) if np.ma.isMaskedArray(column_values) else 0  # type: ignore[attr-defined]
+                cffi_objects.append(m)
                 v = np.char.encode(column_values).view('b').reshape((work_column.count, -1))
                 v = np.c_[v, np.zeros(work_column.count, dtype=np.int8)]
                 stride_length = v.shape[1]
@@ -292,12 +307,14 @@ class Internal:
                 cffi_objects.append(t)
                 p = ffi.from_buffer("char*", v)
                 cffi_objects.append(p)
-                lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length)
+                lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length, ffi.cast("bool*", m))
                 work_column.data = t
             else:
-                work_column.data = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
+                p = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
+                cffi_objects.append(p)
+                work_column.data = p
             work_columns[column_num] = work_column
-            cffi_objects.append(work_column)
+            work_objs.append(work_column)
         check_error(lib.monetdbe_append(self._monetdbe_database, schema.encode(),
                                         table.encode(), work_columns, n_columns))
 

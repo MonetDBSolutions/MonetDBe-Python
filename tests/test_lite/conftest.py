@@ -7,7 +7,7 @@ import monetdbe
 @pytest.fixture(scope="function")
 def monetdbe_empty_cursor(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
-    connection = monetdbe.make_connection(test_dbfarm)
+    connection = monetdbe.connect(test_dbfarm)
 
     def finalizer():
         if tmp_path.is_dir():
@@ -23,7 +23,7 @@ def monetdbe_empty_cursor(request, tmp_path):
 def monetdbe_cursor(request, tmp_path):
     test_dbfarm = tmp_path.resolve().as_posix()
 
-    connection = monetdbe.make_connection(test_dbfarm)
+    connection = monetdbe.connect(test_dbfarm)
 
     def finalizer():
         if tmp_path.is_dir():

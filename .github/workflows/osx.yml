@@ -68,13 +68,10 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: [ "3.6", "3.7", "3.8", "3.9", "3.10"]
         branch: [Jul2021]  # default, , Jan2022]
     needs: [osx-monetdb-brew]
     steps:
-      -
-        name: Print MONETDB_BRANCH to make sure it is set
-        run: echo $MONETDB_BRANCH
       -
         name: Checkout
         uses: actions/checkout@v2

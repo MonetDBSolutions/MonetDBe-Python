@@ -4,6 +4,7 @@ from unittest import TestCase
 from math import isnan
 
 import numpy as np
+import numpy.ma as ma
 from pandas import DataFrame
 from monetdbe import connect, Timestamp
 
@@ -16,10 +17,11 @@ def connect_and_execute(values: List[Any], type: str) -> DataFrame:
         return cur.fetchdf()
 
 
-def connect_and_append(values: List[Any], type: str) -> DataFrame:
+def connect_and_append(values: List[Any], type: str, to_numpy=True) -> DataFrame:
     with connect(autocommit=True) as con:
         cur = con.execute(f"create table example(d {type})")
-        con.append(table='example', data={'d': np.array(values)})
+        input = np.array(values) if to_numpy else values
+        con.append(table='example', data={'d': input})
         cur.execute("select * from example")
         return cur.fetchdf()
 
@@ -71,6 +73,13 @@ class TestDataFrame(TestCase):
         df = connect_and_append(values, 'string')
         self.assertEqual(values, list(df['d']))
 
+    def test_string_nil_append(self):
+        values = np.array(['asssssssssssssssss', 'iwwwwwwwwwwwwwww', None], dtype=np.str_)
+
+        masked = ma.masked_array(values, mask=[0, 0, 1])
+        df = connect_and_append(masked, 'string', False)
+        self.assertEqual(masked.tolist(), list(df['d'].replace({np.nan: None})))
+
     def test_varchar(self):
         values = ['a', 'aa', 'éooooooooooooooooooooo']
         df = connect_and_execute(values, 'string')
@@ -81,3 +90,26 @@ class TestDataFrame(TestCase):
         df = connect_and_execute(values, 'uuid')
         self.assertEqual(values, list(df['d']))
 
+    def test_datetime(self):
+        values = np.array(['2001-01-01T12:00', '2002-02-03T13:56:03.172'], dtype='datetime64')
+        values = list(values)
+        df = connect_and_append(values, 'timestamp')
+        self.assertEqual(values, list(df['d']))
+
+    def test_datetime_nil(self):
+        values = np.array(['nat', '2002-02-03T13:56:03.172'], dtype='datetime64')
+        df = connect_and_append(values, 'timestamp')
+
+        """
+        NOTE: Unfortunately panda's only allows ns as unit of precision.
+        Hence we need to cast back to numpy to restore to ms precision.
+        """
+        result = df['d'].values.astype('datetime64[ms]')
+        self.assertEqual(values.tolist(), result.tolist())
+
+    def test_date_nil(self):
+        values = np.array(['nat', '2002-02-03'], dtype='datetime64[D]')
+        df = connect_and_append(values, 'date')
+
+        result = df['d'].values.astype('datetime64[D]')
+        self.assertEqual(values.tolist(), result.tolist())

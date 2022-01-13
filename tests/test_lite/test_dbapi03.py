@@ -16,7 +16,7 @@ class TestShutdown:
         cursor.commit()
         context.connection.close()
 
-        context.connection = monetdbe.make_connection(context.dbfarm)
+        context.connection = monetdbe.connect(context.dbfarm)
         cursor = context.connection.cursor()
         cursor.execute('SELECT * FROM integers')
         assert result == [(0,), (1,), (2,)], "Incorrect result returned"
@@ -32,7 +32,7 @@ class TestShutdown:
         assert result == [(0,), (1,), (2,)], "Incorrect result returned"
         context.connection.close()
 
-        context.connection = monetdbe.make_connection(context.dbfarm)
+        context.connection = monetdbe.connect(context.dbfarm)
         cursor = context.connection.cursor()
         with pytest.raises(monetdbe.DatabaseError):
             cursor.execute('SELECT * FROM integers')
@@ -49,7 +49,7 @@ class TestShutdown:
             assert result == [(5,)], "Incorrect result returned"
             context.connection.close()
 
-            context.connection = monetdbe.make_connection(context.dbfarm)
+            context.connection = monetdbe.connect(context.dbfarm)
             connection = context.connection
             connection.set_autocommit(True)
             cursor = connection.cursor()

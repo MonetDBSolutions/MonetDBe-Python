@@ -33,9 +33,6 @@ import numpy as np
 import pandas as pd
 
 import monetdbe as monetdbe
-from monetdbe._cffi.branch import monetdb_branch
-
-OCT2020 = monetdb_branch == "Oct2020"
 
 
 class RegressionTests(unittest.TestCase):
@@ -529,7 +526,6 @@ class TestMonetDBeRegressions(unittest.TestCase):
         print(tbl)
         conn.close()
 
-    @unittest.skipIf(OCT2020, "This issue was not fixed on Oct2020")
     def test_issue_136_bigint_result(self):
         con = monetdbe.connect(':memory:')
         cur = con.execute("""

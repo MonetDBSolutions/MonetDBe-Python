@@ -31,7 +31,7 @@ else:
 
 setup(
     name="monetdbe",
-    version="0.10.1",
+    version="0.11",
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",

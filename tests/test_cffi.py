@@ -89,6 +89,9 @@ class TestCffi(unittest.TestCase):
             con.cursor().insert(table='test', values=data)
 
     def test_append_blend(self):
+        """
+        numpy.datetime64 is now supported.
+        """
         with connect() as con:
             con.execute("CREATE TABLE test (i int, f float, s string, ts timestamp)")
             con.execute(
@@ -99,9 +102,11 @@ class TestCffi(unittest.TestCase):
             )
 
             data = con.execute("select * from test").fetchnumpy()
-            with self.assertRaises(con.ProgrammingError):
-                con._internal.append(schema='sys', table='test', data=data)
+
+            con._internal.append(schema='sys', table='test', data=data)
             con.cursor().insert(table='test', values=data)
+
+            data = con.execute("select * from test").fetchnumpy()
 
     def test_get_columns(self):
         with connect() as con:
