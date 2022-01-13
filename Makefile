@@ -1,9 +1,9 @@
 
 GITHUB_WORKSPACE=/build
-DOCKER_IMAGE= monetdb/dev-builds:Oct2020
 
-TEST_IMAGE = monetdb/dev-builds:Oct2020
-WHEEL_IMAGE = monetdb/dev-builds:Oct2020_manylinux 
+STABLE_BRANCH = Jul2021
+TEST_IMAGE = monetdb/dev-builds:$(STABLE_BRANCH)
+WHEEL_IMAGE = monetdb/dev-builds:$(STABLE_BRANCH)_manylinux
 
 
 all: test
@@ -25,13 +25,14 @@ test: venv/bin/pytest
 	venv/bin/pytest
 
 docker-wheels:
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.7"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.8"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.9"
-	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/make_wheel.sh 3.10"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.6"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.7"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.8"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.9"
+	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${WHEEL_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/make_wheel.sh 3.10"
 
 docker-test:
-	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/test.sh"
+	docker run -ti -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); MONETDB_BRANCH=$(STABLE_BRANCH) scripts/test.sh"
 
 docker-mypy:
 	docker run -v `pwd`:$(GITHUB_WORKSPACE) ${TEST_IMAGE} sh -c "cd $(GITHUB_WORKSPACE); scripts/mypy.sh"
@@ -110,9 +111,9 @@ osx-m1-all-wheels: venv38/ venv39/ venv310/
 	venv38/bin/pip install --upgrade pip wheel setuptools build
 	venv39/bin/pip install --upgrade pip wheel setuptools build
 	venv310/bin/pip install --upgrade pip wheel setuptools build
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/Users/gijs/opt/monetdb/include -L/Users/gijs/opt/monetdb/lib" venv38/bin/python -m build
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/Users/gijs/opt/monetdb/include -L/Users/gijs/opt/monetdb/lib" venv39/bin/python -m build
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/Users/gijs/opt/monetdb/include -L/Users/gijs/opt/monetdb/lib" venv310/bin/python -m build
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv38/bin/python -m build
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv39/bin/python -m build
+	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv310/bin/python -m build
 
 osx-m1-wheel: venv/
 	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv/bin/python -m build
