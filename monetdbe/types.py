@@ -56,7 +56,7 @@ supported_numpy_types: str = (
     'i'  # signed integer
     'u'  # unsigned integer
     'f'  # floating-point
-    # 'M'  # datetime
+    'M'  # datetime
     'U'  # Unicode
     # c complex floating-point
     # m timedelta
