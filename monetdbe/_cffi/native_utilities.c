@@ -1,3 +1,19 @@
+/* MANDETORY NUMPY COPYRIGHT AND LICENSE NOTICE:
+Copyright (c) 2005-2022, NumPy Developers.
+All rights reserved.
+
+Some of the code in this file is derived from NumPy 1.22. See NUMPY_LICENSE.txt
+*/
+
+/* MANDETORY PANDAS COPYRIGHT AND LICENSE NOTICE:
+Copyright (c) 2008-2011, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team
+All rights reserved.
+
+Copyright (c) 2011-2022, Open source contributors.
+
+Some of the code in this file is derived from NumPy 1.3.5. See PANDAS_LICENSE.txt
+*/
+
 #include "monetdb/monetdbe.h"
 
 void initialize_string_array_from_numpy(char** restrict output, size_t size, char* restrict numpy_string_input, size_t stride_length, bool* restrict mask) {
@@ -8,12 +24,6 @@ void initialize_string_array_from_numpy(char** restrict output, size_t size, cha
         output[i] = numpy_string_input + i*stride_length;
     }
 }
-
-// The way to convert a numpy datetime to datetime struct is actually in numpy source code at multiarray/datetime.c.
-// 
-/*
- * Converts a datetime based on the given metadata into a datetimestruct
- */
 
 /* The FR in the unit names stands for frequency */
 typedef enum {
@@ -38,6 +48,13 @@ typedef enum {
         NPY_FR_GENERIC = 14     /* unbound units, can convert to anything */
 } NPY_DATETIMEUNIT;
 
+typedef struct {
+        int64_t year;
+        int32_t month, day, hour, min, sec, us, ps, as;
+} npy_datetimestruct; // from numpy:ndarraytypes.h
+
+typedef int64_t npy_datetime; // from numpy:npy_common.h
+
 /*
  * Converts a substring given by 'str' and 'len' into
  * a date time unit enum value. The 'metastr' parameter
@@ -46,7 +63,7 @@ typedef enum {
  * Returns NPY_DATETIMEUNIT on success, NPY_FR_ERROR on failure.
  */
 static NPY_DATETIMEUNIT
-parse_datetime_unit_from_string(char const *str)
+parse_datetime_unit_from_string(char const *str) // from numpy:datetime.c.
 {
     size_t len = strlen(str);
     /* Use switch statements so the compiler can make it fast */
@@ -96,18 +113,11 @@ parse_datetime_unit_from_string(char const *str)
     return -1;
 }
 
-typedef struct {
-        int64_t year;
-        int32_t month, day, hour, min, sec, us, ps, as;
-} npy_datetimestruct;
-
-typedef int64_t npy_datetime;
-
 /*
  * Returns 1 if the given year is a leap year, 0 otherwise.
  */
 static int
-is_leapyear(int64_t year)
+is_leapyear(int64_t year) // from numpy:datetime.c
 {
     return (year & 0x3) == 0 && /* year % 4 == 0 */
            ((year % 100) != 0 ||
@@ -121,7 +131,7 @@ is_leapyear(int64_t year)
  * for subsequent calls to this command - it is able to deduce that `*d >= 0`.
  */
 static inline
-int64_t extract_unit_64(int64_t *d, int64_t unit) {
+int64_t extract_unit_64(int64_t *d, int64_t unit) { // from numpy:datetime.c
     assert(unit > 0);
     int64_t div = *d / unit;
     int64_t mod = *d % unit;
@@ -135,7 +145,7 @@ int64_t extract_unit_64(int64_t *d, int64_t unit) {
 }
 
 static int64_t
-days_to_yearsdays(int64_t *days_)
+days_to_yearsdays(int64_t *days_) // from numpy:datetime.c
 {
     const int64_t days_per_400years = (400*365 + 100 - 4 + 1);
     /* Adjust so it's relative to the year 2000 (divisible by 400) */
@@ -164,7 +174,7 @@ days_to_yearsdays(int64_t *days_)
 }
 
 /* Days per month, regular year and leap year */
-int _days_per_month_table[2][12] = {
+int _days_per_month_table[2][12] = { // from numpy:datetime.c
     { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
     { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
@@ -174,7 +184,7 @@ int _days_per_month_table[2][12] = {
  * offset from 1970.
  */
 static void
-set_datetimestruct_days(int64_t days, npy_datetimestruct *dts)
+set_datetimestruct_days(int64_t days, npy_datetimestruct *dts) // from numpy:datetime.c
 {
     int *month_lengths, i;
 
@@ -194,14 +204,12 @@ set_datetimestruct_days(int64_t days, npy_datetimestruct *dts)
 }
 
 /*
- * Port numpy#13188 https://github.com/numpy/numpy/pull/13188/
- *
  * Computes the python `ret, d = divmod(d, unit)`.
  *
  * Note that GCC is smart enough at -O2 to eliminate the `if(*d < 0)` branch
  * for subsequent calls to this command - it is able to deduce that `*d >= 0`.
  */
-int64_t extract_unit(npy_datetime *d, npy_datetime unit) {
+int64_t extract_unit(npy_datetime *d, npy_datetime unit) { // from pandas:np_datetime.c
     assert(unit > 0);
     int64_t div = *d / unit;
     int64_t mod = *d % unit;
@@ -215,12 +223,12 @@ int64_t extract_unit(npy_datetime *d, npy_datetime unit) {
 }
 
 /* The special not-a-time (NaT) value */
-#define NPY_MAX_INT64 9223372036854775807L
-#define NPY_MIN_INT64 (-NPY_MAX_INT64 - 1L)
-#define NPY_DATETIME_NAT NPY_MIN_INT64
+#define NPY_MAX_INT64 9223372036854775807L // from numpy:npy_commons.h
+#define NPY_MIN_INT64 (-NPY_MAX_INT64 - 1L) // from numpy:npy_commons.h
+#define NPY_DATETIME_NAT NPY_MIN_INT64 // from numpy:ndarraytypes.h
 
 static
-void pandas_datetime_to_datetimestruct(npy_datetime dt, NPY_DATETIMEUNIT base, npy_datetimestruct *out) {
+void pandas_datetime_to_datetimestruct(npy_datetime dt, NPY_DATETIMEUNIT base, npy_datetimestruct *out) { // from pandas:np_datetime.c
     int64_t perday;
 
 
