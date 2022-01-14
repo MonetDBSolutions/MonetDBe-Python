@@ -30,10 +30,12 @@ case "$1" in
         exit 1
 esac
 
+ARCH=${2:-manylinux2014_x86_64}
+
 TARGET=cp${VERSION}-cp${VERSION}${PLATFORM}
 
 /opt/python/${TARGET}/bin/pip install --upgrade pip wheel build
 
 /opt/python/${TARGET}/bin/pyproject-build -o ${WORKDIR}
 
-auditwheel repair --plat manylinux2014_x86_64 -w ${OUTPUT} ${WORKDIR}/*.whl
+auditwheel repair --plat ${ARCH} -w ${OUTPUT} ${WORKDIR}/*.whl
