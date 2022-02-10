@@ -40,6 +40,7 @@ class Connection:
                  username: Optional[str] = None,
                  password: Optional[str] = None,
                  port: Optional[int] = None,
+                 usock: Optional[Path] = None
                  ):
         """
         Args:
@@ -69,7 +70,7 @@ class Connection:
 
         check_if_we_can_import_lowlevel()
 
-        if uri or port or username or password or logging:
+        if uri or username or password or logging:
             raise NotImplemented
 
         if not check_same_thread:
@@ -89,6 +90,11 @@ class Connection:
         else:
             raise TypeError
 
+        if not usock:
+            usock = None
+        elif isinstance(usock, str):
+            usock = Path(usock).resolve()
+
         self.result: Optional[monetdbe_result] = None
         self.row_factory: Optional[Type['Row']] = None
         self.text_factory: Optional[Callable[[str], Any]] = None
@@ -102,7 +108,9 @@ class Connection:
             memorylimit=memorylimit,
             nr_threads=nr_threads,
             querytimeout=querytimeout,
-            sessiontimeout=timeout
+            sessiontimeout=timeout,
+            mapi_server_port=port,
+            mapi_server_usock=usock
         )
 
         self.set_autocommit(autocommit)

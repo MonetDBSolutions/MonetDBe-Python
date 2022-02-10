@@ -124,7 +124,9 @@ class Internal:
             querytimeout: int = 0,
             sessiontimeout: int = 0,
             nr_threads: int = 0,
-            have_hge: bool = False
+            have_hge: bool = False,
+            mapi_server_usock: Optional[Path] = None,
+            mapi_server_port: Optional[int] = None,
     ):
         self._connection = connection
         self.dbdir = dbdir
@@ -133,6 +135,8 @@ class Internal:
         self.sessiontimeout = sessiontimeout
         self.nr_threads = nr_threads
         self.have_hge = have_hge
+        self.mapi_server_usock = mapi_server_usock
+        self.mapi_server_port = mapi_server_port
         self._switch()
         self._monetdbe_database = self.open()
 
@@ -174,6 +178,30 @@ class Internal:
         p_options.querytimeout = self.querytimeout
         p_options.sessiontimeout = self.sessiontimeout
         p_options.nr_threads = self.nr_threads
+        p_options.mapi_server = ffi.NULL
+
+        cffi_objects = list()  # keep weak references to cffi objects alive
+
+        def intialize_mapi_server_option():
+            _mapi_server = ffi.new("monetdbe_mapi_server *")
+            p_options.mapi_server = _mapi_server
+            cffi_objects.append(_mapi_server)
+            p_options.mapi_server.port = ffi.NULL
+            p_options.mapi_server.usock = ffi.NULL
+
+        if self.mapi_server_port:
+            if not p_options.mapi_server:
+                intialize_mapi_server_option()
+            _mapi_server_port = ffi.new("char[]", str(self.mapi_server_port).encode())
+            p_options.mapi_server.port = _mapi_server_port
+            cffi_objects.append(_mapi_server_port)
+
+        if self.mapi_server_usock:
+            if not p_options.mapi_server:
+                intialize_mapi_server_option()
+            _mapi_server_usock = ffi.new("char[]", str(self.mapi_server_usock.resolve().absolute()).encode())
+            p_options.mapi_server.usock = _mapi_server_usock
+            cffi_objects.append(_mapi_server_usock)
 
         result_code = lib.monetdbe_open(p_monetdbe_database, url, p_options)
         connection = p_monetdbe_database[0]
@@ -257,8 +285,7 @@ class Internal:
 
         work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
         work_objs = []
-        # cffi_objects assists to keep all in-memory native data structure alive during the execution of this call
-        cffi_objects = list()
+        cffi_objects = list()  # keep weak references to cffi objects alive
         for column_num, (column_name, existing_type) in enumerate(existing_columns):
             column_values = data[column_name]
             work_column = ffi.new('monetdbe_column *')
