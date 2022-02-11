@@ -125,6 +125,7 @@ class Internal:
             sessiontimeout: int = 0,
             nr_threads: int = 0,
             have_hge: bool = False,
+            mapi_server_host: Optional[str] = None,
             mapi_server_usock: Optional[Path] = None,
             mapi_server_port: Optional[int] = None,
     ):
@@ -135,6 +136,7 @@ class Internal:
         self.sessiontimeout = sessiontimeout
         self.nr_threads = nr_threads
         self.have_hge = have_hge
+        self.mapi_server_host = mapi_server_host
         self.mapi_server_usock = mapi_server_usock
         self.mapi_server_port = mapi_server_port
         self._switch()
@@ -186,10 +188,18 @@ class Internal:
             _mapi_server = ffi.new("monetdbe_mapi_server *")
             p_options.mapi_server = _mapi_server
             cffi_objects.append(_mapi_server)
+            p_options.mapi_server.host = ffi.NULL
             p_options.mapi_server.port = ffi.NULL
             p_options.mapi_server.usock = ffi.NULL
 
-        if self.mapi_server_port:
+        if self.mapi_server_host:
+            if not p_options.mapi_server:
+                intialize_mapi_server_option()
+            _mapi_server_host = ffi.new("char[]", self.mapi_server_host.encode())
+            p_options.mapi_server.host = _mapi_server_host
+            cffi_objects.append(_mapi_server_host)
+
+        if self.mapi_server_port or (self.mapi_server_port == 0):
             if not p_options.mapi_server:
                 intialize_mapi_server_option()
             _mapi_server_port = ffi.new("char[]", str(self.mapi_server_port).encode())

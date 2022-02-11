@@ -39,6 +39,7 @@ class Connection:
                  logging: Optional[Path] = None,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
+                 host: Optional[str] = None,
                  port: Optional[int] = None,
                  usock: Optional[Path] = None
                  ):
@@ -109,6 +110,7 @@ class Connection:
             nr_threads=nr_threads,
             querytimeout=querytimeout,
             sessiontimeout=timeout,
+            mapi_server_host=host,
             mapi_server_port=port,
             mapi_server_usock=usock
         )
