@@ -333,6 +333,10 @@ class Connection:
         self._check()
         self._internal.append(table, data, schema)  # type: ignore[union-attr]
 
+    def get_port(self) -> int:
+        self._check()
+        return self._internal.get_port()
+
     # these are required by the python DBAPI
     Warning = exceptions.Warning
     Error = exceptions.Error
