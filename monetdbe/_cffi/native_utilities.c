@@ -11,7 +11,7 @@ All rights reserved.
 
 Copyright (c) 2011-2022, Open source contributors.
 
-Some of the code in this file is derived from NumPy 1.3.5. See PANDAS_LICENSE.txt
+Some of the code in this file is derived from Pandas 1.3.5. See PANDAS_LICENSE.txt
 */
 
 #include "monetdb/monetdbe.h"
