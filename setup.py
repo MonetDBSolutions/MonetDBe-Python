@@ -13,6 +13,7 @@ tests_require = [
     'types-pkg_resources',
     'types-Jinja2',
     'typing-extensions',
+    'pymonetdb',
 ]
 
 extras_require = {

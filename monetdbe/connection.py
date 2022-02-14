@@ -333,7 +333,7 @@ class Connection:
         self._check()
         self._internal.append(table, data, schema)  # type: ignore[union-attr]
 
-    def get_port(self) -> int:
+    def get_port(self):
         self._check()
         return self._internal.get_port()
 

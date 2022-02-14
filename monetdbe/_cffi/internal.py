@@ -396,13 +396,14 @@ class Internal:
             type_ = columns_p[0][i].type
             yield name, type_
 
-    def get_port(self) -> int:
+    def get_port(self):
         if self.mapi_server_host == "none":
             return None
         if self.mapi_server_host or self.mapi_server_port or self.mapi_server_usock:
             return int(ffi.string((lib.monetdbe_get_mapi_port())).decode())
 
         return None
+
 
 from monetdbe._cffi.branch import newer_then_jul2021
 if not newer_then_jul2021:
