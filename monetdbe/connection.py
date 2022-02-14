@@ -335,7 +335,7 @@ class Connection:
 
     def get_port(self)-> Optional[int]:
         self._check()
-        return self._internal.get_port() if self._internal else None
+        return self._internal.get_port()  # type: ignore[union-attr]
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning
