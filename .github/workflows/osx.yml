@@ -68,7 +68,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        branch: [Jan2022]
+        branch: [default]
     needs: [osx-monetdb-brew]
     steps:
       -
