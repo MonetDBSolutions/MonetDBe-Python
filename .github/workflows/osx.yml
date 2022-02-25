@@ -39,7 +39,7 @@ jobs:
 
       -
         name: download MonetDB
-        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
+        run: curl https://www.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
       -
         name: extract MonetDB
         run: tar jxvf ${{ matrix.branch }}.tar.bz2
