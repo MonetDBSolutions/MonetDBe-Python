@@ -5,7 +5,10 @@ import pymonetdb  # type: ignore
 
 class TestMapi(unittest.TestCase):
     def test_mapi(self):
-        with monetdbe.connect(autocommit=True, host="localhost", port=0) as con:
+        with monetdbe.connect(autocommit=True) as con:
+            con.execute("CREATE TABLE IF NOT EXISTS test (x,y) AS VALUES (10,'foo'), (0, 'bar'), (20, 'baz'), (NULL,NULL);")
+
+        with monetdbe.connect(autocommit=True, host="localhost", port=50000) as con:
             con.execute("CREATE TABLE IF NOT EXISTS test (x,y) AS VALUES (10,'foo'), (0, 'bar'), (20, 'baz'), (NULL,NULL);")
 
             remote_con = pymonetdb.connect(username="monetdb", password="monetdb", hostname="localhost", port=con.get_port(), database="in-memory")
