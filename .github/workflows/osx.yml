@@ -81,6 +81,9 @@ jobs:
           name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
       -
+        name: Homebrew link monetdb
+        run: brew link monetdb
+      -
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
