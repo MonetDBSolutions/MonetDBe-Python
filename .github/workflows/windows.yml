@@ -18,8 +18,8 @@ jobs:
       matrix:
         include:
           - MONETDB_BRANCH: default
-            MONETDB_WIN_PREFIX: 84752
-            MONETDB_WIN_VERSION: eb094846cbb5f
+            MONETDB_WIN_PREFIX: 84804
+            MONETDB_WIN_VERSION: 7f61815866cc
     env:
       MSI: MonetDB5-SQL-Installer-x86_64-${{ matrix.MONETDB_WIN_VERSION }}.msi
     steps:
