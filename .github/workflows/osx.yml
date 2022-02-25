@@ -83,7 +83,7 @@ jobs:
           path: /usr/local/Cellar/monetdb
       -
         name: 'Echo download path'
-        run: echo ${{steps.download.outputs.download-path}}
+        run: ls /usr/local/Cellar/monetdb
       -
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -97,7 +97,7 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest build
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/Cellar/monetdb-osx-${{ matrix.branch }}/monetdb/include -L/usr/local/Cellar/monetdb-osx-${{ matrix.branch }}/monetdb/lib" venv/bin/pip install -e ".[test]"
+        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/Cellar/monetdb/monetdb-osx-${{ matrix.branch }}/include -L/usr/local/Cellar/monetdb/monetdb-osx-${{ matrix.branch }}/lib" venv/bin/pip install -e ".[test]"
       -
         name: make binary wheel
         run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
