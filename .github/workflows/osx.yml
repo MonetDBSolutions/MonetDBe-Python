@@ -96,7 +96,7 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest build
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/Cellar/monetdb/include -L/usr/local/Cellar/monetdb/lib" venv/bin/pip install -e ".[test]"
+        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
       -
         name: make binary wheel
         run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
