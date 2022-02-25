@@ -49,7 +49,7 @@ jobs:
         run: |
           mkdir MonetDB-${{ matrix.branch }}/build
           cd MonetDB-${{ matrix.branch }}/build
-          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb \
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
