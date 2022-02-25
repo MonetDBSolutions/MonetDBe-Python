@@ -82,7 +82,7 @@ jobs:
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb
-        run: brew link --overwrite --dry-run monetdb && brew link --overwrite monetdb
+        run: brew link monetdb
       -
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
