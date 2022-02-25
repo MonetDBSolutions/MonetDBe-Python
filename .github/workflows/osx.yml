@@ -48,7 +48,7 @@ jobs:
         run: |
           mkdir MonetDB-${{ matrix.branch }}/build
           cd MonetDB-${{ matrix.branch }}/build
-          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb \
             -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
@@ -77,7 +77,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2 
         with:
-          name: osx-monetdb-brew  # ${{ matrix.branch }}
+          name: osx-monetdb-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb
