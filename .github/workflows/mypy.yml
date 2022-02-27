@@ -10,14 +10,14 @@ on:
 jobs:
   mypy:
     runs-on: ubuntu-20.04
-    container: monetdb/dev-builds:Jul2021
+    container: monetdb/dev-builds:default
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
       -
         name: Install MonetDBe in developer mode
-        run: MONETDB_BRANCH=Jul2021 python3 -m pip install -e .[test]
+        run: MONETDB_BRANCH=default python3 -m pip install -e .[test]
       -
         name: Run mypy static code checks
         run: mypy monetdbe tests

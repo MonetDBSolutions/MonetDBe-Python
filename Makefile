@@ -117,9 +117,9 @@ osx-m1-all-wheels: venv38/ venv39/ venv310/
 	venv38/bin/pip install --upgrade pip wheel setuptools build
 	venv39/bin/pip install --upgrade pip wheel setuptools build
 	venv310/bin/pip install --upgrade pip wheel setuptools build
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv38/bin/python -m build
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv39/bin/python -m build
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv310/bin/python -m build
+	MONETDB_BRANCH=default CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv38/bin/python -m build
+	MONETDB_BRANCH=default CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv39/bin/python -m build
+	MONETDB_BRANCH=default CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv310/bin/python -m build
 
 osx-m1-wheel: venv/
-	MONETDB_BRANCH=Jul2021 CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv/bin/python -m build
+	MONETDB_BRANCH=default CFLAGS="-I/opt/homebrew/include -L/opt/homebrew/lib" venv/bin/python -m build

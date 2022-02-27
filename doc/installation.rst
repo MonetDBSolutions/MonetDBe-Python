@@ -58,7 +58,7 @@ By default, it is assumed you are compiling against the default branch of MonetD
 If this is wrong, specify the correct branch by setting the ``MONETDB_BRANCH`` environment variable
 before the ``pip install`` command above::
 
-    $ MONETDB_BRANCH=Jul2021
+    $ MONETDB_BRANCH=default
 
 If you set the library CFLAGS at compile time you probably also need to set ``LD_LIBRARY_PATH``
 (or DYLD_LIBRARY_PATH on OS X)::

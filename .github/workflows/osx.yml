@@ -10,57 +10,58 @@ on:
   workflow_dispatch:
 
 jobs:
-  #
-  ## This uses a homebrew bottle of the latest stable monetdb, which is jul2021 branch for now.
-  #
-  osx-monetdb-brew:
-    runs-on: macos-10.15
-    steps:
-      - name: brew packages
-        run: brew install bison monetdb
-      - uses: actions/upload-artifact@v2
-        with:
-          name: osx-monetdb-brew
-          path: /usr/local/Cellar/monetdb
-
-#
-## This builds monetdb from source, so we can build for multiple branches.
-## Disabled for now, since it slows down CI.
-#
-#  osx-monetdb-build:
+#  #
+#  ## This uses a homebrew bottle of the latest stable monetdb, which is jul2021 branch for now.
+#  # Disabled for now
+#  #
+#  osx-monetdb-brew:
 #    runs-on: macos-10.15
-#    strategy:
-#      matrix:
-#        branch: [default, Jul2021, Jan2022]
 #    steps:
-#      -
-#        name: brew packages
+#      - name: brew packages
 #        run: brew install bison monetdb
-#
-#      -
-#        name: download MonetDB
-#        run: curl https://dev.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
-#      -
-#        name: extract MonetDB
-#        run: tar jxvf ${{ matrix.branch }}.tar.bz2
-#      -
-#        name: build monetdb
-#        run: |
-#          mkdir MonetDB-${{ matrix.branch }}/build
-#          cd MonetDB-${{ matrix.branch }}/build
-#          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
-#            -DWITH_CRYPTO=OFF \
-#            -DPY3INTEGRATION=OFF \
-#            -DCMAKE_BUILD_TYPE=Release \
-#            -DASSERT=OFF \
-#            -DRINTEGRATION=OFF \
-#            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
-#          make install -j3
-#      -
-#        uses: actions/upload-artifact@v2
+#      - uses: actions/upload-artifact@v2
 #        with:
-#          name: monetdb-osx-${{ matrix.branch }}
+#          name: osx-monetdb-brew
 #          path: /usr/local/Cellar/monetdb
+
+
+# This builds monetdb from source, so we can build for multiple branches.
+
+
+  osx-monetdb-build:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        branch: [default]
+    steps:
+      -
+        name: brew packages
+        run: brew install bison
+
+      -
+        name: download MonetDB
+        run: curl https://www.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
+      -
+        name: extract MonetDB
+        run: tar jxvf ${{ matrix.branch }}.tar.bz2
+      -
+        name: build monetdb
+        run: |
+          mkdir MonetDB-${{ matrix.branch }}/build
+          cd MonetDB-${{ matrix.branch }}/build
+          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
+            -DWITH_CRYPTO=OFF \
+            -DPY3INTEGRATION=OFF \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DASSERT=OFF \
+            -DRINTEGRATION=OFF \
+            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
+          make install -j3
+      -
+        uses: actions/upload-artifact@v2
+        with:
+          name: monetdb-osx-${{ matrix.branch }}
+          path: /usr/local/Cellar/monetdb
 
   osx-wheel:
 #    continue-on-error: true
@@ -68,8 +69,8 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        branch: [Jan2022]
-    needs: [osx-monetdb-brew]
+        branch: [default]
+    needs: [osx-monetdb-build]
     steps:
       -
         name: Checkout
@@ -77,7 +78,7 @@ jobs:
       - 
         uses: actions/download-artifact@v2 
         with:
-          name: osx-monetdb-brew  # ${{ matrix.branch }}
+          name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
       -
         name: Homebrew link monetdb

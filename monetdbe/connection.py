@@ -39,7 +39,9 @@ class Connection:
                  logging: Optional[Path] = None,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
+                 host: Optional[str] = None,
                  port: Optional[int] = None,
+                 usock: Optional[Path] = None
                  ):
         """
         Args:
@@ -69,7 +71,7 @@ class Connection:
 
         check_if_we_can_import_lowlevel()
 
-        if uri or port or username or password or logging:
+        if uri or username or password or logging:
             raise NotImplemented
 
         if not check_same_thread:
@@ -89,6 +91,11 @@ class Connection:
         else:
             raise TypeError
 
+        if not usock:
+            usock = None
+        elif isinstance(usock, str):
+            usock = Path(usock).resolve()
+
         self.result: Optional[monetdbe_result] = None
         self.row_factory: Optional[Type['Row']] = None
         self.text_factory: Optional[Callable[[str], Any]] = None
@@ -102,7 +109,10 @@ class Connection:
             memorylimit=memorylimit,
             nr_threads=nr_threads,
             querytimeout=querytimeout,
-            sessiontimeout=timeout
+            sessiontimeout=timeout,
+            mapi_server_host=host,
+            mapi_server_port=port,
+            mapi_server_usock=usock
         )
 
         self.set_autocommit(autocommit)
@@ -322,6 +332,10 @@ class Connection:
     def append(self, table: str, data: Mapping[str, np.ndarray], schema: str = 'sys') -> None:
         self._check()
         self._internal.append(table, data, schema)  # type: ignore[union-attr]
+
+    def get_port(self) -> Optional[int]:
+        self._check()
+        return self._internal.get_port()  # type: ignore[union-attr]
 
     # these are required by the python DBAPI
     Warning = exceptions.Warning
