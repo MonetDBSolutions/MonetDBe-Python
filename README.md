@@ -9,6 +9,7 @@ Want to store and search a massive amount of numbers? You don't want to run a da
 MonetDBe-Python internally relies on a serverless and trimmed-down version of the blazingly fast MonetDB, the open-source column-store database.
 
 The documentation can be found at: https://monetdbe.readthedocs.io/
+[![Documentation Status](https://readthedocs.org/projects/monetdbe/badge/?version=latest)](http://monetdbe.readthedocs.io/?badge=latest)
 
 The source code can be found at: https://github.com/monetdBSolutions/MonetDBe-Python/
 
