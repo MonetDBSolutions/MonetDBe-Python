@@ -11,7 +11,6 @@ on:
 
 # the prefix and version numbers for the branches need to be manually copied (for now) from:
 # http://monetdb.org/testweb/web/status.php
-#          Start-Process "C:\${{ env.MSI }}" -ArgumentList '/quiet /passive' -Wait 
 jobs:
   windows-monetdb-build:
     runs-on: windows-latest
@@ -26,20 +25,22 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Install choco packages
-        run: choco install --no-progress -y curl
-      -
-        name: Get monetdb
-        shell: pwsh
-        run: |
-          Set-Location c:\
-          curl.exe -L http://monetdb.org/testweb/web/${{ env.MSI }} -O
+          #-
+          #name: Install choco packages
+          #run: choco install --no-progress -y curl
+          #-
+          #name: Get monetdb
+          #shell: pwsh
+          #run: |
+          #Set-Location c:\
+          #curl.exe -L http://monetdb.org/testweb/web/${{ env.MSI }} -O
       -
         name: Install monetdb
         shell: pwsh
         run: |
-          Start-Process "msiexec.exe" -ArgumentList "/i C:\${{ env.MSI }} /qn" -Wait -NoNewWindow -PassThru
+          $msifile="c:\${{ env.MSI }}"
+          (New-Object System.Net.WebClient).DownloadFile("http://monetdb.org/testweb/web/${{ env.MSI }}","$msifile");
+          Start-Process "$msifile" -ArgumentList '/quiet /passive' -Wait
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
