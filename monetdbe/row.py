@@ -19,7 +19,7 @@ class Row:
 
     def __init__(self, cur: 'Cursor', row: Union[tuple, Generator[Optional[Any], Any, None]]):
         from monetdbe import Cursor
-        if not isinstance(cur, Cursor):
+        if type(cur) is not Cursor:
             raise TypeError("You need to supply a subclass of Cursor as a cursor.")
 
         self._cur = cur
