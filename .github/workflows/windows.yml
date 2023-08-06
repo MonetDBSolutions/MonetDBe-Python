@@ -37,7 +37,6 @@ jobs:
         name: Install monetdb
         run: |
           Start-Process msiexec.exe -Wait -ArgumentList '/I C:\${{ env.MSI }} /quiet /passive INSTALLLEVEL=1000'
-          ls 'C:\Program Files\MonetDB'
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
