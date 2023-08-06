@@ -11,8 +11,8 @@ class TestCsv(TestCase):
             con.read_csv(
                 table=table,
                 filepath_or_buffer=Path(__file__).parent / "example.csv",
-                names=['i', 's', 'i2', 'f'],
-                dtype={"i1": int, 's': str, 'i2': int, 'f': float},
+                names=['i1', 's', 'i2', 'f'],
+                dtype={'i1': int, 's': str, 'i2': int, 'f': float},
             )
             x = con.execute(f'select * from {table}').fetchall()
 
