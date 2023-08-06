@@ -112,7 +112,7 @@ def _format_iterable(cleaned_query: str, parameters: Sequence[Any], query: str):
 
 
 def format_query(query: str, parameters: parameters_type = None) -> str:
-    if type(query) != str:
+    if not isinstance(query, str):
         raise TypeError
 
     cleaned_query = remove_quoted_substrings(query)
