@@ -37,8 +37,8 @@ jobs:
       -
         name: Install monetdb
         run: |
-          $procMain = Start-Process "msiexec" "/i C:\${{ env.MSI }} /qn /l*! install.log" -NoNewWindow -PassThru
-          $procLog = Start-Process "powershell" "Get-Content -Path install.log -Wait" -NoNewWindow -PassThru
+          $procMain = Start-Process "msiexec" "/i C:\${{ env.MSI }} /qn /l*! c:\install.log" -NoNewWindow -PassThru
+          $procLog = Start-Process "powershell" "Get-Content -Path c:\install.log -Wait" -NoNewWindow -PassThru
           $procMain.WaitForExit(200)
           $procLog.Kill()
       - uses: actions/upload-artifact@v3
