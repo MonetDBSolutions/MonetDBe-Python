@@ -29,10 +29,6 @@ jobs:
         name: Install choco packages
         run: choco install --no-progress -y curl
       -
-        name: grant Full Access to c:\windows\temp directory
-        run: |
-          icacls "C:\Windows\Temp" /q /c /t /grant Users:F /T
-      -
         name: Get monetdb
         run: |
           Set-Location c:\
@@ -40,8 +36,7 @@ jobs:
       -
         name: Install monetdb
         run: |
-          Start-Process 'C:\${{ env.MSI }}'  -Wait -ArgumentList '/quiet /passive' 
-          ls 'c:\Program Files\MonetDB'
+          Start-Process "C:\${{ env.MSI }}" -ArgumentList '/quiet /passive' -Wait 
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
