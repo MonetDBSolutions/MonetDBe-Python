@@ -29,6 +29,10 @@ jobs:
         name: Install choco packages
         run: choco install --no-progress -y curl
       -
+        name: grant Full Access to c:\windows\temp directory
+        run: |
+          icacls "C:\Windows\Temp" /q /c /t /grant Users:F /T
+      -
         name: Get monetdb
         run: |
           Set-Location c:\
