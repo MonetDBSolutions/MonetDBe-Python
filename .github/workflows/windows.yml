@@ -14,7 +14,7 @@ on:
 #          Start-Process "C:\${{ env.MSI }}" -ArgumentList '/quiet /passive' -Wait 
 jobs:
   windows-monetdb-build:
-    runs-on: windows-2022
+    runs-on: windows-latest
     strategy:
       matrix:
         include:
@@ -31,16 +31,15 @@ jobs:
         run: choco install --no-progress -y curl
       -
         name: Get monetdb
+        shell: pwsh
         run: |
           Set-Location c:\
           curl.exe -L http://monetdb.org/testweb/web/${{ env.MSI }} -O
       -
         name: Install monetdb
+        shell: pwsh
         run: |
-          $procMain = Start-Process "msiexec" "/i C:\${{ env.MSI }} /qn /l*! c:\install.log" -NoNewWindow -PassThru
-          $procLog = Start-Process "powershell" "Get-Content -Path c:\install.log -Wait" -NoNewWindow -PassThru
-          $procMain.WaitForExit(200)
-          $procLog.Kill()
+          Start-Process "msiexec.exe" -ArgumentList "/i C:\${{ env.MSI }} /qn" -Wait -NoNewWindow -PassThru
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
