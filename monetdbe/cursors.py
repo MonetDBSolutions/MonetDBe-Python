@@ -16,7 +16,7 @@ paramstyles = {"qmark", "numeric", "named", "format", "pyformat"}
 
 
 def _pandas_to_numpy_dict(df: pd.DataFrame) -> Dict[str, np.ndarray]:
-    return {label: np.array(column) for label, column in df.iteritems()}  # type: ignore
+    return {label: np.array(column) for label, column in df.items()}  # type: ignore
 
 
 class Cursor:
