@@ -68,12 +68,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: monetdb-win-${{ matrix.branch }}
-          path: 'C:\Program Files\MonetDB\MonetDB5'
+          path: 'C:\Program Files\MonetDB'
       -
         name: Collect DLLs
         run: |
-          ls 'C:\Program Files\MonetDB\MonetDB5\bin'
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\*.dll' monetdbe\.
+          ls 'C:\Program Files\MonetDB\bin'
+          Copy-Item 'C:\Program Files\MonetDB\bin\*.dll' monetdbe\.
           ls monetdbe
       -
         name: Upgrade pip and wheel for all pythons
