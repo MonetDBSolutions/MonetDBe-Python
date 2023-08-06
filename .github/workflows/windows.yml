@@ -25,15 +25,6 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v3
-          #-
-          #name: Install choco packages
-          #run: choco install --no-progress -y curl
-          #-
-          #name: Get monetdb
-          #shell: pwsh
-          #run: |
-          #Set-Location c:\
-          #curl.exe -L http://monetdb.org/testweb/web/${{ env.MSI }} -O
       -
         name: Install monetdb
         shell: pwsh
