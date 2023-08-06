@@ -15,11 +15,11 @@ jobs:
 #  # Disabled for now
 #  #
 #  osx-monetdb-brew:
-#    runs-on: macos-10.15
+#    runs-on: macos-12
 #    steps:
 #      - name: brew packages
 #        run: brew install bison monetdb
-#      - uses: actions/upload-artifact@v2
+#      - uses: actions/upload-artifact@v3
 #        with:
 #          name: osx-monetdb-brew
 #          path: /usr/local/Cellar/monetdb
@@ -57,7 +57,7 @@ jobs:
             -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
           make install -j3
       -
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
@@ -73,9 +73,9 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - 
-        uses: actions/download-artifact@v2 
+        uses: actions/download-artifact@v3 
         with:
           name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
@@ -84,7 +84,7 @@ jobs:
         run: brew link monetdb
       -
         name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
       -
@@ -104,7 +104,7 @@ jobs:
         run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl
       -
         name: Publish OS X binary wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl

@@ -24,7 +24,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Install choco packages
         run: choco install --no-progress -y curl
@@ -38,7 +38,7 @@ jobs:
         run: |
           Start-Process msiexec.exe -Wait -ArgumentList '/I C:\${{ env.MSI }} /qn INSTALLLEVEL=1000'
           ls 'C:\Program Files\MonetDB'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
           path: 'C:\Program Files\MonetDB'
@@ -48,7 +48,7 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        python-version: ["3.7"," 3.8", "3.9", "3.10"]
+        python-version: ["3.7"," 3.8", "3.9", "3.10", "3.11" ]
         branch: [ default ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
@@ -58,14 +58,14 @@ jobs:
         run: echo $env:MONETDB_BRANCH
       - 
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - 
         name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
       - 
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: monetdb-win-${{ matrix.branch }}
           path: 'C:\Program Files\MonetDB'
@@ -94,7 +94,7 @@ jobs:
         name: Make wheel
         run: python3 setup.py sdist bdist_wheel
       -
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         name: Publish Windows binary wheels
         with:
           name: monetdbe-win-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
