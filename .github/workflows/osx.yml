@@ -29,7 +29,7 @@ jobs:
 
 
   osx-monetdb-build:
-    runs-on: macos-10.15
+    runs-on: macos-12
     strategy:
       matrix:
         branch: [default]
@@ -50,7 +50,6 @@ jobs:
           mkdir MonetDB-${{ matrix.branch }}/build
           cd MonetDB-${{ matrix.branch }}/build
           cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
-            -DWITH_CRYPTO=OFF \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
             -DASSERT=OFF \
@@ -65,10 +64,10 @@ jobs:
 
   osx-wheel:
 #    continue-on-error: true
-    runs-on: macos-10.15
+    runs-on: macos-12
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
         branch: [default]
     needs: [osx-monetdb-build]
     steps:
