@@ -32,7 +32,7 @@ jobs:
         name: Get monetdb
         run: |
           Set-Location c:\
-          curl.exe http://monetdb.org/testweb/web/${{ env.MSI }} -O
+          curl.exe -L http://monetdb.org/testweb/web/${{ env.MSI }} -O
       -
         name: Install monetdb
         run: |
