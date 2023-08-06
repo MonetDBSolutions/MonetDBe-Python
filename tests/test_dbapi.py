@@ -759,7 +759,7 @@ if newer_then_jul2021:
             self.cur.execute("insert into test VALUES (?)", [d])
             self.cur.execute("select x from test")
             row = self.cur.fetchone()
-            assert(d == row[0])
+            assert (d == row[0])
 
 
 class ExtensionTests(unittest.TestCase):
