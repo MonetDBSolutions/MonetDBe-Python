@@ -95,18 +95,18 @@ jobs:
       -
         name: Compile and install MonetDBe-python
         run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
-      -
-        name: make binary wheel
-        run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
-      -
-        name: Delocate binary wheel
-        run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl
-      -
-        name: Publish OS X binary wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
-          path: dist/*.whl
+          #-
+          #name: make binary wheel
+          #run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
+          #-
+          #name: Delocate binary wheel
+          #run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl
+          #-
+          #name: Publish OS X binary wheels
+          #uses: actions/upload-artifact@v3
+          #with:
+          #name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
+          #path: dist/*.whl
             #-
             #name: Print version info
             #run: venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
