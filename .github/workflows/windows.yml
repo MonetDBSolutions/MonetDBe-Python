@@ -11,6 +11,7 @@ on:
 
 # the prefix and version numbers for the branches need to be manually copied (for now) from:
 # http://monetdb.org/testweb/web/status.php
+#  Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList "/norestart /quiet /passive /qn INSTALLLEVEL=1000 INSTALLDIR=$HOME\MonetDB"
 jobs:
   windows-monetdb-build:
     runs-on: windows-latest
@@ -29,7 +30,13 @@ jobs:
         name: Install monetdb
         shell: pwsh
         run: |
-          Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList "/norestart /quiet /passive /qn INSTALLLEVEL=1000 INSTALLDIR=$HOME\MonetDB"
+          $msifile="c:\${{ env.MSI }}"
+          (New-Object System.Net.WebClient).DownloadFile("http://monetdb.org/testweb/web/${{ env.MSI }}","$msifile");
+          $procMain = Start-Process msiexec -ArgumentList '/i $msifile /quiet /passive /L*v c:\test.log'
+          $procLog = Start-Process "powershell" "Get-Content -Path c:\test.log -Wait" -NoNewWindow -PassThru
+          $procMain.WaitForExit(200)
+          $procLog.Kill()
+#  Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList "/norestart /quiet /passive /qn INSTALLLEVEL=1000 INSTALLDIR=$HOME\MonetDB"
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
