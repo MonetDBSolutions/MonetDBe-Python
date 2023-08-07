@@ -35,7 +35,7 @@ jobs:
           (New-Object System.Net.WebClient).DownloadFile("http://monetdb.org/testweb/web/${{ env.MSI }}","$msifile");
           $procMain = Start-Process "$msifile" -ArgumentList '/quiet /passive /qn /norestart INSTALLLEVEL=1000 /L*v c:\test.log'
           $procLog = Start-Process powershell 'Get-Content -Path c:\test.log -Wait' -NoNewWindow -PassThru
-          #$procMain.WaitForExit()
+          $procMain.WaitForExit()
           $procLog.Kill()
       -
         name: check monetdb
