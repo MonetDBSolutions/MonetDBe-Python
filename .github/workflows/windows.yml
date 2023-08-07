@@ -76,6 +76,10 @@ jobs:
           name: monetdb-win-${{ matrix.branch }}
           path: 'C:\Program Files\MonetDB'
       -
+        name: list include
+        run: |
+          ls 'C:\Program Files\MonetDB\MonetDB5\include\monetdb\monetdbe.h'
+      -
         name: Collect DLLs
         run: |
           ls 'C:\Program Files\MonetDB\MonetDB5\bin'
