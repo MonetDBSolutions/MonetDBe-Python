@@ -34,7 +34,7 @@ jobs:
           New-Item -Path 'C:\test.log' -ItemType File
           (New-Object System.Net.WebClient).DownloadFile("http://monetdb.org/testweb/web/${{ env.MSI }}","$msifile");
           $procMain = Start-Process msiexec.exe -ArgumentList '/i $msifile /quiet /passive /L*v c:\test.log'
-          $procLog = Start-Process "Get-Content" -ArgumentList '-Path c:\test.log -Wait' -NoNewWindow -PassThru
+          $procLog = Start-Process powershell 'Get-Content -Path c:\test.log -Wait' -NoNewWindow -PassThru
           $procMain.WaitForExit()
           $procLog.Kill()
 #  Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList "/norestart /quiet /passive /qn INSTALLLEVEL=1000 INSTALLDIR=$HOME\MonetDB"
