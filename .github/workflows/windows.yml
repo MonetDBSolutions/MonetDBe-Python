@@ -29,7 +29,7 @@ jobs:
         name: Install monetdb
         shell: pwsh
         run: |
-          Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" 
+          Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList "/norestart /quiet /passive /qn INSTALLLEVEL=1000 INSTALL_PATH=${{ HOME }}\MonetDB"
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
