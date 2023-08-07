@@ -11,9 +11,6 @@ on:
 
 # the prefix and version numbers for the branches need to be manually copied (for now) from:
 # http://monetdb.org/testweb/web/status.php
-          #$msifile="c:\${{ env.MSI }}"
-          #(New-Object System.Net.WebClient).DownloadFile("http://monetdb.org/testweb/web/${{ env.MSI }}","$msifile");
-          #Start-Process "$msifile" -ArgumentList '/quiet /passive' -Wait
 jobs:
   windows-monetdb-build:
     runs-on: windows-latest
@@ -32,7 +29,7 @@ jobs:
         name: Install monetdb
         shell: pwsh
         run: |
-          Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList '/quiet /passive /qn' 
+          Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" 
       - uses: actions/upload-artifact@v3
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
