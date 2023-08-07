@@ -78,8 +78,8 @@ jobs:
       -
         name: Collect DLLs
         run: |
-          ls 'C:\Program Files\MonetDB\bin'
-          Copy-Item 'C:\Program Files\MonetDB\bin\*.dll' monetdbe\.
+          ls 'C:\Program Files\MonetDB\MonetDB5\bin'
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\*.dll' monetdbe\.
           ls monetdbe
       -
         name: Upgrade pip and wheel for all pythons
