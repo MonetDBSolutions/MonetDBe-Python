@@ -37,7 +37,6 @@ jobs:
       -
         name: brew packages
         run: brew install bison
-
       -
         name: download MonetDB
         run: curl https://www.monetdb.org/hg/MonetDB/archive/${{ matrix.branch }}.tar.bz2 -O
@@ -108,9 +107,9 @@ jobs:
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
-      -
-        name: Print version info
-        run: venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
+            #-
+            #name: Print version info
+            #run: venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
       -
         name: Run pytest
         run: venv/bin/pytest
