@@ -8,6 +8,8 @@ on:
     branches: [ master ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  schedule:
+    - cron:  '15 1 * * *'
 
 # the prefix and version numbers for the branches need to be manually copied (for now) from:
 # http://monetdb.org/testweb/web/status.php
@@ -96,7 +98,7 @@ jobs:
           MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
       -
         name: Install MonetDBe in developer mode
-        run: python3 -m pip install -e .[test]
+        run: CFLAGS='-IC:\Program Files\MonetDB\MonetDB5\include' python3 -m pip install -e .[test]
         env:
           MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
       -
