@@ -76,8 +76,9 @@ else:
 ext_options = get_monetdbe_paths()
 ext_modules = [
     Extension(
-        lib_name + '._lowlevel',
+        'monetdbe._lowlevel',
         sources=['monetdbe/_cffi/native_utilities.c'],
+        language='c',
         **ext_options,
     )
 ]
