@@ -4,8 +4,6 @@ on:
   push:
     branches: [ master ]
     tags: [ "*" ]
-  pull_request:
-    branches: [ master ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   schedule:
@@ -56,8 +54,7 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        python-version: [ "3.8" ]
-        #python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
         branch: [ default ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
