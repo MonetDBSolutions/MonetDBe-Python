@@ -144,5 +144,6 @@ monetdbe/*.dll
 /monetdbe/_cffi/monetdbe/_lowlevel.c
 /monetdbe/_cffi/monetdbe/_lowlevel.o
 monetdbe/_cffi/branch.py
+monetdbe/_cffi/embed.h
 this_folder_can_be_removed
 
