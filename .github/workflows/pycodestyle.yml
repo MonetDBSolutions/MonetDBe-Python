@@ -2,7 +2,7 @@ name: Code syle check
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "*" ]
     tags: [ "*" ]
   schedule:
     - cron:  '15 1 * * *'
