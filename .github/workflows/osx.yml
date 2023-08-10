@@ -10,24 +10,6 @@ on:
     - cron:  '15 1 * * *'
 
 jobs:
-#  #
-#  ## This uses a homebrew bottle of the latest stable monetdb, which is jul2021 branch for now.
-#  # Disabled for now
-#  #
-#  osx-monetdb-brew:
-#    runs-on: macos-12
-#    steps:
-#      - name: brew packages
-#        run: brew install bison monetdb
-#      - uses: actions/upload-artifact@v3
-#        with:
-#          name: osx-monetdb-brew
-#          path: /usr/local/Cellar/monetdb
-
-
-# This builds monetdb from source, so we can build for multiple branches.
-
-
   osx-monetdb-build:
     runs-on: macos-latest
     strategy:
@@ -62,7 +44,7 @@ jobs:
           path: /usr/local/Cellar/monetdb
 
   osx-wheel:
-#    continue-on-error: true
+    continue-on-error: true
     runs-on: macos-latest
     strategy:
       matrix:
@@ -104,7 +86,7 @@ jobs:
         run: venv/bin/pyproject-build
       -
         name: Delocate binary wheel
-        run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl
+        run: venv/bin/delocate-wheel -v dist/*.whl
       -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v3
