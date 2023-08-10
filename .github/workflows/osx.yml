@@ -68,6 +68,10 @@ jobs:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
         branch: [default]
+    env:
+      MONETDB_BRANCH: ${{ matrix.branch }}
+      MONETDBE_INCLUDE_PATH: '/usr/local/Cellar/monetdb/11.40.1/include'
+      MONETDBE_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
     needs: [osx-monetdb-build]
     steps:
       -
@@ -94,10 +98,10 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest build
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
+        run: venv/bin/pip install -e ".[test]"
       -
         name: make binary wheel
-        run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
+        run: venv/bin/pyproject-build
       -
         name: Delocate binary wheel
         run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl
