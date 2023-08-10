@@ -91,16 +91,23 @@ jobs:
       -
         name: Upgrade pip and wheel for all pythons
         run: python3 -m pip install --upgrade pip wheel dll-diagnostics build
+        env:
+          MONETDBE_INCLUDE_PATH: "C:\Program FIles\MonetDB\MonetDB5\include"
+          MONETDBE_LIBRARY_PATH: "C:\Program FIles\MonetDB\MonetDB5\lib"
       -
         name: Build binary python extension
         run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
         env:
           MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
+          MONETDBE_INCLUDE_PATH: "C:\Program FIles\MonetDB\MonetDB5\include"
+          MONETDBE_LIBRARY_PATH: "C:\Program FIles\MonetDB\MonetDB5\lib"
       -
         name: Install MonetDBe in developer mode
-        run: CFLAGS='-IC:\Program Files\MonetDB\MonetDB5\include' python3 -m pip install -e .[test]
+        run: python3 -m pip install -e .[test]
         env:
           MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
+          MONETDBE_INCLUDE_PATH: "C:\Program FIles\MonetDB\MonetDB5\include"
+          MONETDBE_LIBRARY_PATH: "C:\Program FIles\MonetDB\MonetDB5\lib"
       -
         name: Run DLL diagnostics
         run: |
@@ -108,6 +115,10 @@ jobs:
       -
         name: Make wheel
         run: python3 setup.py sdist bdist_wheel
+        env:
+          MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
+          MONETDBE_INCLUDE_PATH: "C:\Program FIles\MonetDB\MonetDB5\include"
+          MONETDBE_LIBRARY_PATH: "C:\Program FIles\MonetDB\MonetDB5\lib"
       -
         uses: actions/upload-artifact@v3
         name: Publish Windows binary wheels
