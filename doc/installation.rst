@@ -50,9 +50,10 @@ Now obtain the MonetDBe-Python source code from github::
 
 
 If MonetDB is not installed in the default search paths (like ``/usr/local``),
-you need to set some ``CFLAGS`` environment variables to have pip find MonetDB::
+you need to set some ``MONETDBE_INCLUDE_PATH`` and ``MONETDBE_LIBRARY_PATH`` environment
+variables to have pip find MonetDB::
 
-    $ CFLAGS="-I<monetdb_prefix>/include/ -L<monetdb_prefix>/lib" pip install .
+    $ MONETDBE_INCLUDE_PATH=<monetdb_prefix>/include/ MONETDBE_LIBRARY_PATH=<monetdb_prefix>/lib pip install .
 
 By default, it is assumed you are compiling against the default branch of MonetDB.
 If this is wrong, specify the correct branch by setting the ``MONETDB_BRANCH`` environment variable
