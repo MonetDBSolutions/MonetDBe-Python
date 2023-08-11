@@ -1,5 +1,19 @@
 from setuptools import find_packages, setup
 from sys import platform
+from setuptools.command.build_ext import build_ext as _build_ext
+
+
+def get_monetdbe_paths():
+    import os
+    """Obtain the paths for compiling and linking with monetdbe """
+
+    include_dir = os.environ.get("MONETDBE_INCLUDE_PATH")
+    library_dir = os.environ.get("MONETDBE_LIBRARY_PATH")
+
+    return {
+        "include_dir": include_dir,
+        "library_dir": library_dir,
+    }
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -29,6 +43,13 @@ if platform == 'win32':
 else:
     package_data = {}
 
+class build_ext(_build_ext):
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        opt = get_monetdbe_paths()
+        if opt['include_dir'] and opt['library_dir']:
+            self.include_dirs.append(opt['include_dir'])
+            self.library_dirs.append(opt['library_dir'])
 
 setup(
     name="monetdbe",
@@ -52,6 +73,7 @@ setup(
     setup_requires=["cffi>=1.0.0", "Jinja2"],
     extras_require=extras_require,
     cffi_modules=["monetdbe/_cffi/builder.py:ffibuilder"],
+    cmdclass = {'build_ext': build_ext},
     install_requires=["cffi>=1.0.0", "numpy", "pandas"],
     tests_require=tests_require,
     test_suite="tests",

@@ -141,8 +141,7 @@ tests/@test_*_tmp/
 
 doc/_build
 monetdbe/*.dll
-/monetdbe/_cffi/monetdbe/_lowlevel.c
-/monetdbe/_cffi/monetdbe/_lowlevel.o
+monetdbe/*.so 
 monetdbe/_cffi/branch.py
 this_folder_can_be_removed
 

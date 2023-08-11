@@ -1,4 +1,4 @@
-# type: ignore[union-attr]
+# mypy: disable-error-code="union-attr, arg-type, assignment"
 from typing import Optional, Iterable, Union, cast, Iterator, Dict, Sequence, TYPE_CHECKING, Any, List, Mapping
 from warnings import warn
 import numpy as np

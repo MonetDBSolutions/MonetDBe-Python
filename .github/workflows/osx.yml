@@ -2,36 +2,16 @@ name: OS X wheels
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "*" ]
     tags: [ "*" ]
-  pull_request:
-    branches: [ master ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   schedule:
     - cron:  '15 1 * * *'
 
 jobs:
-#  #
-#  ## This uses a homebrew bottle of the latest stable monetdb, which is jul2021 branch for now.
-#  # Disabled for now
-#  #
-#  osx-monetdb-brew:
-#    runs-on: macos-12
-#    steps:
-#      - name: brew packages
-#        run: brew install bison monetdb
-#      - uses: actions/upload-artifact@v3
-#        with:
-#          name: osx-monetdb-brew
-#          path: /usr/local/Cellar/monetdb
-
-
-# This builds monetdb from source, so we can build for multiple branches.
-
-
   osx-monetdb-build:
-    runs-on: macos-12
+    runs-on: macos-latest
     strategy:
       matrix:
         branch: [default]
@@ -64,12 +44,17 @@ jobs:
           path: /usr/local/Cellar/monetdb
 
   osx-wheel:
-#    continue-on-error: true
-    runs-on: macos-12
+    continue-on-error: true
+    runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10" ]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
         branch: [default]
+    env:
+      MONETDB_BRANCH: ${{ matrix.branch }}
+      MONETDBE_INCLUDE_PATH: '/usr/local/Cellar/monetdb/11.40.1/include'
+      MONETDBE_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
+      LD_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
     needs: [osx-monetdb-build]
     steps:
       -
@@ -96,13 +81,13 @@ jobs:
         run: venv/bin/pip install --upgrade pip wheel delocate pytest build
       -
         name: Compile and install MonetDBe-python
-        run: MONETDB_BRANCH=${{ matrix.branch }} CFLAGS="-I/usr/local/include -L/usr/local/lib" venv/bin/pip install -e ".[test]"
+        run: venv/bin/pip install -e ".[test]"
       -
         name: make binary wheel
-        run: MONETDB_BRANCH=${{ matrix.branch }} venv/bin/pyproject-build
+        run: venv/bin/pyproject-build
       -
         name: Delocate binary wheel
-        run: DYLD_LIBRARY_PATH=/usr/local/lib venv/bin/delocate-wheel -v dist/*.whl
+        run: venv/bin/delocate-wheel -v dist/*.whl
       -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v3

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 40.6.0", "wheel", 'cffi']
+requires = ["setuptools >= 40.6.0", "wheel", 'cffi', 'jinja2']
 build-backend = "setuptools.build_meta"
 
 [mypy]

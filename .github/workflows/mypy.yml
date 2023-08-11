@@ -2,16 +2,14 @@ name: Python type check
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "*" ]
     tags: [ "*" ]
-  pull_request:
-    branches: [ master ]
   schedule:
     - cron:  '15 1 * * *'
 
 jobs:
   mypy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container: monetdb/dev-builds:default
     steps:
       -
