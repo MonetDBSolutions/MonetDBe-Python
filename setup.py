@@ -47,9 +47,8 @@ class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
         opt = get_monetdbe_paths()
-        if opt['include_dir']:
+        if opt['include_dir'] and opt['library_dir']:
             self.include_dirs.append(opt['include_dir'])
-        if opt['library_dir']:
             self.library_dirs.append(opt['library_dir'])
 
 setup(
