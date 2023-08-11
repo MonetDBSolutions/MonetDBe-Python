@@ -86,7 +86,7 @@ jobs:
         run: venv/bin/pyproject-build
       -
         name: Delocate binary wheel
-        run: venv/bin/delocate-wheel -v dist/*.whl
+        run: DYLD_LIBRARY_PATH=/usr/local/lib  venv/bin/delocate-wheel -v dist/*.whl
       -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v3
