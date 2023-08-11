@@ -2,10 +2,8 @@ name: Windows wheels
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "*" ]
     tags: [ "*" ]
-  pull_request:
-    branches: [ master ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   schedule:
@@ -56,15 +54,16 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        python-version: [ "3.8" ]
-        #python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
         branch: [ default ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
+      MONETDBE_INCLUDE_PATH: 'C:\Program FIles\MonetDB\MonetDB5\include'
+      MONETDBE_LIBRARY_PATH: 'C:\Program FIles\MonetDB\MonetDB5\lib'
     steps:
       -
         name: Print monetdbe branch variable to make sure it is set properly
-        run: echo $env:MONETDB_BRANCH
+        run: echo $MONETDB_BRANCH
       - 
         name: Checkout
         uses: actions/checkout@v3
@@ -94,13 +93,9 @@ jobs:
       -
         name: Build binary python extension
         run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
-        env:
-          MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
       -
         name: Install MonetDBe in developer mode
-        run: CFLAGS='-IC:\Program Files\MonetDB\MonetDB5\include' python3 -m pip install -e .[test]
-        env:
-          MONETDB_BRANCH: ${{ env.MONETDB_BRANCH }}
+        run: python3 -m pip install -e .[test]
       -
         name: Run DLL diagnostics
         run: |
