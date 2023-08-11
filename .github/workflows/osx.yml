@@ -54,7 +54,7 @@ jobs:
       MONETDB_BRANCH: ${{ matrix.branch }}
       MONETDBE_INCLUDE_PATH: '/usr/local/Cellar/monetdb/11.40.1/include'
       MONETDBE_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
-      DYLD_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
+      LD_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
     needs: [osx-monetdb-build]
     steps:
       -
