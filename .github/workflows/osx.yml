@@ -54,6 +54,7 @@ jobs:
       MONETDB_BRANCH: ${{ matrix.branch }}
       MONETDBE_INCLUDE_PATH: '/usr/local/Cellar/monetdb/11.40.1/include'
       MONETDBE_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
+      DYLD_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
     needs: [osx-monetdb-build]
     steps:
       -
@@ -86,7 +87,7 @@ jobs:
         run: venv/bin/pyproject-build
       -
         name: Delocate binary wheel
-        run: DYLD_LIBRARY_PATH=/usr/local/lib  venv/bin/delocate-wheel -v dist/*.whl
+        run: venv/bin/delocate-wheel -v dist/*.whl
       -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v3
