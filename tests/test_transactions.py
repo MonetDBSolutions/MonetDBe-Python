@@ -217,17 +217,5 @@ class TransactionalDDL(unittest.TestCase):
         self.con.close()
 
 
-def suite():
-    default_suite = unittest.makeSuite(TransactionTests, "Check")
-    special_command_suite = unittest.makeSuite(SpecialCommandTests, "Check")
-    ddl_suite = unittest.makeSuite(TransactionalDDL, "Check")
-    return unittest.TestSuite((default_suite, special_command_suite, ddl_suite))
-
-
-def test():
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
-
-
 if __name__ == "__main__":
-    test()
+    unittest.main()

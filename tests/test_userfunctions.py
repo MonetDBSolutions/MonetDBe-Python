@@ -2,7 +2,7 @@
 # monetdbe/test/userfunctions.py: tests for user-defined functions and
 #                                  aggregates.
 #
-# Copyright (C) 2005-2007 Gerhard Häring <gh@ghaering.de>
+# Copyright (C) 2005-2007 Gerhard Hï¿½ring <gh@ghaering.de>
 #
 # This file is part of pymonetdbe.
 #
@@ -524,24 +524,5 @@ class AuthorizerLargeIntegerTests(AuthorizerTests):
         return monetdbe.monetdbe_OK
 
 
-def suite():
-    function_suite = unittest.makeSuite(FunctionTests, "Check")
-    aggregate_suite = unittest.makeSuite(AggregateTests, "Check")
-    authorizer_suite = unittest.makeSuite(AuthorizerTests)
-    return unittest.TestSuite((
-        function_suite,
-        aggregate_suite,
-        authorizer_suite,
-        unittest.makeSuite(AuthorizerRaiseExceptionTests),
-        unittest.makeSuite(AuthorizerIllegalTypeTests),
-        unittest.makeSuite(AuthorizerLargeIntegerTests),
-    ))
-
-
-def test():
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
-
-
 if __name__ == "__main__":
-    test()
+    unittest.main()

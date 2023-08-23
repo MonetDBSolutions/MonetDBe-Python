@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # monetdbe/test/test_factory.py: tests for the various factories in pymonetdbe
 #
-# Copyright (C) 2005-2007 Gerhard Häring <gh@ghaering.de>
+# Copyright (C) 2005-2007 Gerhard Hï¿½ring <gh@ghaering.de>
 #
 # This file is part of pymonetdbe.
 #
@@ -252,20 +252,20 @@ class TextFactoryTests(unittest.TestCase):
         self.con = connect(":memory:")
 
     def test_Unicode(self):
-        austria = "Österreich"
+        austria = "ï¿½sterreich"
         row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), str, "type of row[0] must be unicode")
 
     def test_String(self):
         self.con.text_factory = lambda x: bytes(x.encode('utf-8'))
-        austria = "Österreich"
+        austria = "ï¿½sterreich"
         row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), bytes, "type of row[0] must be bytes")
         self.assertEqual(row[0], austria.encode("utf-8"), "column must equal original data in UTF-8")
 
     def test_Custom(self):
         self.con.text_factory = lambda x: str(x) + str(x)
-        austria = "Österreich"
+        austria = "ï¿½sterreich"
         # todo/note (gijs): added (? as varchar(20)) since monetdbe can't infer the type from the query
         row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), str, "type of row[0] must be unicode")
@@ -275,7 +275,7 @@ class TextFactoryTests(unittest.TestCase):
         # In py3k, str objects are always returned when text_factory
         # is OptimizedUnicode
         self.con.text_factory = OptimizedUnicode
-        austria = "Österreich"
+        austria = "ï¿½sterreich"
         germany = "Deutchland"
         a_row = self.con.execute("select cast(? as varchar(20))", (austria,)).fetchone()
         d_row = self.con.execute("select cast(? as varchar(20))", (germany,)).fetchone()
@@ -322,21 +322,5 @@ class TextFactoryTestsWithEmbeddedZeroBytes(unittest.TestCase):
         self.con.close()
 
 
-def suite():
-    connection_suite = unittest.makeSuite(ConnectionFactoryTests, "Check")
-    cursor_suite = unittest.makeSuite(CursorFactoryTests, "Check")
-    row_suite_compat = unittest.makeSuite(RowFactoryTestsBackwardsCompat, "Check")
-    row_suite = unittest.makeSuite(RowFactoryTests, "Check")
-    text_suite = unittest.makeSuite(TextFactoryTests, "Check")
-    text_zero_bytes_suite = unittest.makeSuite(TextFactoryTestsWithEmbeddedZeroBytes, "Check")
-    return unittest.TestSuite(
-        (connection_suite, cursor_suite, row_suite_compat, row_suite, text_suite, text_zero_bytes_suite))
-
-
-def test():
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
-
-
 if __name__ == "__main__":
-    test()
+    unittest.main()
