@@ -226,6 +226,8 @@ class RegressionTests(unittest.TestCase):
         called.
         """
 
+        con = self.con
+        con.close()
         class Connection(monetdbe.Connection):
             def __init__(self, name):
                 pass
@@ -233,29 +235,6 @@ class RegressionTests(unittest.TestCase):
         con = Connection(":memory:")
         with self.assertRaises(monetdbe.ProgrammingError):
             cur = con.cursor()
-
-    def test_CursorRegistration(self):
-        """
-        Verifies that subclassed cursor classes are correctly registered with
-        the connection object, too.  (fetch-across-rollback problem)
-        """
-
-        class Connection(monetdbe.Connection):
-            def cursor(self, *args, **kwargs):
-                return Cursor(self)
-
-        class Cursor(monetdbe.Cursor):
-            def __init__(self, con):
-                monetdbe.Cursor.__init__(self, con)
-
-        con = Connection(":memory:")
-        cur = con.cursor()
-        cur.execute("create table foo(x int)")
-        cur.executemany("insert into foo(x) values (?)", [(3,), (4,), (5,)])
-        cur.execute("select x from foo")
-        con.rollback()
-        with self.assertRaises(monetdbe.InterfaceError):
-            cur.fetchall()
 
     @unittest.skip("we don't support isolation_level yet")
     def test_AutoCommit(self):
@@ -388,6 +367,7 @@ class RegressionTests(unittest.TestCase):
                 counter += 1
         self.assertEqual(counter, 3, "should have returned exactly three rows")
 
+class TestMonetDBeBpo(unittest.TestCase):
     def test_Bpo31770(self):
         """
         The interpreter shouldn't crash in case Cursor.__init__() is called
@@ -429,6 +409,32 @@ class RegressionTests(unittest.TestCase):
 
 
 class TestMonetDBeRegressions(unittest.TestCase):
+    def test_CursorRegistration(self):
+        """
+        Verifies that subclassed cursor classes are correctly registered with
+        the connection object, too.  (fetch-across-rollback problem)
+
+        moved here as we cannot handle self.con already initialialized
+        """
+
+        class Connection(monetdbe.Connection):
+            def cursor(self, *args, **kwargs):
+                return Cursor(self)
+
+        class Cursor(monetdbe.Cursor):
+            def __init__(self, con):
+                monetdbe.Cursor.__init__(self, con)
+
+        con = Connection(":memory:")
+        cur = con.cursor()
+        cur.execute("create table foo(x int)")
+        cur.executemany("insert into foo(x) values (?)", [(3,), (4,), (5,)])
+        cur.execute("select x from foo")
+        con.rollback()
+        with self.assertRaises(monetdbe.InterfaceError):
+            cur.fetchall()
+        con.close()
+
     def test_crash_on_url(self):
         with self.assertRaises(Exception):
             monetdbe.connect("monetdb://localhost:5000/sf1?user=monetdb&password=monetdb")
