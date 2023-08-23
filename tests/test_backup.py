@@ -155,9 +155,5 @@ class BackupTests(unittest.TestCase):
             self.verify_backup(bck)
 
 
-def suite():
-    return unittest.makeSuite(BackupTests)
-
-
 if __name__ == "__main__":
     unittest.main()

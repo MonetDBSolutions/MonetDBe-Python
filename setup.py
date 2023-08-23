@@ -1,6 +1,13 @@
 from setuptools import find_packages, setup
 from sys import platform
 from setuptools.command.build_ext import build_ext as _build_ext
+import runpy
+import os
+
+
+version_file = os.path.join(os.path.dirname(__file__), "monetdbe", "version.py")
+version_data = runpy.run_path(version_file)
+version = version_data['__version__']
 
 
 def get_monetdbe_paths():
@@ -24,7 +31,6 @@ tests_require = [
     'pycodestyle',
     'data-science-types',
     'types-setuptools',
-    'types-pkg_resources',
     'types-Jinja2',
     'typing-extensions',
     'pymonetdb',
@@ -53,7 +59,7 @@ class build_ext(_build_ext):
 
 setup(
     name="monetdbe",
-    version="0.11",
+    version=version,
     author="Gijs Molenaar",
     author_email="gijs@pythonic.nl",
     description="MonetDBe - the Python embedded MonetDB",

@@ -1,6 +1,7 @@
 import unittest
 from sys import platform
 import numpy as np
+import pytest
 from monetdbe._lowlevel import lib
 from monetdbe import connect
 from monetdbe.exceptions import ProgrammingError
@@ -83,10 +84,14 @@ class TestCffi(unittest.TestCase):
                 """
             )
 
-            data = con.execute("select * from test").fetchnumpy()
+            with pytest.warns(UserWarning, match="no proper numpy equivalent") as warnings:
+                data = con.execute("select * from test").fetchnumpy()
+                self.assertEqual(len(warnings), 1)
             with self.assertRaises(con.ProgrammingError):
                 con._internal.append(schema='sys', table='test', data=data)
-            con.cursor().insert(table='test', values=data)
+            with pytest.warns(UserWarning, match="Falling back to regular insert") as warnings:
+                con.cursor().insert(table='test', values=data)
+                self.assertEqual(len(warnings), 1)
 
     def test_append_blend(self):
         """

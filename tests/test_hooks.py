@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # monetdbe/test/test_hooks.py: tests for various monetdbe-specific hooks
 #
-# Copyright (C) 2006-2007 Gerhard Häring <gh@ghaering.de>
+# Copyright (C) 2006-2007 Gerhard Hï¿½ring <gh@ghaering.de>
 #
 # This file is part of pymonetdbe.
 #
@@ -47,7 +47,7 @@ class CollationTests(unittest.TestCase):
     def test_CreateCollationNotAscii(self):
         con = monetdbe.connect(":memory:")
         with self.assertRaises(monetdbe.ProgrammingError):
-            con.create_collation("collä", lambda x, y: (x > y) - (x < y))
+            con.create_collation("collï¿½", lambda x, y: (x > y) - (x < y))
 
     def test_CreateCollationBadUpper(self):
         class BadUpperStr(str):
@@ -297,17 +297,5 @@ class TraceCallbackTests(unittest.TestCase):
         self.assertEqual(traced_statements, queries)
 
 
-def suite():
-    collation_suite = unittest.makeSuite(CollationTests, "Check")
-    progress_suite = unittest.makeSuite(ProgressTests, "Check")
-    trace_suite = unittest.makeSuite(TraceCallbackTests, "Check")
-    return unittest.TestSuite((collation_suite, progress_suite, trace_suite))
-
-
-def test():
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
-
-
 if __name__ == "__main__":
-    test()
+    unittest.main()
