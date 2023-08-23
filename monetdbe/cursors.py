@@ -198,7 +198,6 @@ class Cursor:
         """
         if hasattr(self, 'connection') and self.connection and self.connection.result:
             self.connection.cleanup_result()
-            self.connection.result = None
         self.connection = None
 
     def executescript(self, sql_script: str) -> None:
@@ -464,7 +463,7 @@ class Cursor:
             return []
 
         rows = [i for i in self]
-        self.connection.result = None
+        self.connection.cleanup_result()
         return rows
 
     def _fetchnumpy_slow(self) -> Mapping[str, np.ndarray]:

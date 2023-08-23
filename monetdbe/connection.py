@@ -211,6 +211,8 @@ class Connection:
     def close(self, *args, **kwargs) -> None:
         if not hasattr(self, '_internal'):
             return
+        if self.result:
+            self.cleanup_result()
 
         if self._internal:
             self._internal.close()
