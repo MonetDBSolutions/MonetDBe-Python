@@ -228,6 +228,7 @@ class RegressionTests(unittest.TestCase):
 
         con = self.con
         con.close()
+
         class Connection(monetdbe.Connection):
             def __init__(self, name):
                 pass
@@ -366,6 +367,7 @@ class RegressionTests(unittest.TestCase):
                     self.assertEqual(row[0], 2)
                 counter += 1
         self.assertEqual(counter, 3, "should have returned exactly three rows")
+
 
 class TestMonetDBeBpo(unittest.TestCase):
     def test_Bpo31770(self):

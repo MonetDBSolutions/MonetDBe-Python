@@ -34,8 +34,8 @@ class TestmonetdbeBase(TestCase):
         arrays = numpy.arange(100000).reshape((5, 20000))
         with monetdbe.connect() as con:
             cur = con.cursor().create('pylite03',
-                                                 {'i': arrays[0], 'j': arrays[1], 'k': arrays[2], 'l': arrays[3],
-                                                  'm': arrays[4]})
+                                      {'i': arrays[0], 'j': arrays[1], 'k': arrays[2], 'l': arrays[3],
+                                       'm': arrays[4]})
             result = cur.execute('select * from pylite03').fetchnumpy()
             assert len(result) == 5, "Incorrect amount of columns"
             assert len(result['i']) == 20000, "Incorrect amount of rows"
@@ -69,7 +69,6 @@ class TestmonetdbeBase(TestCase):
         # attempt to query the table from another client
         with pytest.raises(monetdbe.DatabaseError):
             monetdbe.connect().execute('SELECT * FROM pylite05', client=conn2)
-
 
         # now commit the table
         monetdbe.connect().execute('COMMIT', client=conn)
