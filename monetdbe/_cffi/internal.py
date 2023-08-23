@@ -368,6 +368,7 @@ class Internal:
             if (extract(result_fetch(p_result[0], 3), r)) is None:
                 row = TypeInfo(impl_type=extract(result_fetch(p_result[0], 6), r), sql_type=extract(result_fetch(p_result[0], 0), r), scale=extract(result_fetch(p_result[0], 2), r))
                 input_parameter_info.append(row)
+        self.cleanup_result(p_result[0])
 
         return stmt[0], input_parameter_info
 
