@@ -94,6 +94,23 @@ jobs:
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
+
+  osx-test-wheel:
+        name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      -
+        name: Install Python dependencies
+        run: venv/bin/pip install --upgrade pip pytest
+      -
+        name: downlod OS X binary wheels
+        uses: actions/download-artifact@v3
+        with:
+          name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
+      -
+        name: Install Python dependencies
+        run: venv/bin/pip install *.whl
       -
         name: Print version info
         run: venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
