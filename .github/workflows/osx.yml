@@ -87,7 +87,7 @@ jobs:
         run: venv/bin/pyproject-build
       -
         name: Delocate binary wheel
-        run: venv/bin/delocate-wheel -v dist/*.whl
+        run: venv/bin/delocate-wheel --ignore-missing-dependencies -v dist/*.whl
       -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v3
