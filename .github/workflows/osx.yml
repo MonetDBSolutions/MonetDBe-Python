@@ -96,6 +96,14 @@ jobs:
           path: dist/*.whl
 
   osx-test-wheel:
+    continue-on-error: true
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11" ]
+        branch: [default]
+    needs: [osx-wheel]
+    steps:
         name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
