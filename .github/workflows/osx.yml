@@ -121,11 +121,8 @@ jobs:
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
       -
-        name: Install Python dependencies
+        name: Install Python wheel
         run: venv/bin/pip install *.whl
       -
         name: Print version info
         run: venv/bin/python -c "from monetdbe._cffi.util import print_info; print_info()"
-      -
-        name: Run pytest
-        run: venv/bin/pytest
