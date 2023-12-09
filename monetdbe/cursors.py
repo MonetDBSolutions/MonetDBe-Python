@@ -472,7 +472,7 @@ class Cursor:
         all_ = self.fetchall()
         names = (d.name for d in self.description)
         flipped = zip(*all_)
-        return {k: v for k, v in zip(names, flipped)} # type: ignore
+        return {k: v for k, v in zip(names, flipped)}  # type: ignore
 
     def _fetchall_numpy(self):
         result = self.fetchnumpy()

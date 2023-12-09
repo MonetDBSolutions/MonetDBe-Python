@@ -37,7 +37,7 @@ def result_fetch_numpy(result: monetdbe_result) -> Mapping[str, np.ndarray]:
         if type_info.numpy_type.type == np.object_:
             values = [extract(rcol, r) for r in range(result.nrows)]
             np_col: np.ndarray = np.array(values)
-            np_mask = np.array([v is None for v in values]) # type: ignore
+            np_mask = np.array([v is None for v in values])  # type: ignore
             if rcol.type == lib.monetdbe_str:
                 np_col = np_col.astype(str)
             elif rcol.type == lib.monetdbe_date:
