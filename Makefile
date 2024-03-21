@@ -1,10 +1,9 @@
 
 GITHUB_WORKSPACE=/build
 
-STABLE_BRANCH = Jun2023
+STABLE_BRANCH = Dec2023
 TEST_IMAGE = monetdb/dev-builds:$(STABLE_BRANCH)
 WHEEL_IMAGE = monetdb/dev-builds:$(STABLE_BRANCH)_manylinux
-
 
 all: test
 
