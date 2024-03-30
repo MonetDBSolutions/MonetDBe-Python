@@ -38,7 +38,7 @@ jobs:
             -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison
           make install -j3
       -
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
@@ -59,9 +59,9 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
-      - 
-        uses: actions/download-artifact@v3 
+        uses: actions/checkout@v4
+      -
+        uses: actions/download-artifact@v4
         with:
           name: monetdb-osx-${{ matrix.branch }}
           path: /usr/local/Cellar/monetdb
@@ -70,7 +70,7 @@ jobs:
         run: brew link monetdb
       -
         name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       -
@@ -90,7 +90,7 @@ jobs:
         run: venv/bin/delocate-wheel --ignore-missing-dependencies -v dist/*.whl
       -
         name: Publish OS X binary wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
           path: dist/*.whl
@@ -106,7 +106,7 @@ jobs:
     steps:
       -
         name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       -
@@ -117,7 +117,7 @@ jobs:
         run: venv/bin/pip install --upgrade pip pytest
       -
         name: downlod OS X binary wheels
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
       -
