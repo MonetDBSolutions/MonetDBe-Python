@@ -25,7 +25,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: Install monetdb
         shell: pwsh
@@ -44,7 +44,7 @@ jobs:
         shell: pwsh
         run: |
           ls "C:\Program Files\MonetDB\MonetDB5"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
           path: 'C:\Program Files\MonetDB'
@@ -66,14 +66,14 @@ jobs:
         run: echo $MONETDB_BRANCH
       - 
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - 
         name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - 
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: monetdb-win-${{ matrix.branch }}
           path: 'C:\Program Files\MonetDB'
@@ -99,12 +99,12 @@ jobs:
       -
         name: Run DLL diagnostics
         run: |
-          dlldiag.exe deps .\monetdbe\_lowlevel.pyd  
+          dlldiag.exe deps .\monetdbe\_lowlevel.pyd
       -
         name: Make wheel
         run: python3 setup.py sdist bdist_wheel
       -
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         name: Publish Windows binary wheels
         with:
           name: monetdbe-win-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
