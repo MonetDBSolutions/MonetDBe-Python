@@ -20,7 +20,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: Install MonetDBe in developer mode
         run: MONETDB_BRANCH=${{ matrix.branch }} python3 -m pip install -e .[test]
@@ -36,19 +36,19 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.7"," 3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.7"," 3.8", "3.9", "3.10", "3.11", "3.12" ]
         branch: [default]
     container: monetdb/dev-builds:${{ matrix.branch }}_manylinux
 
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: make linux binary wheels
         run: MONETDB_BRANCH=${{ matrix.branch }} scripts/make_wheel.sh ${{ matrix.python-version }}
       -
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         name: Publish Linux binary wheels
         with:
           name: monetdbe-linux-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
