@@ -70,6 +70,7 @@ numpy_to_monetdb_type_infos: List[MonetdbTypeInfo] = [
 
 # things that can have a mapping from monetdb to numpy but not back
 monetdb_to_numpy_type_infos: List[MonetdbTypeInfo] = [
+    MonetdbTypeInfo(lib.monetdbe_size_t, "oid", np.dtype(np.int64), "int64_t", None),  # type: ignore
     MonetdbTypeInfo(lib.monetdbe_str, "string", np.dtype('=O'), "str", make_string),
     MonetdbTypeInfo(lib.monetdbe_blob, "blob", np.dtype('=O'), "blob", make_blob),
     MonetdbTypeInfo(lib.monetdbe_date, "date", np.dtype('=O'), "date", py_date),
