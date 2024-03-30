@@ -121,6 +121,9 @@ jobs:
         with:
           name: monetdbe-osx-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
       -
+        name: list allowed wheel versions
+        run: venv/bin/pip debug --verbose
+      -
         name: Install Python wheel
         run: venv/bin/pip install *.whl
       -
