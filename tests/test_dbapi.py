@@ -362,15 +362,9 @@ class CursorTests(unittest.TestCase):
         self.cu.execute("update test set name='bar'")
         self.assertEqual(self.cu.rowcount, 2)
 
-    @unittest.skip("we skip this test, since we actually *do* know the rowcount")
     def test_RowcountSelect(self):
-        """
-        pymonetdbe does not know the rowcount of SELECT statements, because we
-        don't fetch all rows after executing the select statement. The rowcount
-        has thus to be -1.
-        """
         self.cu.execute("select 5 union select 6")
-        self.assertEqual(self.cu.rowcount, -1)
+        self.assertEqual(self.cu.rowcount, 2)
 
     def test_RowcountExecutemany(self):
         self.cu.execute("delete from test")
