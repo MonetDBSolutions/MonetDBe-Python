@@ -48,7 +48,7 @@ jobs:
         name: make linux binary wheels
         run: MONETDB_BRANCH=${{ matrix.branch }} scripts/make_wheel.sh ${{ matrix.python-version }}
       -
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         name: Publish Linux binary wheels
         with:
           name: monetdbe-linux-wheel-${{ matrix.branch }}-${{ matrix.python-version }}
