@@ -82,6 +82,9 @@ typedef struct {
  int querytimeout;
  int sessiontimeout;
  int nr_threads;
+{% if newer_then_dec2023 %}
+ bool no_int128;
+{% endif %}
  monetdbe_remote* remote;
  monetdbe_mapi_server* mapi_server;
  const char *trace_file;

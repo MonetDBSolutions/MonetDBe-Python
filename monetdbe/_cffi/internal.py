@@ -181,6 +181,8 @@ class Internal:
         p_options.querytimeout = self.querytimeout
         p_options.sessiontimeout = self.sessiontimeout
         p_options.nr_threads = self.nr_threads
+        if newer_then_dec2023:
+            p_options.no_int128 = 1
         p_options.mapi_server = ffi.NULL
 
         cffi_objects = list()  # keep weak references to cffi objects alive
