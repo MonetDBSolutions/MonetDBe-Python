@@ -14,12 +14,12 @@ print(f"\n**MONETDB**: We are assuming you are building against MonetDB branch {
 print("**MONETDB**: If this is incorrect, set the MONETDB_BRANCH environment variable during monetdbe-python build\n")
 
 branch_file = str(Path(__file__).parent / 'branch.py')
-newer_then_jul2021 = monetdb_branch.lower() not in ("oct2020", "jul2021")
+newer_then_dec2023 = monetdb_branch.lower() not in ("dec2023")
 
 with open(branch_file, 'w') as f:
     f.write("# this file is created by the cffi interface builder and contains the monetdb branch env variable.\n\n")
     f.write(f"monetdb_branch = '{monetdb_branch}'\n")
-    f.write(f"newer_then_jul2021 = {newer_then_jul2021}\n")
+    f.write(f"newer_then_dec2023 = {newer_then_dec2023}\n")
 
 
 win32 = platform == 'win32'
@@ -36,7 +36,7 @@ embed_path = str(Path(__file__).resolve().parent / 'embed.h.j2')
 with open(embed_path, 'r') as f:
     content = f.read()
     template = Template(content)
-    cdef = template.render(win32=win32, newer_then_jul2021=newer_then_jul2021)
+    cdef = template.render(win32=win32, newer_then_dec2023=newer_then_dec2023)
     ffibuilder.cdef(cdef)
 
 

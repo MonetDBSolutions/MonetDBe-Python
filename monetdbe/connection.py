@@ -33,6 +33,7 @@ class Connection:
                  detect_types: int = 0,
                  check_same_thread: bool = True,
                  autocommit: bool = False,
+                 _load_extension: bool = False,
                  nr_threads: int = 0,
                  memorylimit: int = 0,
                  querytimeout: int = 0,
@@ -251,6 +252,14 @@ class Connection:
     def set_authorizer(self, *args, **kwargs):
         self._check()
         raise NotImplemented
+
+    def enable_load_extension(self, __enable: bool = True):
+        self._load_extension = __enable;
+
+    def load_extension(self, __name: str): 
+        self._check()
+        if self._load_extension:
+            self._internal.load_extension(__name)
 
     def backup(self, *args, **kwargs):
         self._check()

@@ -12,6 +12,7 @@ from monetdbe._cffi.convert import make_string, monet_c_type_map, extract, numpy
 from monetdbe._cffi.convert.bind import monetdbe_decimal_to_bte, monetdbe_decimal_to_sht, monetdbe_decimal_to_int, monetdbe_decimal_to_lng, prepare_bind
 from monetdbe._cffi.errors import check_error
 from monetdbe._cffi.types_ import monetdbe_result, monetdbe_database, monetdbe_column, monetdbe_statement
+from monetdbe._cffi.branch import newer_then_dec2023
 
 if TYPE_CHECKING:
     from monetdbe.connection import Connection
@@ -376,6 +377,10 @@ class Internal:
         self._switch()
         lib.monetdbe_cleanup_statement(self._monetdbe_database, statement)
 
+    def load_extension(self, name: str):
+        if newer_then_dec2023:
+            lib.monetdbe_load_extension(self._monetdbe_database, str(name).encode())
+
     def dump_database(self, backupfile: Path):
         # todo (gijs): use :)
         lib.monetdbe_dump_database(self._monetdbe_database, str(backupfile).encode())
@@ -404,35 +409,3 @@ class Internal:
             return int(ffi.string((lib.monetdbe_get_mapi_port())).decode())
 
         return None
-
-
-from monetdbe._cffi.branch import newer_then_jul2021
-if not newer_then_jul2021:
-    def bind(statement: monetdbe_statement, data: Any, parameter_nr: int, type_info=None) -> None:
-        prepared = prepare_bind(data)
-        check_error(lib.monetdbe_bind(statement, prepared, parameter_nr))
-
-    def prepare(self, query: str) -> monetdbe_statement:
-        self._switch()
-        stmt = ffi.new("monetdbe_statement **")
-        check_error(lib.monetdbe_prepare(self._monetdbe_database, str(query).encode(), stmt))
-        return stmt[0],
-
-    def get_columns(self, table: str, schema: str = 'sys') -> Iterator[Tuple[str, int]]:
-        self._switch()
-        count_p = ffi.new('size_t *')
-        names_p = ffi.new('char ***')
-        types_p = ffi.new('int **')
-
-        lib.monetdbe_get_columns(self._monetdbe_database, schema.encode(), table.encode(), count_p, names_p, types_p)
-
-        for i in range(count_p[0]):
-            name = ffi.string(names_p[0][i]).decode()
-            type_ = types_p[0][i]
-            yield name, type_
-
-    import sys
-    Module = sys.modules[__name__]
-    setattr(Module, 'bind', bind)
-    setattr(Internal, 'prepare', prepare)
-    setattr(Internal, 'get_columns', get_columns)
