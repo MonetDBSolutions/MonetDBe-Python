@@ -258,7 +258,7 @@ class Connection:
 
     def load_extension(self, __name: str):
         self._check()
-        if self._load_extension:
+        if self._load_extension and self._internal:
             self._internal.load_extension(__name)
 
     def backup(self, *args, **kwargs):

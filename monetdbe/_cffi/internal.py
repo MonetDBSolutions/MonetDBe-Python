@@ -382,6 +382,7 @@ class Internal:
     def load_extension(self, name: str):
         if newer_then_dec2023:
             lib.monetdbe_load_extension(self._monetdbe_database, str(name).encode())
+        return None
 
     def dump_database(self, backupfile: Path):
         # todo (gijs): use :)
