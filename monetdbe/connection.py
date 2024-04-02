@@ -254,9 +254,9 @@ class Connection:
         raise NotImplemented
 
     def enable_load_extension(self, __enable: bool = True):
-        self._load_extension = __enable;
+        self._load_extension = __enable
 
-    def load_extension(self, __name: str): 
+    def load_extension(self, __name: str):
         self._check()
         if self._load_extension:
             self._internal.load_extension(__name)

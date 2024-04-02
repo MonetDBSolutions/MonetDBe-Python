@@ -293,7 +293,7 @@ class Internal:
         existing_names, existing_types = zip(*existing_columns)
         if not set(existing_names) == set(data.keys()):
             error = f"Appended column names ({', '.join(str(i) for i in data.keys())}) " \
-                    f"don't match existing column names ({', '.join(existing_names)})"
+                f"don't match existing column names ({', '.join(existing_names)})"
             raise exceptions.ProgrammingError(error)
 
         work_columns = ffi.new(f'monetdbe_column * [{n_columns}]')
@@ -321,7 +321,7 @@ class Internal:
                     except Exception as e:
                         existing_type_string = monet_c_type_map[existing_type].c_string_type
                         error = f"Can't convert '{type_info.c_string_type}' " \
-                                f"to type '{existing_type_string}' for column '{column_name}': {e} "
+                            f"to type '{existing_type_string}' for column '{column_name}': {e} "
                         raise ValueError(error)
 
             work_column.type = type_info.c_type
