@@ -89,6 +89,10 @@ jobs:
         name: Delocate binary wheel
         run: venv/bin/delocate-wheel --ignore-missing-dependencies -v dist/*.whl
       -
+        name: list allowed wheel versions
+        run: venv/bin/pip debug --verbose
+
+      -
         name: Publish OS X binary wheels
         uses: actions/upload-artifact@v4
         with:
