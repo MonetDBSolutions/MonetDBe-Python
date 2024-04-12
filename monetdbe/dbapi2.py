@@ -24,8 +24,6 @@ from time import localtime
 
 from monetdbe.connection import Connection
 
-OptimizedUnicode = str
-
 paramstyle = "qmark"
 threadsafety = 1
 apilevel = "2.0"

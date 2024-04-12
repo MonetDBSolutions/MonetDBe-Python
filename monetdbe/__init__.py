@@ -9,7 +9,6 @@ from monetdbe.connection import Connection
 from monetdbe.dbapi2 import (
     connect,
     Timestamp,
-    OptimizedUnicode,
     apilevel,
     paramstyle,
     threadsafety,

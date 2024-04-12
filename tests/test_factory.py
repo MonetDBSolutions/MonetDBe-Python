@@ -26,7 +26,7 @@ import unittest
 from monetdbe.connection import Connection
 from monetdbe.cursors import Cursor  # type: ignore[attr-defined]
 from monetdbe.row import Row
-from monetdbe import connect, OptimizedUnicode
+from monetdbe import connect
 from collections.abc import Sequence
 
 
@@ -271,17 +271,6 @@ class TextFactoryTests(unittest.TestCase):
         row = self.con.execute("select cast(? as varchar(100))", (austria,)).fetchone()
         self.assertEqual(type(row[0]), str, "type of row[0] must be unicode")
         self.assertTrue(row[0].strip().endswith("reich"), "column must contain original data")
-
-    def test_OptimizedUnicode(self):
-        # In py3k, str objects are always returned when text_factory
-        # is OptimizedUnicode
-        self.con.text_factory = OptimizedUnicode
-        austria = "�sterreich"
-        germany = "Deutchland"
-        a_row = self.con.execute("select cast(? as varchar(20))", (austria,)).fetchone()
-        d_row = self.con.execute("select cast(? as varchar(20))", (germany,)).fetchone()
-        self.assertEqual(type(a_row[0]), str, "type of non-ASCII row must be str")
-        self.assertEqual(type(d_row[0]), str, "type of ASCII-only row must be str")
 
     def tearDown(self):
         self.con.close()
