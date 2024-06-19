@@ -257,8 +257,7 @@ class Cursor:
                 column_type = 'REAL'
             elif arr.dtype == np.float64:
                 column_type = 'DOUBLE'
-            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype,
-                                                                                                             np.object_):
+            elif np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.str_) or np.issubdtype(arr.dtype, np.object_):
                 column_type = 'STRING'
             else:
                 raise Exception('Unsupported dtype: %s' % (str(arr.dtype)))
