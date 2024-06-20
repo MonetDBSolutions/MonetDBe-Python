@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir MonetDB-${{ matrix.branch }}/build
           cd MonetDB-${{ matrix.branch }}/build
-          cmake ..  -DCMAKE_INSTALL_PREFIX=/usr/local/Cellar/monetdb/11.40.1 \
+          cmake ..  -DCMAKE_INSTALL_PREFIX=$HOME/monetdb \
             -DPY3INTEGRATION=OFF \
             -DCMAKE_BUILD_TYPE=Release \
             -DASSERT=OFF \
@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: monetdb-osx-${{ matrix.branch }}
-          path: /usr/local/Cellar/monetdb
+          path: $HOME/monetdb
 
   osx-wheel:
     continue-on-error: true
@@ -55,9 +55,9 @@ jobs:
         branch: [default]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
-      MONETDBE_INCLUDE_PATH: '/usr/local/Cellar/monetdb/11.40.1/include'
-      MONETDBE_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
-      LD_LIBRARY_PATH: '/usr/local/Cellar/monetdb/11.40.1/lib'
+      MONETDBE_INCLUDE_PATH: '$HOME/monetdb/include'
+      MONETDBE_LIBRARY_PATH: '$HOME/monetdb/lib'
+      LD_LIBRARY_PATH: '$HOME/monetdb/lib'
     needs: [osx-monetdb-build]
     steps:
       -
