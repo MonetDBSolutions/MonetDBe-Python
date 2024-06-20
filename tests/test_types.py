@@ -20,7 +20,7 @@
 # 2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
-import datetime
+from datetime import datetime,timezone
 import unittest
 import zlib
 
@@ -418,11 +418,11 @@ class DateTimeTests(unittest.TestCase):
         self.assertEqual(ts, ts2)
 
     def test_SqlTimestamp(self):
-        now = datetime.datetime.now(datetime.UTC)
+        now = datetime.now(timezone.utc)
         self.cur.execute("insert into test(ts) values (current_timestamp)")
         self.cur.execute("select ts from test")
         ts = self.cur.fetchone()[0]
-        self.assertEqual(type(ts), datetime.datetime)
+        self.assertEqual(type(ts), datetime)
         self.assertEqual(ts.year, now.year)
 
     def test_DateTimeSubSeconds(self):
