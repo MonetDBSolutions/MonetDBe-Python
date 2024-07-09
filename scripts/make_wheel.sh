@@ -38,7 +38,7 @@ case "$1" in
         exit 1
 esac
 
-ARCH=${2:-manylinux2014_x86_64}
+ARCH=${2:-manylinux_2_28_x86_64}
 
 TARGET=cp${VERSION}-cp${VERSION}${PLATFORM}
 
