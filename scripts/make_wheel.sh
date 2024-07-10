@@ -48,4 +48,4 @@ TARGET=cp${VERSION}-cp${VERSION}${PLATFORM}
 
 echo '/usr/local/lib' >> /etc/ld.so.conf.d/00-manylinux.conf 
 auditwheel show ${WORKDIR}/*.whl
-auditwheel repair -vvv --plat ${ARCH} -w ${OUTPUT} ${WORKDIR}/*.whl
+auditwheel repair -v --plat ${ARCH} -w ${OUTPUT} ${WORKDIR}/*.whl
