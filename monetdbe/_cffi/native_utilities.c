@@ -396,33 +396,22 @@ void initialize_timestamp_array_from_numpy(
         monetdbe_data_date*         d   = NULL;
         monetdbe_data_time*         t   = NULL;
 
-        switch (type) {
-        case monetdbe_timestamp: {
+        if (type == monetdbe_timestamp) {
             ts  = &((monetdbe_data_timestamp*) output)[i];
             d = &ts->date;
             t = &ts->time;
-            break;
-        }
-        case monetdbe_date: {
+        } else if (type == monetdbe_date) {
             d = &((monetdbe_data_date*) output)[i];
-            break;
-        }
-	default:
-            // TODO error wrong type
         }
 
-        if (out.year == NPY_DATETIME_NAT) switch (type) {
-            // nil value
-            case monetdbe_timestamp: {
+        if (out.year == NPY_DATETIME_NAT) {
+	    if (type == monetdbe_timestamp) {
                 *ts = *(monetdbe_data_timestamp*) monetdbe_null(dbhdl, monetdbe_timestamp);
                 continue;
-            }
-            case monetdbe_date: {
+            } else if (type == monetdbe_date) {
                 *d = *(monetdbe_data_date*) monetdbe_null(dbhdl, monetdbe_date);
                 continue;
             }
-	    default:
-            	// TODO error wrong type
         }
 
         d->year  = (short) out.year;
