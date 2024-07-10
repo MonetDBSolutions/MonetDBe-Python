@@ -47,5 +47,5 @@ TARGET=cp${VERSION}-cp${VERSION}${PLATFORM}
 /opt/python/${TARGET}/bin/pyproject-build -o ${WORKDIR}
 
 echo '/usr/local/lib64' >> /etc/ld.so.conf.d/00-manylinux.conf
-auditwheel -v show ${WORKDIR}/*.whl
+#auditwheel -v show ${WORKDIR}/*.whl
 auditwheel repair --plat ${ARCH} -w ${OUTPUT} ${WORKDIR}/*.whl
