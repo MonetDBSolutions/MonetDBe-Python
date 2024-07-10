@@ -407,6 +407,7 @@ void initialize_timestamp_array_from_numpy(
             d = &((monetdbe_data_date*) output)[i];
             break;
         }
+	default:
             // TODO error wrong type
         }
 
@@ -420,6 +421,8 @@ void initialize_timestamp_array_from_numpy(
                 *d = *(monetdbe_data_date*) monetdbe_null(dbhdl, monetdbe_date);
                 continue;
             }
+	    default:
+            	// TODO error wrong type
         }
 
         d->year  = (short) out.year;
