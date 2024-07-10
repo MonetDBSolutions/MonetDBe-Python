@@ -39,7 +39,10 @@ jobs:
         python-version: [" 3.8", "3.9", "3.10", "3.11", "3.12" ]
         branch: [default]
     container: monetdb/dev-builds:${{ matrix.branch }}_manylinux
-
+    env:
+      MONETDB_BRANCH: ${{ matrix.branch }}
+      MONETDBE_INCLUDE_PATH: '/usr/local/include'
+      MONETDBE_LIBRARY_PATH: '/usr/local/lib'
     steps:
       -
         name: Checkout
