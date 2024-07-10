@@ -46,4 +46,5 @@ TARGET=cp${VERSION}-cp${VERSION}${PLATFORM}
 
 /opt/python/${TARGET}/bin/pyproject-build -o ${WORKDIR}
 
+auditwheel-symbols --manylinux 2_28 ${WORKDIR}/*.whl
 auditwheel repair --plat ${ARCH} -w ${OUTPUT} ${WORKDIR}/*.whl
