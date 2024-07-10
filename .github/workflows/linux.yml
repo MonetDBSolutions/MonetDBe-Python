@@ -43,6 +43,7 @@ jobs:
       MONETDB_BRANCH: ${{ matrix.branch }}
       MONETDBE_INCLUDE_PATH: '/usr/local/include'
       MONETDBE_LIBRARY_PATH: '/usr/local/lib64'
+      LD_LIBRARY_PATH: '/usr/local/lib64'
     steps:
       -
         name: Checkout
