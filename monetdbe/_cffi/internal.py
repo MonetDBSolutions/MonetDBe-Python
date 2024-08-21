@@ -350,6 +350,8 @@ class Internal:
                 lib.initialize_string_array_from_numpy(t, work_column.count, p, stride_length, ffi.cast("bool*", m))
                 work_column.data = t
             else:
+                if not column_values.flags.c_contiguous:  # Checks if the array is C-contiguous
+                    column_values = np.ascontiguousarray(column_values) # Converts the array to C-contiguous
                 p = ffi.from_buffer(f"{type_info.c_string_type}*", column_values)
                 cffi_objects.append(p)
                 work_column.data = p
