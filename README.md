@@ -2,7 +2,7 @@
 
 MonetDB/e-Python - the serverless Python embedded MonetDB
 
-![alt text](monetdbe-python.png)
+![alt text](MonetPython.svg)
 
 Want to store and search a massive amount of numbers? You don't want to run a database service? Is SQLite too slow for what you want to do? Search no further! MonetDBe-Python is here. Just pip install the binary wheel on your Windows, Linux or OS X system and you are ready to go, no compilation needed.
 
