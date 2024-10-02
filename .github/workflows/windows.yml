@@ -43,7 +43,7 @@ jobs:
         name: check monetdb
         shell: pwsh
         run: |
-          ls "C:\Program Files\MonetDB\MonetDB5*"
+          ls "C:\Program Files\MonetDB*"
       - uses: actions/upload-artifact@v4
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
