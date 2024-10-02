@@ -43,7 +43,7 @@ jobs:
         name: check monetdb
         shell: pwsh
         run: |
-          ls "C:\Program Files\MonetDB\MonetDB5"
+          ls "C:\Program Files\MonetDB\MonetDB"
       - uses: actions/upload-artifact@v4
         with:
           name: monetdb-win-${{ matrix.MONETDB_BRANCH }}
@@ -58,8 +58,8 @@ jobs:
         branch: [ default ]
     env:
       MONETDB_BRANCH: ${{ matrix.branch }}
-      MONETDBE_INCLUDE_PATH: 'C:\Program FIles\MonetDB\MonetDB5\include'
-      MONETDBE_LIBRARY_PATH: 'C:\Program FIles\MonetDB\MonetDB5\lib'
+      MONETDBE_INCLUDE_PATH: 'C:\Program FIles\MonetDB\MonetDB\include'
+      MONETDBE_LIBRARY_PATH: 'C:\Program FIles\MonetDB\MonetDB\lib'
     steps:
       -
         name: Print monetdbe branch variable to make sure it is set properly
@@ -80,19 +80,19 @@ jobs:
       -
         name: list include
         run: |
-          ls 'C:\Program Files\MonetDB\MonetDB5\include\monetdb\monetdbe.h'
+          ls 'C:\Program Files\MonetDB\MonetDB\include\monetdb\monetdbe.h'
       -
         name: Collect DLLs
         run: |
-          ls 'C:\Program Files\MonetDB\MonetDB5\bin'
-          Copy-Item 'C:\Program Files\MonetDB\MonetDB5\bin\*.dll' monetdbe\.
+          ls 'C:\Program Files\MonetDB\MonetDB\bin'
+          Copy-Item 'C:\Program Files\MonetDB\MonetDB\bin\*.dll' monetdbe\.
           ls monetdbe
       -
         name: Upgrade pip and wheel for all pythons
         run: python3 -m pip install --upgrade pip wheel dll-diagnostics build
       -
         name: Build binary python extension
-        run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB5\include' --library-dirs='C:\Program Files\MonetDB\MonetDB5\lib'
+        run: python3 setup.py build_ext --include-dirs='C:\Program Files\MonetDB\MonetDB\include' --library-dirs='C:\Program Files\MonetDB\MonetDB\lib'
       -
         name: Install MonetDBe in developer mode
         run: python3 -m pip install -e .[test]
