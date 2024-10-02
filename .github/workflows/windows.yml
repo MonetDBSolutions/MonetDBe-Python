@@ -31,13 +31,14 @@ jobs:
         shell: pwsh
         run: |
           $msifile="c:\${{ env.MSI }}"
-          New-Item -Path 'C:\test.log' -ItemType File
           (New-Object System.Net.WebClient).DownloadFile("http://monetdb.org/testweb/web/${{ env.MSI }}","$msifile");
-          #$procMain = Start-Process "$msifile" -ArgumentList '/quiet /passive /qn /norestart INSTALLLEVEL=1000 MSIRMSHUTDOWN=2' -Wait
-          $procMain = Start-Process "$msifile" -ArgumentList '/quiet /passive /qn /norestart INSTALLLEVEL=1000 MSIRMSHUTDOWN=2 /L*xv c:\test.log'
-          $procLog = Start-Process powershell 'Get-Content -Path c:\test.log -Wait' -NoNewWindow -PassThru
-          $procMain.WaitForExit()
-          $procLog.Kill()
+          # for debug comment previous line and use the commented out lines (except the Install-Binary one)
+          #New-Item -Path 'C:\test.log' -ItemType File
+          $procMain = Start-Process "$msifile" -ArgumentList '/quiet /passive /qn /norestart INSTALLLEVEL=1000 MSIRMSHUTDOWN=2' -Wait
+          #$procMain = Start-Process "$msifile" -ArgumentList '/quiet /passive /qn /norestart INSTALLLEVEL=1000 MSIRMSHUTDOWN=2 /L*xv c:\test.log'
+          #$procLog = Start-Process powershell 'Get-Content -Path c:\test.log -Wait' -NoNewWindow -PassThru
+          #$procMain.WaitForExit()
+          #$procLog.Kill()
           #  Install-Binary -Url "http://monetdb.org/testweb/web/${{ env.MSI }}" -Name "${{ env.MSI }}" -ArgumentList "/norestart /quiet /passive /qn INSTALLLEVEL=1000"
       -
         name: check monetdb
